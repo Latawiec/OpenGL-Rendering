@@ -9,7 +9,7 @@ namespace Utils {
 static std::vector<char> readDataFile(const std::string& filename) {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
 	if (!file.is_open()) {
-		throw std::runtime_error("Failed to open file");
+		throw std::runtime_error(std::string("Cannot open file: ").append(filename));
 	}
 
 	const size_t dataSize = file.tellg();

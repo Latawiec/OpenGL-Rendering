@@ -7,6 +7,11 @@
 #include "ShaderProgram.hpp"
 #include "read_file.hpp"
 
+#ifndef SHADERS_SOURCE_DIR
+#define SHADERS_SOURCE_DIR "INCORRECT SOURCE DIR"
+#endif
+
+
 namespace Render {
 
 class TextureProgram {
@@ -20,8 +25,8 @@ public:
         auto indicesVector = std::vector<unsigned int>(indices, indices + 6);
         _vertexData = VertexData<Layout::Sequential, Vec3>(indicesVector, 4, reinterpret_cast<const float*>(quadCoords));
 
-        const auto vertexShaderCode = Utils::readFile("Shaders/Deferred/SimpleTexture/texture.vert.glsl");
-	    const auto fragmentShaderCode = Utils::readFile("Shaders/Deferred/SimpleTexture/texture.frag.glsl");
+        const auto vertexShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/Deferred/SimpleTexture/" "texture.vert.glsl");
+	    const auto fragmentShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/Deferred/SimpleTexture/" "texture.frag.glsl");
 
         _shaderProgram = ShaderProgram(
             Shader<ShaderType::Vertex>(vertexShaderCode.c_str()),

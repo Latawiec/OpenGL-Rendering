@@ -94,14 +94,14 @@ private:
     inline void layoutInterleavingAttributes(const int index = 0, const int offset = 0) {
         const int stride = (VertexAttributeDescription::byte_size::value + ...);
         glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, LastOfDescriptions::elements_count::value, LastOfDescriptions::glType(), GL_FALSE, stride, (void*)offset);
+        glVertexAttribPointer(index, LastOfDescriptions::elements_count::value, LastOfDescriptions::glType(), GL_FALSE, stride, (const void*)offset);
     }
 
     template<class HeadOfDescriptions, class NextDescrption, class ... RestOfDescriptions>
     inline void layoutInterleavingAttributes(const int index = 0, const int offset = 0) {
         const int stride = (VertexAttributeDescription::byte_size::value + ...);
         glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, HeadOfDescriptions::elements_count::value, HeadOfDescriptions::glType(), GL_FALSE, stride, (void*)offset);
+        glVertexAttribPointer(index, HeadOfDescriptions::elements_count::value, HeadOfDescriptions::glType(), GL_FALSE, stride, (const void*)offset);
         layoutInterleavingAttributes<NextDescrption, RestOfDescriptions...>(index + 1, offset + HeadOfDescriptions::byte_size::value);
     }
 };
@@ -161,16 +161,12 @@ private:
     inline void layoutSequentialAttributes(const int index = 0, const int offset = 0) {
         glEnableVertexAttribArray(index);
         glVertexAttribPointer(index, LastOfDescriptions::elements_count::value, LastOfDescriptions::glType(), GL_FALSE, LastOfDescriptions::byte_size::value, (void*)offset);
-        std::cout << LastOfDescriptions::elements_count::value << '\n';
-        std::cout << LastOfDescriptions::byte_size::value << '\n';
     }
 
     template<class HeadOfDescriptions, class NextDescription, class ... RestOfDescriptions>
     inline void layoutSequentialAttributes(const int index = 0, const int offset = 0) {
         glEnableVertexAttribArray(index);
         glVertexAttribPointer(index, HeadOfDescriptions::elements_count::value, HeadOfDescriptions::glType(), GL_FALSE, HeadOfDescriptions::byte_size::value, (void*)offset);
-        std::cout << HeadOfDescriptions::elements_count::value << '\n';
-        std::cout << HeadOfDescriptions::byte_size::value << '\n';
         layoutSequentialAttributes<NextDescription, RestOfDescriptions...>(index + 1, offset + HeadOfDescriptions::byte_size::value * _size);
     }
 };

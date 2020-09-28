@@ -6,10 +6,6 @@
 #include "GraphicBuffer.hpp"
 #include "TextureProgram.hpp"
 
-#ifndef SHADERS_SOURCE_DIR
-#define SHADERS_SOURCE_DIR "INCORRECT SOURCE DIR"
-#endif
-
 namespace Render {
 
 class Renderer {

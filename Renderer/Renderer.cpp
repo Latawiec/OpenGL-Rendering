@@ -2,8 +2,11 @@
 #include "read_file.hpp"
 
 
-namespace Render {
+#ifndef SHADERS_SOURCE_DIR
+#define SHADERS_SOURCE_DIR "INCORRECT SOURCE DIR"
+#endif
 
+namespace Render {
 
 Renderer::Renderer(const int width, const int height)
 : deferredBuffers_(width, height)
@@ -12,7 +15,7 @@ Renderer::Renderer(const int width, const int height)
     Shader<ShaderType::Fragment>(Utils::readFile(SHADERS_SOURCE_DIR "/Deferred/Phong/" "phong.frag.glsl").c_str())
 )
 {
-
+    glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
 }
 
 void Renderer::Draw() {
@@ -22,7 +25,6 @@ void Renderer::Draw() {
     constexpr static auto viewName = std::string_view("view");
     constexpr static auto projectionName = std::string_view("projection");
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if (activeCamera_ == nullptr)
         return;
 
@@ -38,6 +40,7 @@ void Renderer::Draw() {
         }
     }
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     textureDrawProgram_.draw(deferredBuffers_.getTexture(GraphicBuffer::Output::Albedo));
 }
 
