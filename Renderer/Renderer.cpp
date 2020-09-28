@@ -43,6 +43,12 @@ void Renderer::Draw() {
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     textureDrawProgram_.draw(deferredBuffers_.getTexture(GraphicBuffer::Output::Albedo));
+
+    #ifndef NDEBUG
+    while (auto error = glGetError() != GL_NO_ERROR) {
+        std::cerr << "Error: " << error << '\n';
+    }
+    #endif
 }
 
 bool Renderer::AddMesh(const Mesh* mesh) {
