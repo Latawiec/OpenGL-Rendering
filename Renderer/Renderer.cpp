@@ -29,6 +29,7 @@ void Renderer::Draw() {
         return;
 
     {
+        glEnable(GL_DEPTH_TEST);
         FramebufferBase::ScopedBinding bind(deferredBuffers_);
         phongToGBuffers_.use();
         phongToGBuffers_.set(modelName, glm::mat4(1.0f));
@@ -39,7 +40,7 @@ void Renderer::Draw() {
             mesh->Draw(phongToGBuffers_);
         }
     }
-
+    glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     textureDrawProgram_.draw(deferredBuffers_.getTexture(GraphicBuffer::Output::Albedo));
 }
