@@ -15,6 +15,7 @@ public:
         Albedo,
         Normals,
         Depth,
+        EdgeInfo,
         SIZE
     };
 
@@ -42,5 +43,8 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::Normals>();
 
 template<>
 void GraphicBuffer::setupTexture<GraphicBuffer::Output::Depth>();
+
+template<>
+void GraphicBuffer::setupTexture<GraphicBuffer::Output::EdgeInfo>();
 
 } // namespace Render

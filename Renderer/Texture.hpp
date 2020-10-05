@@ -22,6 +22,14 @@ public:
     int width() const { return _width; }
     int height() const { return _height; }
     int channels() const { return _channelsCount; }
+
+    enum class Type : uint8_t {
+        Diffuse = 0,
+        Specular,
+        Normal,
+        SIZE
+    };
+
 };
 
 } // namespace Render

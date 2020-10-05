@@ -7,23 +7,21 @@ layout (location = 2) in vec2 aTexCoords;
 out VS_OUTPUT {
     vec3 FragPos;
     vec3 Normal;
+    vec4 Edge;
     vec2 TexCoords;
 } OUT;
 
 uniform mat4 model;
 uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 proj;
 
-vec3 vColor[3] = vec3[](
-    vec3(1,0,0),
-    vec3(0,1,0),
-    vec3(0,0,1)
-);
+uniform int mesh_id;
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
-    OUT.FragPos = vColor[gl_VertexID % 3];//vec3(model * vec4(aPos, 1.0));
+    gl_Position = proj * view * model * vec4(aPos, 1.0);
+    OUT.FragPos = vec3(model * vec4(aPos, 1.0));
     OUT.TexCoords = aTexCoords;
+    OUT.Edge = vec4(0, ((mesh_id >> 8) & 0xff)/255.0, (mesh_id  & 0xff)/255.0, 1.0);
     OUT.Normal = mat3(transpose(inverse(model))) * aNormal;
 }

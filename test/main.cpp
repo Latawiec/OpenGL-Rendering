@@ -4,8 +4,10 @@
 #include <GLFW/glfw3.h>
 
 #include "Camera.hpp"
-#include "Renderer.hpp"
-
+#include "Contour/Model.hpp"
+#include "Contour/Program.hpp"
+#include "GraphicBuffer.hpp"
+#include "TextureProgram.hpp"
 
 using namespace Render;
 
@@ -81,16 +83,33 @@ int main() {
     camera.updateAspectRatio(static_cast<float>(windowWidth)/static_cast<float>(windowHeight));
 
     VertexDataBase cubeVertexData = VertexData<Layout::Interleaving, Vec3, Vec3, Vec2>(indices, 36, reinterpret_cast<std::byte*>(vertices.data()));
-    Mesh cube(cubeVertexData);
 
-    Renderer renderer(windowWidth, windowHeight);
-    renderer.SetCamera(&camera);
-    renderer.AddMesh(&cube);
+    // ModelImporter::import(ASSETS_DIR "/testCube.glb");
+    GraphicBuffer deferredBuffers(windowWidth, windowHeight);
+    TextureProgram textureDrawProgram;
+    Contour::Model cube(cubeVertexData);
+    Contour::Program program;
+
+     glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
 
     while(!glfwWindowShouldClose(window)) {
-        renderer.Draw();
+        {
+            FramebufferBase::ScopedBinding bind(deferredBuffers);
+            glEnable(GL_DEPTH_TEST);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            program.Draw(camera, cube);
+        }
+        glDisable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        textureDrawProgram.draw(deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        #ifndef NDEBUG
+        while (auto error = glGetError() != GL_NO_ERROR) {
+            std::cerr << "Error: " << error << '\n';
+        }
+        #endif
     }
 	glfwTerminate();
 	return 0;

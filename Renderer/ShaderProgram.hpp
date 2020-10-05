@@ -117,7 +117,7 @@ public:
 	}
 
 	template<class T>
-	void set(const std::string_view name, const T value) {
+	void set(const std::string_view name, const T value) const {
 		static_assert("Not implemented for given type.");
 	}
 
@@ -138,21 +138,21 @@ private:
 };
 
 template<>
-void ShaderProgram::set<bool>(const std::string_view name, const bool value);
+void ShaderProgram::set<bool>(const std::string_view name, const bool value) const;
 
 template<>
-void ShaderProgram::set<int>(const std::string_view name, const int value);
+void ShaderProgram::set<int>(const std::string_view name, const int value) const;
 
 template<>
-void ShaderProgram::set<unsigned int>(const std::string_view name, const unsigned int value);
+void ShaderProgram::set<unsigned int>(const std::string_view name, const unsigned int value) const;
 
 template<>
-void ShaderProgram::set<float>(const std::string_view name, const float value);
+void ShaderProgram::set<float>(const std::string_view name, const float value) const;
 
 template<>
-void ShaderProgram::set<glm::mat4>(const std::string_view name, const glm::mat4 value);
+void ShaderProgram::set<glm::mat4>(const std::string_view name, const glm::mat4 value) const;
 
 template<>
-void ShaderProgram::set<glm::vec3>(const std::string_view name, const glm::vec3 value);
+void ShaderProgram::set<glm::vec3>(const std::string_view name, const glm::vec3 value) const;
 
 } // namespace Render

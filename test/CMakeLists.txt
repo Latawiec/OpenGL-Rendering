@@ -9,12 +9,14 @@ add_executable(${PROJECT_NAME}
 )
 
 add_dependencies(${PROJECT_NAME}
+    Assets
     Utils
     Renderer
 )
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
+    Assets
     Utils
     Renderer
     glfw

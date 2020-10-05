@@ -14,7 +14,7 @@ GraphicBuffer::GraphicBuffer(unsigned int width, unsigned int height)
     }(std::make_index_sequence<Output::SIZE>{});
 
     // Set attachments for all but Depth. I'll do it manually for now...
-    const GLenum bufs[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+    const GLenum bufs[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
     glDrawBuffers(sizeof(bufs)/sizeof(decltype(bufs[0])), bufs);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -67,6 +67,16 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::Depth>() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, outputTexture, 0);
+}
+
+template<>
+void GraphicBuffer::setupTexture<GraphicBuffer::Output::EdgeInfo>() {
+    const auto outputTexture = outputTextures_[Output::EdgeInfo];
+    glBindTexture(GL_TEXTURE_2D, outputTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, outputTexture, 0);
 }
 
 } // namespace Render
