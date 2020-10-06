@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
 
-set(AUTOINSTALL TRUE)
-
 # Check
 if (NOT DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     message (WARNING "Neither VCPKG_ROOT nor CMAKE_TOOLCHAIN_FILE specified. We might not be able to make it!" )

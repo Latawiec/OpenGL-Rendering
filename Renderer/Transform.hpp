@@ -30,7 +30,7 @@ public:
     Transformed(T object, glm::mat4 transform) : TransformBase(transform), _wrapped(object) {}
 
     const T& get() const { return {_wrapped}; };
-    T& get() { return {_wrapped} };
+    T& get() { return {_wrapped}; };
 
     operator Transformed<T&>&()             { return {_wrapped}; }
     operator const Transformed<T&>&() const { return {_wrapped}; }

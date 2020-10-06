@@ -5,7 +5,7 @@ project(Renderer)
 find_package(OpenGL REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
-find_package(assimp CONFIG REQUIRED)
+find_package(Assimp CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME}
 # Renderer.cpp
@@ -19,10 +19,10 @@ Transform.cpp
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
-    Utils
-    glad::glad
-    assimp::assimp
-    glm
+Utils
+glad::glad
+assimp::assimp
+glm
 )
 
 add_dependencies(${PROJECT_NAME}
