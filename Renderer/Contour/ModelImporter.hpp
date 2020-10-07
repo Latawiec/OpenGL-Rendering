@@ -8,6 +8,7 @@
 #endif
 
 namespace Render {
+namespace Contour {
 
 class ModelImporter {
 
@@ -21,11 +22,9 @@ public:
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
             std::cerr << "Failed to import file: " << data << std::endl;
         }
-        #endif
-
-        
+        #endif   
     }
-
 };
 
+} // namespace Contour
 } // namespace Render

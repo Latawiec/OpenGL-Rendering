@@ -32,11 +32,13 @@ using Vec2 = VertexAttribute<2, float>;
 using Float = VertexAttribute<1, float>;
 // More?
 
+template<class ... VertexAttributeDescription>
 class VertexDataBase {   
-protected: 
+protected:
     unsigned int _VAO{}, _VBO{}, _EBO{};
     size_t _size {}, _elementsCount{};
 public:
+    using TupleOfDescriptions = std::tuple<VertexAttributeDescription...>;
     constexpr VertexDataBase() {}
 
     VertexDataBase(const std::vector<unsigned int>& indices, const std::size_t size) :
@@ -51,11 +53,15 @@ public:
         return _elementsCount;
     }
 
-    struct ScopedBinding {
-        unsigned int _id;
-        ScopedBinding(const VertexDataBase& vertexData) : _id(vertexData._VAO) { glBindVertexArray(_id); }
-        ~ScopedBinding() { glBindVertexArray(0); }
-    };
+    friend class ScopedBinding;
+};
+
+class ScopedBinding {
+    unsigned int _id;
+public:
+    template<class ... Ts>
+    ScopedBinding(const VertexDataBase<Ts...>& vertexData) : _id(vertexData._VAO) { glBindVertexArray(_id); }
+    ~ScopedBinding() { glBindVertexArray(0); }
 };
 
 template <Layout, class ... >
@@ -63,7 +69,8 @@ class VertexData {};
 
 
 template <class ... VertexAttributeDescription>
-class VertexData<Layout::Interleaving, VertexAttributeDescription...> : public VertexDataBase {
+class VertexData<Layout::Interleaving, VertexAttributeDescription...>
+: public VertexDataBase<VertexAttributeDescription...> {
 public:    
     constexpr VertexData() = default;
 
@@ -107,8 +114,8 @@ private:
 };
 
 template <class ... VertexAttributeDescription>
-class VertexData<Layout::Sequential, VertexAttributeDescription...> : public VertexDataBase {
-    using TupleOfDescriptions = std::tuple<VertexAttributeDescription...>;
+class VertexData<Layout::Sequential, VertexAttributeDescription...>
+: public VertexDataBase<VertexAttributeDescription...> {
 public:    
     constexpr VertexData() = default;
 

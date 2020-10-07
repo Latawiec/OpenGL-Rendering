@@ -32,7 +32,7 @@ void Program::Draw(const Camera& camera, const Transformed<Model&>& model) const
     prepareCamera(camera);
     prepareTextures();
     prepareUniforms(model);
-    VertexDataBase::ScopedBinding bind(model.get().getVertexData());
+    ScopedBinding bind(model.get().getVertexData());
     glDrawElements(GL_TRIANGLES, model.get().getVertexData().vertexCount(), GL_UNSIGNED_INT, 0);
 }
 

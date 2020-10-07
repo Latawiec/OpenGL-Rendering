@@ -10,7 +10,7 @@ namespace Render {
 class TextureProgram {
     constexpr static auto processedTextureName = std::string_view("imageTexture");
 
-    VertexDataBase _vertexData;
+    VertexDataBase<Vec3> _vertexData;
     ShaderProgram _shaderProgram;
 
 public:

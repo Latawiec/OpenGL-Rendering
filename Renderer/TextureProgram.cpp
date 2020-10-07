@@ -33,7 +33,7 @@ void TextureProgram::draw(unsigned int texture) const {
     glBindTexture(GL_TEXTURE_2D, texture);
     _shaderProgram.set(processedTextureName, 0);
 
-    auto vertexBinding = VertexDataBase::ScopedBinding(_vertexData);
+    ScopedBinding bind(_vertexData);
     glDrawElements(GL_TRIANGLES, _vertexData.vertexCount(), GL_UNSIGNED_INT, 0);
 }
 
