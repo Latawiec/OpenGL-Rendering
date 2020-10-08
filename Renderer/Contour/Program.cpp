@@ -26,20 +26,37 @@ Program::Program()
 {
 }
 
-void Program::Draw(const Camera& camera, const Transformed<Model&>& model) const
+void Program::Draw(const glm::mat4& viewTransform,
+          const glm::mat4& projectionTransform,
+          const glm::mat4& modelTransform,
+          const Model& model) const
 {
     _program.use();
-    prepareCamera(camera);
+    prepareCamera(viewTransform, projectionTransform);
     prepareTextures();
-    prepareUniforms(model);
-    ScopedBinding bind(model.get().getVertexData());
-    glDrawElements(GL_TRIANGLES, model.get().getVertexData().vertexCount(), GL_UNSIGNED_INT, 0);
+    prepareUniforms(modelTransform);
+    ScopedBinding bind(model.getVertexData());
+    glDrawElements(GL_TRIANGLES, model.getVertexData().vertexCount(), GL_UNSIGNED_INT, 0);
 }
 
-void Program::prepareCamera(const Camera& camera) const
+void Program::Draw(const glm::mat4& viewTransform,
+          const glm::mat4& projectionTransform,
+          const std::vector<std::pair<glm::mat4, const Model&>>& transformedModels) const
 {
-    _program.set(u_view, camera.getViewTransform());
-    _program.set(u_projection, camera.getProjectionTransform());
+    _program.use();
+    prepareCamera(viewTransform, projectionTransform);
+    for (const auto& [modelTransform, model] : transformedModels) {
+        prepareTextures();
+        prepareUniforms(modelTransform);
+        ScopedBinding bind(model.getVertexData());
+        glDrawElements(GL_TRIANGLES, model.getVertexData().vertexCount(), GL_UNSIGNED_INT, 0);
+    }
+}
+
+void Program::prepareCamera(const glm::mat4& view, const glm::mat4& projection) const
+{
+    _program.set(u_view, view);
+    _program.set(u_projection, projection);
 }
 
 void Program::prepareTextures() const

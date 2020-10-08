@@ -8,6 +8,7 @@
 #include "Contour/Program.hpp"
 #include "GraphicBuffer.hpp"
 #include "TextureProgram.hpp"
+#include "DrawingManager.hpp"
 
 using namespace Render;
 
@@ -92,12 +93,22 @@ int main() {
 
      glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
 
+    DrawingManager drawingManager;
+    auto rootNode = std::make_unique<Node>();
+    auto cubeNode = std::make_unique<Node>();
+    cubeNode->SetModel(&cube);
+    cubeNode->SetTransform(glm::translate(cubeNode->GetTransform(), glm::vec3(2, 0, 0)));
+    rootNode->AddChildNode(std::move(cubeNode));
+
     while(!glfwWindowShouldClose(window)) {
+        rootNode->SetTransform(glm::rotate(rootNode->GetTransform(), 0.01f, glm::vec3(0, 1, 0)));
         {
             FramebufferBase::ScopedBinding bind(deferredBuffers);
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            program.Draw(camera, cube);
+            //program.Draw(camera.getViewTransform(), camera.getProjectionTransform(), glm::mat4{1}, cube);
+            drawingManager.QueueNodes(*rootNode);
+            drawingManager.Draw(camera.getViewTransform(), camera.getProjectionTransform());
         }
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

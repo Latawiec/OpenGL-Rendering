@@ -12,6 +12,7 @@ add_library(${PROJECT_NAME}
 ShaderProgram.cpp
 GraphicBuffer.cpp
 Texture.cpp
+Node.cpp
 TextureProgram.cpp
 Contour/Program.cpp
 Transform.cpp

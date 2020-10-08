@@ -4,7 +4,6 @@
 
 #include "Model.hpp"
 #include "Transform.hpp"
-#include <Camera.hpp>
 #include <ShaderProgram.hpp>
 
 namespace Render {
@@ -24,14 +23,21 @@ class Program {
     // Unique value per-mesh to easier define borders between objects
     constexpr static std::string_view u_mesh_id = "mesh_id";
     // Preparation - set uniforms and other important things.
-    void prepareCamera(const Camera&) const;
+    void prepareCamera(const glm::mat4& view, const glm::mat4& projection) const;
     void prepareTextures() const;
     void prepareUniforms(const TransformBase&) const;
 
 public:
     Program();
 
-    void Draw(const Camera& camera, const Transformed<Model&>& model) const;
+    void Draw(const glm::mat4& viewTransform,
+              const glm::mat4& projectionTransform,
+              const glm::mat4& modelTransform,
+              const Model& model) const;
+
+    void Draw(const glm::mat4& viewTransform,
+              const glm::mat4& projectionTransform,
+              const std::vector<std::pair<glm::mat4, const Model&>>& transformedModels) const;
 
     Program(Program&) = delete;
     Program(Program&&) = delete;
