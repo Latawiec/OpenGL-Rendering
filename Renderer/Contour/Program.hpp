@@ -3,8 +3,7 @@
 #include <string_view>
 
 #include "Model.hpp"
-#include "Transform.hpp"
-#include <ShaderProgram.hpp>
+#include "ShaderProgram.hpp"
 
 namespace Render {
 namespace Contour {
@@ -25,7 +24,7 @@ class Program {
     // Preparation - set uniforms and other important things.
     void prepareCamera(const glm::mat4& view, const glm::mat4& projection) const;
     void prepareTextures() const;
-    void prepareUniforms(const TransformBase&) const;
+    void prepareUniforms(const glm::mat4& transform) const;
 
 public:
     Program();

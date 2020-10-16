@@ -6,6 +6,7 @@
 #include "ShaderProgram.hpp"
 
 namespace Render {
+namespace DebugUtils {
 
 class TextureProgram {
     constexpr static auto processedTextureName = std::string_view("imageTexture");
@@ -30,4 +31,5 @@ private:
     };
 };
 
+} // namespace DebugUtils
 } // namespace Render

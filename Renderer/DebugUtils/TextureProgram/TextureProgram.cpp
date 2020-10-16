@@ -5,20 +5,20 @@
 
 #include "read_file.hpp"
 
-#ifndef SHADERS_SOURCE_DIR
-#define SHADERS_SOURCE_DIR "INCORRECT SOURCE DIR"
+#ifndef TEXTURE_PROGRAM_DIR
+#define TEXTURE_PROGRAM_DIR "INCORRECT SOURCE DIR"
 #endif
 
 
 namespace Render {
-
+namespace DebugUtils {
 
 TextureProgram::TextureProgram() {
     auto indicesVector = std::vector<unsigned int>(indices, indices + 6);
     _vertexData = VertexData<Layout::Sequential, Vec3>(indicesVector, 4, reinterpret_cast<const float*>(quadCoords));
 
-    const auto vertexShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/Deferred/SimpleTexture/" "texture.vert.glsl");
-    const auto fragmentShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/Deferred/SimpleTexture/" "texture.frag.glsl");
+    const auto vertexShaderCode = Utils::readFile(TEXTURE_PROGRAM_DIR "/texture.vert.glsl");
+    const auto fragmentShaderCode = Utils::readFile(TEXTURE_PROGRAM_DIR "/texture.frag.glsl");
 
     _shaderProgram = ShaderProgram(
         Shader<ShaderType::Vertex>(vertexShaderCode.c_str()),
@@ -37,4 +37,5 @@ void TextureProgram::draw(unsigned int texture) const {
     glDrawElements(GL_TRIANGLES, _vertexData.vertexCount(), GL_UNSIGNED_INT, 0);
 }
 
+} // namespace DebugUtils
 } // namespace Render

@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "Camera.hpp"
+#include "BasicCamera.hpp"
 #include "Contour/Model.hpp"
 #include "Contour/Program.hpp"
 #include "GraphicBuffer.hpp"
@@ -57,7 +57,7 @@ std::vector<unsigned int> indices(36);
 int main() {
     std::iota(indices.begin(), indices.end(), 0);
 
-    Camera camera;
+    Render::Camera::BasicCamera camera;
     constexpr int windowWidth = 800;
     constexpr int windowHeight= 600;
 
@@ -87,7 +87,7 @@ int main() {
 
     // ModelImporter::import(ASSETS_DIR "/testCube.glb");
     GraphicBuffer deferredBuffers(windowWidth, windowHeight);
-    TextureProgram textureDrawProgram;
+    DebugUtils::TextureProgram textureDrawProgram;
     Contour::Model cube(cubeVertexData);
     Contour::Program program;
 

@@ -1,8 +1,8 @@
 #include "Program.hpp"
 #include "read_file.hpp"
 
-#ifndef CONTOUR_PROGRAM
-#define CONTOUR_PROGRAM "Path not provided."
+#ifndef CONTOUR_PROGRAM_DIR
+#define CONTOUR_PROGRAM_DIR "Path not provided."
 #endif
 
 namespace Render {
@@ -20,8 +20,8 @@ static std::uint16_t generateId() {
 
 Program::Program()
 : _program (
-    Shader<ShaderType::Vertex>(Utils::readFile(CONTOUR_PROGRAM "/Contour.vert.glsl").c_str()),
-    Shader<ShaderType::Fragment>(Utils::readFile(CONTOUR_PROGRAM "/Contour.frag.glsl").c_str())
+    Shader<ShaderType::Vertex>(Utils::readFile(CONTOUR_PROGRAM_DIR "/Contour.vert.glsl").c_str()),
+    Shader<ShaderType::Fragment>(Utils::readFile(CONTOUR_PROGRAM_DIR "/Contour.frag.glsl").c_str())
 )
 {
 }
@@ -64,10 +64,10 @@ void Program::prepareTextures() const
     // TODO
 }
 
-void Program::prepareUniforms(const TransformBase& transform) const
+void Program::prepareUniforms(const glm::mat4& transform) const
 {
     _program.set<unsigned int>(u_mesh_id, generateId());
-    _program.set(u_model, transform.get());
+    _program.set(u_model, transform);
 }
 
 } // namespace Contour

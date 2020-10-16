@@ -2,8 +2,8 @@
 
 #include <map>
 
-#include "Texture.hpp"
 #include "VertexData.hpp"
+#include "Texture.hpp"
 #include "IModel.hpp"
 
 namespace Render {
