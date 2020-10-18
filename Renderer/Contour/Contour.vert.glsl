@@ -3,6 +3,7 @@
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoords;
+layout (location = 3) in vec4 aEdgeColours;
 
 out VS_OUTPUT {
     vec3 Position;
@@ -28,6 +29,7 @@ void main()
 
     OUT.Position = vec3(model * vec4(aPos, 1.0));
     OUT.Normal = mat3(transpose(inverse(model))) * aNormal;
-    OUT.ContourInfo = vec4(0, mesh_id_component, 1.0);
+    OUT.ContourInfo = aEdgeColours;
+    //OUT.ContourInfo = vec4(0, mesh_id_component, 1.0);
     OUT.TexCoords = aTexCoords;
 }

@@ -27,6 +27,7 @@ namespace /*anonymous*/ {
     static const std::string PositionAttribute = "POSITION";
     static const std::string NormalsAttribute = "NORMAL";
     static const std::string UvAttribute = "TEXCOORD_0";
+    static const std::string EdgeColourAttribute = "COLOR_0";
 
     std::unique_ptr<Node> processContourMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
         GLuint VAO;
@@ -36,12 +37,13 @@ namespace /*anonymous*/ {
         // I assume single primitve.
         const auto primitive = mesh.primitives[0];
 
-        GLuint buffers[4];
-        glGenBuffers(4, buffers);
+        GLuint buffers[5];
+        glGenBuffers(5, buffers);
 
         const auto& positionAccessorId = primitive.attributes.at(PositionAttribute);
         const auto& normalsAccessorId = primitive.attributes.at(NormalsAttribute);
         const auto& uvAccessorId = primitive.attributes.at(UvAttribute);
+        const auto& edgeColourAccessorId = primitive.attributes.at(EdgeColourAttribute);
 
         const auto& indicesAccessorId = primitive.indices;
         
@@ -49,11 +51,12 @@ namespace /*anonymous*/ {
             positionAccessorId,
             normalsAccessorId,
             uvAccessorId,
+            edgeColourAccessorId,
             indicesAccessorId
         };
 
         for (int i=0; i<accessorIds.size() - 1; ++i) {
-            const auto& accessor = model.accessors[accessorIds[i]];
+            const auto& accessor = model.accessors[accessorIds[i]]; 
             const auto& bufferView = model.bufferViews[accessor.bufferView];
             const auto& buffer = model.buffers[bufferView.buffer];
             const int attrSize = accessor.type != TINYGLTF_TYPE_SCALAR ? accessor.type : 1;
@@ -74,14 +77,14 @@ namespace /*anonymous*/ {
         const auto& indicesBuffer = model.buffers[indicesBufferView.buffer];
         const int indicesSize = indicesAccessor.type != TINYGLTF_TYPE_SCALAR ? indicesAccessor.type : 1;
         const int indicesByteStride = indicesAccessor.ByteStride(indicesBufferView);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[3]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[4]);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBufferView.byteLength,
                      &indicesBuffer.data.at(0) + indicesBufferView.byteOffset, GL_STATIC_DRAW);
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glDeleteBuffers(4, buffers);
+        //glDeleteBuffers(5, buffers);
 
         auto result = std::make_unique<Node>();
         result->SetMesh(std::make_unique<Contour::Mesh>(VertexDataBase(VAO, indicesAccessor.count)));
