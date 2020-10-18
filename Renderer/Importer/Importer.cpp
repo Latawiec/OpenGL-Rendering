@@ -78,7 +78,7 @@ namespace /*anonymous*/ {
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        //glDeleteBuffers(4, buffers);
+        glDeleteBuffers(4, buffers);
 
         auto result = std::make_unique<Node>();
         result->SetMesh(std::make_unique<Contour::Mesh>(VertexDataBase(VAO, indicesAccessor.count)));

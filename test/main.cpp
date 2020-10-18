@@ -98,7 +98,7 @@ int main() {
     DrawingManager drawingManager;
     auto rootNode = std::make_unique<Node>();
     auto cubeNode = std::make_unique<Node>();
-    auto imported = Importer::importGltf(ASSETS_DIR "/testCube_properties.gltf");
+    auto imported = Importer::importGltf(ASSETS_DIR "/three_elements.gltf");
     imported->SetTransform(glm::translate(imported->GetTransform(), glm::vec3(2, 0, 0)));
     rootNode->AddChildNode(std::move(imported));
     // cubeNode->SetMesh(std::move(cube));
