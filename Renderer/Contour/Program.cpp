@@ -28,28 +28,28 @@ Program::Program()
 
 void Program::Draw(const glm::mat4& viewTransform,
           const glm::mat4& projectionTransform,
-          const glm::mat4& modelTransform,
-          const Model& model) const
+          const glm::mat4& meshTransform,
+          const Mesh& mesh) const
 {
     _program.use();
     prepareCamera(viewTransform, projectionTransform);
     prepareTextures();
-    prepareUniforms(modelTransform);
-    ScopedBinding bind(model.getVertexData());
-    glDrawElements(GL_TRIANGLES, model.getVertexData().vertexCount(), GL_UNSIGNED_INT, 0);
+    prepareUniforms(meshTransform);
+    ScopedBinding bind(mesh.getVertexData());
+    glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
 }
 
 void Program::Draw(const glm::mat4& viewTransform,
           const glm::mat4& projectionTransform,
-          const std::vector<std::pair<glm::mat4, const Model&>>& transformedModels) const
+          const std::vector<std::pair<glm::mat4, const Mesh&>>& transformedMeshes) const
 {
     _program.use();
     prepareCamera(viewTransform, projectionTransform);
-    for (const auto& [modelTransform, model] : transformedModels) {
+    for (const auto& [meshTransform, mesh] : transformedMeshes) {
         prepareTextures();
-        prepareUniforms(modelTransform);
-        ScopedBinding bind(model.getVertexData());
-        glDrawElements(GL_TRIANGLES, model.getVertexData().vertexCount(), GL_UNSIGNED_INT, 0);
+        prepareUniforms(meshTransform);
+        ScopedBinding bind(mesh.getVertexData());
+        glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
     }
 }
 

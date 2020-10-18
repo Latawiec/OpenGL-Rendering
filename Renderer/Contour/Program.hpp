@@ -2,7 +2,7 @@
 
 #include <string_view>
 
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "ShaderProgram.hpp"
 
 namespace Render {
@@ -32,11 +32,11 @@ public:
     void Draw(const glm::mat4& viewTransform,
               const glm::mat4& projectionTransform,
               const glm::mat4& modelTransform,
-              const Model& model) const;
+              const Mesh& model) const;
 
     void Draw(const glm::mat4& viewTransform,
               const glm::mat4& projectionTransform,
-              const std::vector<std::pair<glm::mat4, const Model&>>& transformedModels) const;
+              const std::vector<std::pair<glm::mat4, const Mesh&>>& transformedModels) const;
 
     Program(Program&) = delete;
     Program(Program&&) = delete;

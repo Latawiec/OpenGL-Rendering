@@ -32,21 +32,41 @@ using Vec2 = VertexAttribute<2, float>;
 using Float = VertexAttribute<1, float>;
 // More?
 
-template<class ... VertexAttributeDescription>
 class VertexDataBase {   
 protected:
-    unsigned int _VAO{}, _VBO{}, _EBO{};
-    size_t _size {}, _elementsCount{};
+    unsigned int _VAO = -1;
+    size_t _elementsCount{};
+
+    VertexDataBase& operator=(const VertexDataBase&) = delete;
+    VertexDataBase(const VertexDataBase&) = delete;
 public:
-    using TupleOfDescriptions = std::tuple<VertexAttributeDescription...>;
     constexpr VertexDataBase() {}
 
-    VertexDataBase(const std::vector<unsigned int>& indices, const std::size_t size) :
-    _size(size), _elementsCount(indices.size()) {
-        glGenBuffers(1, &_EBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    VertexDataBase(const std::vector<unsigned int>& indices) :
+    _elementsCount(indices.size()) {}
+
+    VertexDataBase(const GLuint VAO, const size_t elementsCount) :
+    _VAO(VAO),
+    _elementsCount(elementsCount) {}
+
+    VertexDataBase(VertexDataBase&& other) {
+        this->_VAO = other._VAO;
+        this->_elementsCount = other._elementsCount;
+        other._VAO = -1;
+        other._elementsCount = 0;
+    }
+
+    VertexDataBase& operator=(VertexDataBase&& other) {
+        this->_VAO = other._VAO;
+        this->_elementsCount = other._elementsCount;
+
+        other._VAO = -1;
+        other._elementsCount = 0;
+        return *this;
+    }
+
+    ~VertexDataBase() {
+        glDeleteVertexArrays(1, &_VAO);
     }
 
     constexpr int vertexCount() const {
@@ -60,7 +80,7 @@ class ScopedBinding {
     unsigned int _id;
 public:
     template<class ... Ts>
-    ScopedBinding(const VertexDataBase<Ts...>& vertexData) : _id(vertexData._VAO) { glBindVertexArray(_id); }
+    ScopedBinding(const VertexDataBase& vertexData) : _id(vertexData._VAO) { glBindVertexArray(_id); }
     ~ScopedBinding() { glBindVertexArray(0); }
 };
 
@@ -70,25 +90,37 @@ class VertexData {};
 
 template <class ... VertexAttributeDescription>
 class VertexData<Layout::Interleaving, VertexAttributeDescription...>
-: public VertexDataBase<VertexAttributeDescription...> {
+: public VertexDataBase {
+    using TupleOfDescriptions = std::tuple<VertexAttributeDescription...>;
+    size_t _size;
 public:    
     constexpr VertexData() = default;
 
     constexpr VertexData(const std::vector<unsigned int>& indices, const size_t size, const std::byte* data)
-    : VertexDataBase(indices, size)
+    : VertexDataBase(indices), _size(size)
     {
         glGenVertexArrays(1, &_VAO);
-        glGenBuffers(1, &_VBO);
         glBindVertexArray(_VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, _VBO);
+
+        GLuint EBO, VBO;
+        glGenBuffers(1, &EBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
+
+        glGenBuffers(1, &VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
         
         layoutInterleavingData(data);
         layoutInterleavingAttributes<VertexAttributeDescription...>();
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        glDeleteBuffers(1, &EBO);
+        glDeleteBuffers(1, &VBO);
     }
 
 private:
@@ -115,26 +147,36 @@ private:
 
 template <class ... VertexAttributeDescription>
 class VertexData<Layout::Sequential, VertexAttributeDescription...>
-: public VertexDataBase<VertexAttributeDescription...> {
+: public VertexDataBase {
+    using TupleOfDescriptions = std::tuple<VertexAttributeDescription...>;
+    size_t _size;
 public:    
     constexpr VertexData() = default;
 
     constexpr VertexData(const std::vector<unsigned int>& indices, const size_t size, const typename VertexAttributeDescription::value_type* ... data)
-    : VertexDataBase(indices, size)
+    : VertexDataBase(indices), _size(size)
     {
         glGenVertexArrays(1, &_VAO);
-        glGenBuffers(1, &_VBO);
         glBindVertexArray(_VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, _VBO);
+
+        GLuint EBO, VBO;
+        glGenBuffers(1, &EBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
+
+        glGenBuffers(1, &VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         allocateBuffer();
         layoutSequentialData(data...);
         layoutSequentialAttributes<VertexAttributeDescription...>();
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
-
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        glDeleteBuffers(1, &EBO);
+        glDeleteBuffers(1, &VBO);
     }
 
     template<int Index>

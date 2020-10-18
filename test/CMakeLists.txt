@@ -12,6 +12,10 @@ add_dependencies(${PROJECT_NAME}
     Assets
     Utils
     Renderer
+    Renderer_Contour
+    Renderer_Camera
+    Renderer_Importer
+    Renderer_DebugUtils_TextureProgram
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -19,5 +23,9 @@ PRIVATE
     Assets
     Utils
     Renderer
+    Renderer_Contour
+    Renderer_Camera
+    Renderer_Importer
+    Renderer_DebugUtils_TextureProgram
     glfw
 )

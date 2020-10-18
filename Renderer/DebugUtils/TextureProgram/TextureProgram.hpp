@@ -11,7 +11,7 @@ namespace DebugUtils {
 class TextureProgram {
     constexpr static auto processedTextureName = std::string_view("imageTexture");
 
-    VertexDataBase<Vec3> _vertexData;
+    VertexDataBase _vertexData;
     ShaderProgram _shaderProgram;
 
 public:

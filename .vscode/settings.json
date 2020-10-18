@@ -47,6 +47,14 @@
         "numeric": "cpp",
         "string": "cpp",
         "xtree": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "clocale": "cpp",
+        "forward_list": "cpp",
+        "functional": "cpp",
+        "list": "cpp",
+        "sstream": "cpp",
+        "unordered_map": "cpp",
+        "valarray": "cpp",
+        "xhash": "cpp"
     }
 }

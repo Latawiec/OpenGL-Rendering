@@ -14,12 +14,12 @@ target_link_libraries(${PROJECT_NAME}
 PRIVATE
     Utils
     glad::glad
-    assimp::assimp
     glm
     Renderer_Node
-    Renderer_Texture
-    Renderer_VertexData
+PUBLIC
     Renderer_ShaderProgram
+    Renderer_VertexData
+    Renderer_Texture
 )
 
 add_dependencies(${PROJECT_NAME}

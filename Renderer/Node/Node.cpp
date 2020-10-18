@@ -12,12 +12,12 @@ const glm::mat4& Node::GetTransform() const {
     return _transform;
 }
 
-void Node::SetModel(const IModel* model) {
-    _model = model;
+void Node::SetMesh(std::unique_ptr<IMesh> mesh) {
+    _mesh = std::move(mesh);
 }
 
-const IModel* Node::GetModel() const {
-    return _model;
+const IMesh* Node::GetMesh() const {
+    return _mesh.get();
 }
 
 const std::vector<std::unique_ptr<Node>>& Node::GetChildNodes() const {
