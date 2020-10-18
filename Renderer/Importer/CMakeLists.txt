@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.9)
 project(Renderer_Importer)
 
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME}
     Importer.cpp
@@ -11,6 +12,7 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
     nlohmann_json::nlohmann_json
+    glm
     Renderer_Node
     Renderer_VertexData
     Renderer_Contour

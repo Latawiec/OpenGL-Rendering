@@ -98,7 +98,7 @@ int main() {
     DrawingManager drawingManager;
     auto rootNode = std::make_unique<Node>();
     auto cubeNode = std::make_unique<Node>();
-    auto imported = Importer::importGltf(ASSETS_DIR "/three_elements.gltf");
+    auto imported = Importer::importGltf(ASSETS_DIR "/hierarchy_test.gltf");
     imported->SetTransform(glm::translate(imported->GetTransform(), glm::vec3(2, 0, 0)));
     rootNode->AddChildNode(std::move(imported));
     // cubeNode->SetMesh(std::move(cube));
@@ -117,7 +117,7 @@ int main() {
         }
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        textureDrawProgram.draw(deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
+        textureDrawProgram.draw(deferredBuffers.getTexture(GraphicBuffer::Output::Position));
         glfwSwapBuffers(window);
         glfwPollEvents();
 
