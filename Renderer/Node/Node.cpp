@@ -4,20 +4,16 @@ namespace Render {
 
 Node::Node(glm::mat4 transform) : _transform(transform) {}
 
+void Node::Visit(INodeVisitor& visitor, const glm::mat4& transform) const {
+    visitor.Accept(*this, transform);
+};
+
 void Node::SetTransform(glm::mat4 transform) {
     _transform = transform;
 }
 
 const glm::mat4& Node::GetTransform() const {
     return _transform;
-}
-
-void Node::SetMesh(std::unique_ptr<IMesh> mesh) {
-    _mesh = std::move(mesh);
-}
-
-const IMesh* Node::GetMesh() const {
-    return _mesh.get();
 }
 
 const std::vector<std::unique_ptr<Node>>& Node::GetChildNodes() const {

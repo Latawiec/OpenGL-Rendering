@@ -115,7 +115,8 @@ int main() {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             //program.Draw(camera.getViewTransform(), camera.getProjectionTransform(), glm::mat4{1}, cube);
             drawingManager.QueueNodes(*rootNode);
-            drawingManager.Draw(camera.getViewTransform(), camera.getProjectionTransform());
+            //drawingManager.Draw(camera.getViewTransform(), camera.getProjectionTransform());
+            drawingManager.Draw();
         }
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

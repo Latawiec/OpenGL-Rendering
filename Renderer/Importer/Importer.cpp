@@ -9,6 +9,8 @@
 #include <glad/glad.h>
 
 #include "Mesh.hpp"
+#include "MeshNode.hpp"
+#include "CameraNode.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
@@ -86,7 +88,7 @@ namespace /*anonymous*/ {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         //glDeleteBuffers(5, buffers);
 
-        auto result = std::make_unique<Node>();
+        auto result = std::make_unique<MeshNode>();
         result->SetMesh(std::make_unique<Contour::Mesh>(VertexDataBase(VAO, indicesAccessor.count)));
         return result;
     }
@@ -109,9 +111,42 @@ std::unique_ptr<Node> processMesh(const tinygltf::Model& model, const tinygltf::
     return nullptr;
 }
 
-std::unique_ptr<Node> processModelNodes(const tinygltf::Model& model, const tinygltf::Node& node) {
-    
-    std::unique_ptr<Node> root{processMesh(model, model.meshes[node.mesh])};
+std::unique_ptr<Node> processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {
+    return std::make_unique<CameraNode>();
+}
+
+std::unique_ptr<Node> processElement(const tinygltf::Model& model, const tinygltf::Node& node) {
+    if (node.mesh != -1) {
+        auto result = processMesh(model, model.meshes[node.mesh]);
+        {
+            const auto scaleVec = node.scale.size() == 0 ? glm::vec3(1.0) : glm::vec3(node.scale[0], node.scale[1], node.scale[2]);
+            const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
+            const auto translationVec = node.translation.size() == 0 ? glm::vec3(0.0) : glm::vec3(node.translation[0], node.translation[1], node.translation[2]);
+            
+            const auto scaleMatrix = glm::scale(glm::mat4(1.0), scaleVec);
+            const auto rotateMatrix = glm::mat4_cast(rotationQuat);
+            const auto translateMatrix = glm::translate(glm::mat4(1.0), translationVec);
+            result->SetTransform(translateMatrix * rotateMatrix * scaleMatrix);
+        }
+        return result;
+    } 
+
+    if (node.camera != -1) {
+        auto result = processCamera(model, model.cameras[node.camera]);
+        {
+            const auto scaleVec = node.scale.size() == 0 ? glm::vec3(1.0) : glm::vec3(node.scale[0], node.scale[1], node.scale[2]);
+            const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
+            const auto translationVec = node.translation.size() == 0 ? glm::vec3(0.0) : glm::vec3(node.translation[0], node.translation[1], node.translation[2]);
+            
+            const auto scaleMatrix = glm::scale(glm::mat4(1.0), scaleVec);
+            const auto rotateMatrix = glm::mat4_cast(rotationQuat);
+            const auto translateMatrix = glm::translate(glm::mat4(1.0), translationVec);
+            result->SetTransform(translateMatrix * glm::inverse(rotateMatrix) * scaleMatrix);
+        }
+        return result;
+    }
+
+    auto result = std::make_unique<Node>();
     {
         const auto scaleVec = node.scale.size() == 0 ? glm::vec3(1.0) : glm::vec3(node.scale[0], node.scale[1], node.scale[2]);
         const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
@@ -120,8 +155,14 @@ std::unique_ptr<Node> processModelNodes(const tinygltf::Model& model, const tiny
         const auto scaleMatrix = glm::scale(glm::mat4(1.0), scaleVec);
         const auto rotateMatrix = glm::mat4_cast(rotationQuat);
         const auto translateMatrix = glm::translate(glm::mat4(1.0), translationVec);
-        root->SetTransform(translateMatrix * rotateMatrix * scaleMatrix);
+        result->SetTransform(translateMatrix * rotateMatrix * scaleMatrix);
     }
+    return result;
+}
+
+std::unique_ptr<Node> processModelNodes(const tinygltf::Model& model, const tinygltf::Node& node) {
+
+    std::unique_ptr<Node> root{processElement(model, node)};
     
     for (size_t i = 0; i < node.children.size(); ++i) {
         assert((node.children[i] >= 0) && (node.children[i] < model.nodes.size()));

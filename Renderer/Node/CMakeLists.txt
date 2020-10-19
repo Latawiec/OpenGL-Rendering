@@ -6,6 +6,8 @@ find_package(glm REQUIRED)
 
 add_library(${PROJECT_NAME}
     Node.cpp
+    CameraNode.cpp
+    MeshNode.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
