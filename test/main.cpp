@@ -84,7 +84,9 @@ int main() {
 
     glViewport(0, 0, windowWidth, windowHeight);
     camera.updateAspectRatio(static_cast<float>(windowWidth)/static_cast<float>(windowHeight));
-    camera.updatePosition(-5.f, 0.f, 0.f);
+
+    camera.updateRotation(0.f, -110.0f);
+    camera.updatePosition(-10.f, 4.f, 1.f);
 
     VertexDataBase cubeVertexData = VertexData<Layout::Interleaving, Vec3, Vec3, Vec2>(indices, 36, reinterpret_cast<std::byte*>(vertices.data()));
 
@@ -98,15 +100,15 @@ int main() {
     DrawingManager drawingManager;
     auto rootNode = std::make_unique<Node>();
     auto cubeNode = std::make_unique<Node>();
-    auto imported = Importer::importGltf(ASSETS_DIR "/testCube_colours.gltf");
-    imported->SetTransform(glm::translate(imported->GetTransform(), glm::vec3(2, 0, 0)));
+    auto imported = Importer::importGltf(ASSETS_DIR "/scene_test.gltf");
+    //imported->SetTransform(glm::translate(imported->GetTransform(), glm::vec3(2, 0, 0)));
     rootNode->AddChildNode(std::move(imported));
     // cubeNode->SetMesh(std::move(cube));
     // cubeNode->SetTransform(glm::translate(cubeNode->GetTransform(), glm::vec3(2, 0, 0)));
     // rootNode->AddChildNode(std::move(cubeNode));
 
     while(!glfwWindowShouldClose(window)) {
-        rootNode->SetTransform(glm::rotate(rootNode->GetTransform(), 0.01f, glm::vec3(0, 1, 0)));
+        //rootNode->SetTransform(glm::rotate(rootNode->GetTransform(), 0.01f, glm::vec3(0, 1, 0)));
         {
             FramebufferBase::ScopedBinding bind(deferredBuffers);
             glEnable(GL_DEPTH_TEST);
@@ -117,7 +119,7 @@ int main() {
         }
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        textureDrawProgram.draw(deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
+        textureDrawProgram.draw(deferredBuffers.getTexture(GraphicBuffer::Output::Normals));
         glfwSwapBuffers(window);
         glfwPollEvents();
 

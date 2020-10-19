@@ -100,21 +100,21 @@ std::unique_ptr<Node> processMesh(const tinygltf::Model& model, const tinygltf::
     const auto& material = model.materials[mesh.primitives[0].material];
     const auto& materialCustomProperties = material.extras;
 
-    assert(materialCustomProperties.Has(ProgramType) && materialCustomProperties.Get(ProgramType).IsString());
-    const auto& materialType = materialCustomProperties.Get(ProgramType).Get<std::string>();
-    
-    if (materialType == ContourProgramType) {
-        return processContourMesh(model, mesh);
+    if (materialCustomProperties.Has(ProgramType) && materialCustomProperties.Get(ProgramType).IsString()) {
+        const auto& materialType = materialCustomProperties.Get(ProgramType).Get<std::string>();
+        if (materialType == ContourProgramType) {
+            return processContourMesh(model, mesh);
+        }
     }
-    assert(false);
     return nullptr;
 }
 
 std::unique_ptr<Node> processModelNodes(const tinygltf::Model& model, const tinygltf::Node& node) {
+    
     std::unique_ptr<Node> root{processMesh(model, model.meshes[node.mesh])};
     {
         const auto scaleVec = node.scale.size() == 0 ? glm::vec3(1.0) : glm::vec3(node.scale[0], node.scale[1], node.scale[2]);
-        const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]);
+        const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
         const auto translationVec = node.translation.size() == 0 ? glm::vec3(0.0) : glm::vec3(node.translation[0], node.translation[1], node.translation[2]);
         
         const auto scaleMatrix = glm::scale(glm::mat4(1.0), scaleVec);

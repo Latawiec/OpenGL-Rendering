@@ -36,7 +36,7 @@ class DrawingManager {
 
 public:
     void QueueNodes(const Node& node, const glm::mat4 transform = glm::mat4{1}) {
-        const glm::mat4 totalTransform = transform * node.GetTransform();
+        const glm::mat4 totalTransform = node.GetTransform() * transform;
         const IMesh* mesh = node.GetMesh();
         if (mesh != nullptr) {
             queueNode(totalTransform, *mesh);

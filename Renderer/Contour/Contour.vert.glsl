@@ -29,7 +29,7 @@ void main()
 
     OUT.Position = vec3(model * vec4(aPos, 1.0));
     OUT.Normal = mat3(transpose(inverse(model))) * aNormal;
-    OUT.ContourInfo = aEdgeColours;
-    //OUT.ContourInfo = vec4(0, mesh_id_component, 1.0);
+    //OUT.ContourInfo = aEdgeColours;
+    OUT.ContourInfo = vec4(0, mesh_id_component, 1.0);
     OUT.TexCoords = aTexCoords;
 }
