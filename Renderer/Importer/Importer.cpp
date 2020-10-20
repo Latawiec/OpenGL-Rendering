@@ -117,36 +117,19 @@ std::unique_ptr<Node> processCamera(const tinygltf::Model& model, const tinygltf
 
 std::unique_ptr<Node> processElement(const tinygltf::Model& model, const tinygltf::Node& node) {
     if (node.mesh != -1) {
-        auto result = processMesh(model, model.meshes[node.mesh]);
-        {
-            const auto scaleVec = node.scale.size() == 0 ? glm::vec3(1.0) : glm::vec3(node.scale[0], node.scale[1], node.scale[2]);
-            const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
-            const auto translationVec = node.translation.size() == 0 ? glm::vec3(0.0) : glm::vec3(node.translation[0], node.translation[1], node.translation[2]);
-            
-            const auto scaleMatrix = glm::scale(glm::mat4(1.0), scaleVec);
-            const auto rotateMatrix = glm::mat4_cast(rotationQuat);
-            const auto translateMatrix = glm::translate(glm::mat4(1.0), translationVec);
-            result->SetTransform(translateMatrix * rotateMatrix * scaleMatrix);
-        }
-        return result;
+        return processMesh(model, model.meshes[node.mesh]);
     } 
 
     if (node.camera != -1) {
-        auto result = processCamera(model, model.cameras[node.camera]);
-        {
-            const auto scaleVec = node.scale.size() == 0 ? glm::vec3(1.0) : glm::vec3(node.scale[0], node.scale[1], node.scale[2]);
-            const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
-            const auto translationVec = node.translation.size() == 0 ? glm::vec3(0.0) : glm::vec3(node.translation[0], node.translation[1], node.translation[2]);
-            
-            const auto scaleMatrix = glm::scale(glm::mat4(1.0), scaleVec);
-            const auto rotateMatrix = glm::mat4_cast(rotationQuat);
-            const auto translateMatrix = glm::translate(glm::mat4(1.0), translationVec);
-            result->SetTransform(translateMatrix * glm::inverse(rotateMatrix) * scaleMatrix);
-        }
-        return result;
+        return processCamera(model, model.cameras[node.camera]);
     }
 
-    auto result = std::make_unique<Node>();
+    return std::make_unique<Node>();
+}
+
+std::unique_ptr<Node> processModelNodes(const tinygltf::Model& model, const tinygltf::Node& node) {
+
+    std::unique_ptr<Node> root = processElement(model, node);
     {
         const auto scaleVec = node.scale.size() == 0 ? glm::vec3(1.0) : glm::vec3(node.scale[0], node.scale[1], node.scale[2]);
         const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
@@ -155,14 +138,8 @@ std::unique_ptr<Node> processElement(const tinygltf::Model& model, const tinyglt
         const auto scaleMatrix = glm::scale(glm::mat4(1.0), scaleVec);
         const auto rotateMatrix = glm::mat4_cast(rotationQuat);
         const auto translateMatrix = glm::translate(glm::mat4(1.0), translationVec);
-        result->SetTransform(translateMatrix * rotateMatrix * scaleMatrix);
+        root->SetTransform(translateMatrix * rotateMatrix * scaleMatrix);
     }
-    return result;
-}
-
-std::unique_ptr<Node> processModelNodes(const tinygltf::Model& model, const tinygltf::Node& node) {
-
-    std::unique_ptr<Node> root{processElement(model, node)};
     
     for (size_t i = 0; i < node.children.size(); ++i) {
         assert((node.children[i] >= 0) && (node.children[i] < model.nodes.size()));
@@ -170,7 +147,6 @@ std::unique_ptr<Node> processModelNodes(const tinygltf::Model& model, const tiny
         auto processedNode = processModelNodes(model, childNode);
         root->AddChildNode(std::move(processedNode));
     }
-
     return root;
 }
 

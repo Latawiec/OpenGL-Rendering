@@ -46,7 +46,7 @@ class DrawingManager : private INodeVisitor {
     }
 
     void Accept(const CameraNode& node, const glm::mat4& transform) override {
-        camera.view = node.GetTransform() * glm::inverse(transform);
+        camera.view = glm::inverse(node.GetTransform()) * glm::inverse(transform);
         glm::vec3 scale;
         glm::quat rotation;
         glm::vec3 translation;
