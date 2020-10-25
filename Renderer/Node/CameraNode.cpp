@@ -31,7 +31,7 @@ glm::mat4 CameraNode::GetProjectionTransform() const {
     // Don't care about ortographic for now.
     // Also, I should be able to only generate this matrix if FoV, Aspect Ratio or type changes,
     // instead of every single time this matrix is queried...
-    return glm::perspective(glm::radians(_fov), _aspectRatio, 0.1f, 100.f);
+    return glm::perspective(_fov, _aspectRatio, 0.1f, 100.f);
 }
 
 

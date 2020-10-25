@@ -112,7 +112,7 @@ std::unique_ptr<Node> processMesh(const tinygltf::Model& model, const tinygltf::
 }
 
 std::unique_ptr<Node> processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {
-    return std::make_unique<CameraNode>();
+    return std::make_unique<CameraNode>(camera.perspective.yfov,  800.f/600.f);
 }
 
 std::unique_ptr<Node> processElement(const tinygltf::Model& model, const tinygltf::Node& node) {
