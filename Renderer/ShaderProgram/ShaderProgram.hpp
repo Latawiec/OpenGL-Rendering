@@ -155,4 +155,7 @@ void ShaderProgram::set<glm::mat4>(const std::string_view name, const glm::mat4 
 template<>
 void ShaderProgram::set<glm::vec3>(const std::string_view name, const glm::vec3 value) const;
 
+template<>
+void ShaderProgram::set<glm::vec2>(const std::string_view name, const glm::vec2 value) const;
+
 } // namespace Render

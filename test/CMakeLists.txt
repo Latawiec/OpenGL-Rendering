@@ -15,6 +15,7 @@ add_dependencies(${PROJECT_NAME}
     Renderer_Contour
     Renderer_Camera
     Renderer_Importer
+    Renderer_EdgeDetector
     Renderer_DebugUtils_TextureProgram
 )
 
@@ -26,6 +27,7 @@ PRIVATE
     Renderer_Contour
     Renderer_Camera
     Renderer_Importer
+    Renderer_EdgeDetector
     Renderer_DebugUtils_TextureProgram
     glfw
 )

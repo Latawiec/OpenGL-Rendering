@@ -32,4 +32,9 @@ void ShaderProgram::set<glm::vec3>(const std::string_view name, const glm::vec3 
 	glUniform3fv(glGetUniformLocation(_id, name.data()), 1, glm::value_ptr(value));
 }
 
+template<>
+void ShaderProgram::set<glm::vec2>(const std::string_view name, const glm::vec2 value) const {
+	glUniform2fv(glGetUniformLocation(_id, name.data()), 1, glm::value_ptr(value));
+}
+
 } // namespace Render

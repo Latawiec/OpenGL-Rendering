@@ -6,6 +6,7 @@
 #include "BasicCamera.hpp"
 #include "Mesh.hpp"
 #include "Program.hpp"
+#include "EdgeDetector/Program.hpp"
 #include "GraphicBuffer.hpp"
 #include "TextureProgram.hpp"
 #include "DrawingManager.hpp"
@@ -92,6 +93,8 @@ int main() {
 
     GraphicBuffer deferredBuffers(windowWidth, windowHeight);
     DebugUtils::TextureProgram textureDrawProgram;
+    EdgeDetector::Program edgeProgram;
+    edgeProgram.SetImageSize(800, 600);
     auto  cube = std::make_unique<Contour::Mesh>(std::move(cubeVertexData));
     Contour::Program program;
 
@@ -120,7 +123,8 @@ int main() {
         }
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        textureDrawProgram.draw(deferredBuffers.getTexture(GraphicBuffer::Output::Normals));
+        edgeProgram.Draw(deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
+        //textureDrawProgram.draw(deferredBuffers.getTexture(GraphicBuffer::Output::Normals));
         glfwSwapBuffers(window);
         glfwPollEvents();
 
