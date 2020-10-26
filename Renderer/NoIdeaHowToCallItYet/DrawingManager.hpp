@@ -32,6 +32,8 @@ class DrawingManager : private INodeVisitor {
     DrawingExecutor<Contour::Program, Contour::Mesh> _contourProgramExecutor;
     // more programs soon...
 
+
+
     struct Camera {
         glm::mat4 projection;
         glm::mat4 view;
@@ -47,12 +49,6 @@ class DrawingManager : private INodeVisitor {
 
     void Accept(const CameraNode& node, const glm::mat4& transform) override {
         camera.view = glm::inverse(node.GetTransform()) * glm::inverse(transform);
-        glm::vec3 scale;
-        glm::quat rotation;
-        glm::vec3 translation;
-        glm::vec3 skew;
-        glm::vec4 perspective;
-        glm::decompose(camera.view, scale, rotation, translation, skew, perspective);
         camera.projection = node.GetProjectionTransform();
     };
 

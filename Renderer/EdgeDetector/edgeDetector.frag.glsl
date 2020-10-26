@@ -3,7 +3,7 @@ in vec2 FragPos;
 
 out vec4 EdgesTexture;
 
-const vec4 cChannelTresholds = vec4(0.4, 0.0, 0.0, 1.0);
+const vec4 cChannelTresholds = vec4(0.5, 0.5, 0.5, 0.0);
 
 uniform sampler2D edgeMap_tex;
 uniform vec2 imageSize;
