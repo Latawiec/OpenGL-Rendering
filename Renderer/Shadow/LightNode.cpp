@@ -5,7 +5,7 @@
 namespace Render {
 
 LightNode::LightNode() : Node() {
-    float near_plane = 1.0f, far_plane = 7.5f;
+    float near_plane = 1.0f, far_plane = 10.5f;
     _lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
 }
 

@@ -59,7 +59,7 @@ int main() {
     auto shadowingLight = std::make_unique<LightNode>();
     auto& stolenLight = *shadowingLight;
     shadowingLight->SetTransform(glm::translate(glm::mat4(1), glm::vec3(5, 2.5, 1)));
-    auto imported = Importer::importGltf(ASSETS_DIR "/scene_test.gltf");
+    auto imported = Importer::importGltf(ASSETS_DIR "/scene_test_depth.gltf");
     imported->AddChildNode(std::move(shadowingLight));
 
     while(!glfwWindowShouldClose(window)) {
