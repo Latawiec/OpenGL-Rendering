@@ -10,11 +10,13 @@ out VS_OUTPUT {
     vec3 Normal;
     vec4 ContourInfo;
     vec2 TexCoords;
+    vec4 FragPosLightSpace;
 } OUT;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
+uniform mat4 lightSpaceMatrix;
 
 uniform int mesh_id;
 
@@ -32,4 +34,5 @@ void main()
     //OUT.ContourInfo = aEdgeColours;
     OUT.ContourInfo = vec4(aEdgeColours.xy, mesh_id_component);
     OUT.TexCoords = aTexCoords;
+    OUT.FragPosLightSpace = lightSpaceMatrix * vec4(OUT.Position, 1.0);
 }

@@ -3,7 +3,7 @@
 #include <string_view>
 
 #include "Texture.hpp"
-#include "VertexData.hpp"
+#include "Common/VertexData.hpp"
 #include "ShaderProgram.hpp"
 
 namespace Render {

@@ -13,6 +13,11 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
     glm
+    Renderer_Common
+)
+
+add_dependencies(${PROJECT_NAME}
+    Renderer_Common
 )
 
 target_include_directories(${PROJECT_NAME}

@@ -3,7 +3,7 @@
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
-#include "IMesh.hpp"
+#include "Common/Mesh.hpp"
 #include "INodeVisitor.hpp"
 
 namespace Render {
@@ -21,7 +21,7 @@ public:
     virtual void Visit(INodeVisitor& visitor, const glm::mat4& transform) const;
 
     void SetTransform(glm::mat4 transform);
-    const glm::mat4& GetTransform() const;
+    glm::mat4 GetTransform() const;
 
     const std::vector<std::unique_ptr<Node>>& GetChildNodes() const;
     std::vector<std::unique_ptr<Node>>& GetChildNodes();

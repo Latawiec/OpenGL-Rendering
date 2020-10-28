@@ -1,4 +1,4 @@
-#include "Program.hpp"
+#include "Contour/Program.hpp"
 #include "read_file.hpp"
 
 #ifndef CONTOUR_PROGRAM_DIR
@@ -23,13 +23,12 @@ Program::Program()
     Shader<ShaderType::Vertex>(Utils::readFile(CONTOUR_PROGRAM_DIR "/Contour.vert.glsl").c_str()),
     Shader<ShaderType::Fragment>(Utils::readFile(CONTOUR_PROGRAM_DIR "/Contour.frag.glsl").c_str())
 )
-{
-}
+{}
 
 void Program::Draw(const glm::mat4& viewTransform,
           const glm::mat4& projectionTransform,
           const glm::mat4& meshTransform,
-          const Mesh& mesh) const
+          const Common::Mesh& mesh) const
 {
     _program.use();
     prepareCamera(viewTransform, projectionTransform);
@@ -41,7 +40,7 @@ void Program::Draw(const glm::mat4& viewTransform,
 
 void Program::Draw(const glm::mat4& viewTransform,
           const glm::mat4& projectionTransform,
-          const std::vector<std::pair<glm::mat4, const Mesh&>>& transformedMeshes) const
+          const std::vector<std::pair<glm::mat4, const Common::Mesh&>>& transformedMeshes) const
 {
     _program.use();
     prepareCamera(viewTransform, projectionTransform);
@@ -50,7 +49,18 @@ void Program::Draw(const glm::mat4& viewTransform,
         prepareUniforms(meshTransform);
         ScopedBinding bind(mesh.getVertexData());
         glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
+        while (auto error = glGetError()) {
+           std::cerr << "Error: " << error << '\n';
+	    }
     }
+}
+
+void Program::SetLightSpaceMatrix(const glm::mat4& lightSpaceMatrix) {
+    _lightSpaceMatrix = lightSpaceMatrix;
+}
+
+void Program::SetShadowMapTexture(const GLuint textureId) {
+    _shadowMapTexture = textureId;
 }
 
 void Program::prepareCamera(const glm::mat4& view, const glm::mat4& projection) const
@@ -61,13 +71,15 @@ void Program::prepareCamera(const glm::mat4& view, const glm::mat4& projection) 
 
 void Program::prepareTextures() const
 {
-    // TODO
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, _shadowMapTexture);
 }
 
 void Program::prepareUniforms(const glm::mat4& transform) const
 {
     _program.set<unsigned int>(u_mesh_id, generateId());
     _program.set(u_model, transform);
+    _program.set(u_light_space_matrix, _lightSpaceMatrix);
 }
 
 } // namespace Contour

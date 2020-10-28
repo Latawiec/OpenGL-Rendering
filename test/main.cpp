@@ -4,12 +4,14 @@
 #include <GLFW/glfw3.h>
 
 #include "BasicCamera.hpp"
-#include "Mesh.hpp"
-#include "Program.hpp"
+#include "Common/Mesh.hpp"
+#include "Contour/Program.hpp"
+#include "Shadow/Program.hpp"
 #include "EdgeDetector/Program.hpp"
 #include "GraphicBuffer.hpp"
 #include "TextureProgram.hpp"
 #include "DrawingManager.hpp"
+#include "DepthBuffer.hpp"
 #include "Texture.hpp"
 #include "Importer.hpp"
 
@@ -46,7 +48,6 @@ int main() {
     camera.updateRotation(0.f, -110.0f);
     camera.updatePosition(-10.f, 4.f, 1.f);
 
-    GraphicBuffer deferredBuffers(windowWidth/2, windowHeight/2);
     DebugUtils::TextureProgram textureDrawProgram;
     EdgeDetector::Program edgeProgram;
     edgeProgram.SetImageSize(windowWidth/2, windowHeight/2);
@@ -54,25 +55,18 @@ int main() {
 
      glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
 
-    DrawingManager drawingManager;
+    DrawingManager drawingManager(windowWidth, windowHeight);
+    auto shadowingLight = std::make_unique<LightNode>();
+    auto& stolenLight = *shadowingLight;
+    shadowingLight->SetTransform(glm::translate(glm::mat4(1), glm::vec3(5, 2.5, 1)));
     auto imported = Importer::importGltf(ASSETS_DIR "/scene_test.gltf");
+    imported->AddChildNode(std::move(shadowingLight));
 
     while(!glfwWindowShouldClose(window)) {
-        //rootNode->SetTransform(glm::rotate(rootNode->GetTransform(), 0.01f, glm::vec3(0, 1, 0)));
-        {
-            FramebufferBase::ScopedBinding bind(deferredBuffers);
-            glEnable(GL_DEPTH_TEST);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            //program.Draw(camera.getViewTransform(), camera.getProjectionTransform(), glm::mat4{1}, cube);
-            drawingManager.QueueNodes(*imported);
-            //drawingManager.Draw(camera.getViewTransform(), camera.getProjectionTransform());
-            drawingManager.Draw();
-        }
-        glDisable(GL_DEPTH_TEST);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, windowWidth, windowHeight);
-        edgeProgram.Draw(deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
-        //textureDrawProgram.draw(deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
+        stolenLight.SetTransform(glm::translate(glm::mat4(1), glm::vec3(5 * glm::sin(glfwGetTime()), 2.5, 1)));
+        drawingManager.QueueNodes(*imported);
+        drawingManager.Draw();
+
         glfwSwapBuffers(window);
         glfwPollEvents();
 

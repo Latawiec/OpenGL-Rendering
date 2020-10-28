@@ -18,12 +18,13 @@ PRIVATE
     Renderer_Texture
 PUBLIC
     Renderer_ShaderProgram
-    Renderer_VertexData
+    Renderer_Common
     Renderer_Texture
 )
 
 add_dependencies(${PROJECT_NAME}
     Utils
+    Renderer_Common
     Renderer_Texture
     Renderer_ShaderProgram
 )

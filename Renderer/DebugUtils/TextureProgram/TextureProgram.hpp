@@ -2,7 +2,7 @@
 
 #include "glm/glm.hpp"
 
-#include "VertexData.hpp"
+#include "Common/VertexData.hpp"
 #include "ShaderProgram.hpp"
 
 namespace Render {

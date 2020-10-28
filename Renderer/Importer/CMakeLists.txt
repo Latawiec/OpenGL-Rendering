@@ -14,13 +14,13 @@ PRIVATE
     nlohmann_json::nlohmann_json
     glm
     Renderer_Node
-    Renderer_VertexData
+    Renderer_Common
     Renderer_Contour
 )
 
 add_dependencies(${PROJECT_NAME}
     Renderer_Node
-    Renderer_VertexData
+    Renderer_Common
     Renderer_Contour
 )
 

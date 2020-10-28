@@ -18,7 +18,7 @@ PRIVATE
     Renderer_Node
 PUBLIC
     Renderer_ShaderProgram
-    Renderer_VertexData
+    Renderer_Common
     Renderer_Texture
 )
 
@@ -26,7 +26,7 @@ add_dependencies(${PROJECT_NAME}
     Utils
     Renderer_Node
     Renderer_Texture
-    Renderer_VertexData
+    Renderer_Common
     Renderer_ShaderProgram
 )
 

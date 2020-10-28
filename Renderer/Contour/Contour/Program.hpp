@@ -2,7 +2,7 @@
 
 #include <string_view>
 
-#include "Mesh.hpp"
+#include "Common/Mesh.hpp"
 #include "ShaderProgram.hpp"
 
 namespace Render {
@@ -21,10 +21,17 @@ class Program {
     constexpr static std::string_view u_specular_texture = "specular_tex";
     // Unique value per-mesh to easier define borders between objects
     constexpr static std::string_view u_mesh_id = "mesh_id";
+    // Lighting
+    constexpr static std::string_view u_light_space_matrix = "lightSpaceMatrix";
+    constexpr static std::string_view u_shadow_map_texture = "shadowMap";
+
     // Preparation - set uniforms and other important things.
     void prepareCamera(const glm::mat4& view, const glm::mat4& projection) const;
     void prepareTextures() const;
     void prepareUniforms(const glm::mat4& transform) const;
+
+    glm::mat4 _lightSpaceMatrix = glm::mat4(1);
+    GLuint _shadowMapTexture = -1;
 
 public:
     Program();
@@ -32,11 +39,15 @@ public:
     void Draw(const glm::mat4& viewTransform,
               const glm::mat4& projectionTransform,
               const glm::mat4& modelTransform,
-              const Mesh& model) const;
+              const Common::Mesh& model) const;
 
     void Draw(const glm::mat4& viewTransform,
               const glm::mat4& projectionTransform,
-              const std::vector<std::pair<glm::mat4, const Mesh&>>& transformedModels) const;
+              const std::vector<std::pair<glm::mat4, const Common::Mesh&>>& transformedModels) const;
+
+    void SetLightSpaceMatrix(const glm::mat4& lightSpaceMatrix);
+
+    void SetShadowMapTexture(const GLuint textureId);
 
     Program(Program&) = delete;
     Program(Program&&) = delete;

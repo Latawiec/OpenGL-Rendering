@@ -12,7 +12,7 @@ void Node::SetTransform(glm::mat4 transform) {
     _transform = transform;
 }
 
-const glm::mat4& Node::GetTransform() const {
+glm::mat4 Node::GetTransform() const {
     return _transform;
 }
 

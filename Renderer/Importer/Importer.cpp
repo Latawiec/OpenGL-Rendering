@@ -1,6 +1,5 @@
 
 #include "Importer.hpp"
-#include "VertexData.hpp"
 #include <nlohmann/json.hpp>
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -8,7 +7,9 @@
 #include <tiny_gltf.h>
 #include <glad/glad.h>
 
-#include "Mesh.hpp"
+#include "Common/VertexData.hpp"
+#include "Common/VertexAttribute.hpp"
+#include "Common/Mesh.hpp"
 #include "MeshNode.hpp"
 #include "CameraNode.hpp"
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,8 +17,6 @@
 #include <glm/gtx/transform.hpp>
 #include <iostream>
 #include <array>
-
-//#include "Mesh.hpp"
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
@@ -39,38 +38,37 @@ namespace /*anonymous*/ {
         // I assume single primitve.
         const auto primitive = mesh.primitives[0];
 
-        GLuint buffers[5];
-        glGenBuffers(5, buffers);
-
         const auto& positionAccessorId = primitive.attributes.at(PositionAttribute);
-        const auto& normalsAccessorId = primitive.attributes.at(NormalsAttribute);
+        const auto& normalAccessorId = primitive.attributes.at(NormalsAttribute);
         const auto& uvAccessorId = primitive.attributes.at(UvAttribute);
-        const auto& edgeColourAccessorId = primitive.attributes.at(EdgeColourAttribute);
+        const auto& edgeInfoAccessorId = primitive.attributes.at(EdgeColourAttribute);
 
         const auto& indicesAccessorId = primitive.indices;
         
-        const std::array accessorIds = {
-            positionAccessorId,
-            normalsAccessorId,
-            uvAccessorId,
-            edgeColourAccessorId,
-            indicesAccessorId
+        const std::map<Common::VertexAttribute, const int&> locationToAccessorMap {
+            { Common::VertexAttribute::POSITION, positionAccessorId },
+            { Common::VertexAttribute::NORMAL, normalAccessorId },
+            { Common::VertexAttribute::UV_MAP, uvAccessorId },
+            { Common::VertexAttribute::EDGE_INFO, edgeInfoAccessorId }
         };
 
-        for (int i=0; i<accessorIds.size() - 1; ++i) {
-            const auto& accessor = model.accessors[accessorIds[i]]; 
+        for (const auto&[attrLocation, accessorId] : locationToAccessorMap) {
+            const auto& accessor = model.accessors[accessorId]; 
             const auto& bufferView = model.bufferViews[accessor.bufferView];
             const auto& buffer = model.buffers[bufferView.buffer];
             const int attrSize = accessor.type != TINYGLTF_TYPE_SCALAR ? accessor.type : 1;
             const int byteStride = accessor.ByteStride(bufferView);
 
-            glBindBuffer(GL_ARRAY_BUFFER, buffers[i]);
+            GLuint glBuffer;
+            glGenBuffers(1, &glBuffer);
+            glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
             glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, 
                          &buffer.data.at(0) + bufferView.byteOffset, GL_STATIC_DRAW);
-            glEnableVertexAttribArray(i);
-            glVertexAttribPointer(i, attrSize, accessor.componentType,
+            glEnableVertexAttribArray(attrLocation);
+            glVertexAttribPointer(attrLocation, attrSize, accessor.componentType,
                                   accessor.normalized ? GL_TRUE : GL_FALSE,
                                   byteStride, BUFFER_OFFSET(accessor.byteOffset));
+            // glDeleteBuffers(1, &glBuffer); Why the hell can't I delete these? :(
         }
 
         // Indices
@@ -79,17 +77,20 @@ namespace /*anonymous*/ {
         const auto& indicesBuffer = model.buffers[indicesBufferView.buffer];
         const int indicesSize = indicesAccessor.type != TINYGLTF_TYPE_SCALAR ? indicesAccessor.type : 1;
         const int indicesByteStride = indicesAccessor.ByteStride(indicesBufferView);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[4]);
+
+        GLuint glBuffer;
+        glGenBuffers(1, &glBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glBuffer);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBufferView.byteLength,
                      &indicesBuffer.data.at(0) + indicesBufferView.byteOffset, GL_STATIC_DRAW);
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        //glDeleteBuffers(5, buffers);
+        // glDeleteBuffers(1, &glBuffer); Why the hell can't I delete these? :(
 
         auto result = std::make_unique<MeshNode>();
-        result->SetMesh(std::make_unique<Contour::Mesh>(VertexDataBase(VAO, indicesAccessor.count)));
+        result->SetMesh(std::make_unique<Common::Mesh>(VertexDataBase(VAO, indicesAccessor.count)));
         return result;
     }
 }
