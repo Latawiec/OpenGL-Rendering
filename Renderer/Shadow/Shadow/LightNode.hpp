@@ -18,7 +18,6 @@ public:
 private:
     const Type _type = Type::Directional;
     glm::mat4 _lightProjection;
-    glm::mat4 _lightView;
 
 public:
     LightNode();
@@ -26,9 +25,9 @@ public:
 
     void Visit(INodeVisitor& visitor, const glm::mat4& transform) const override;
 
-    const glm::mat4& GetLightProjection() const;
+    glm::mat4 GetLightProjection() const;
 
-    const glm::mat4& GetLightView() const;
+    glm::mat4 GetLightView() const;
 };
 
 } // namespace Render

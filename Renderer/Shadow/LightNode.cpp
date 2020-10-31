@@ -16,18 +16,16 @@ void LightNode::Visit(INodeVisitor& visitor, const glm::mat4& transform) const {
     visitor.Accept(*this, transform);
 }
 
-const glm::mat4& LightNode::GetLightProjection() const {
+glm::mat4 LightNode::GetLightProjection() const {
     return _lightProjection;
 }
 
-const glm::mat4& LightNode::GetLightView() const {
+glm::mat4 LightNode::GetLightView() const {
     constexpr const glm::vec3 SceneMiddle {0, 0, 0};
     constexpr const glm::vec3 SceneUp {0, 1, 0};
     const glm::mat4 transform = GetTransform();
-    const float x = transform[3][0];
-    const float y = transform[3][1];
-    const float z = transform[3][2];
-    const glm::vec3 translation{x, y, z};
+    const auto& translationColumn = transform[3];
+    const glm::vec3 translation{ translationColumn.x, translationColumn.y, translationColumn.z };
 
     return glm::lookAt(translation, SceneMiddle, SceneUp);
 }

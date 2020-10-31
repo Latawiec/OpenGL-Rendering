@@ -78,7 +78,7 @@ class DrawingManager : private INodeVisitor {
     };
 
     void Accept(const LightNode& node, const glm::mat4& transform) override {
-        thisSingleLightIWantToTest.view = node.GetLightView();// * glm::inverse(transform);
+        thisSingleLightIWantToTest.view = node.GetLightView() * transform;
         thisSingleLightIWantToTest.projection = node.GetLightProjection();
     }
 
