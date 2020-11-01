@@ -11,7 +11,7 @@
 #include "GraphicBuffer.hpp"
 #include "TextureProgram.hpp"
 #include "DrawingManager.hpp"
-#include "DepthBuffer.hpp"
+#include <Common/DepthBuffer.hpp>
 #include "Texture.hpp"
 #include "Importer.hpp"
 

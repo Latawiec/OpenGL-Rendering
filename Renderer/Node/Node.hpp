@@ -9,15 +9,19 @@
 namespace Render {
 
 class Node {
+   
 protected:
-    glm::mat4 _transform{1};
+    glm::mat4 _transform;
+    uint64_t _nodeId;
     std::vector<std::unique_ptr<Node>> _childNodes;
 
 public:
-    Node() = default;
+    Node();
     Node(glm::mat4 transform);
     virtual ~Node() = default;
     
+    uint64_t GetId() const;
+
     virtual void Visit(INodeVisitor& visitor, const glm::mat4& transform) const;
 
     void SetTransform(glm::mat4 transform);

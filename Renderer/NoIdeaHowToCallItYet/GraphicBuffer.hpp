@@ -1,5 +1,5 @@
 #pragma once
-#include "FramebufferBase.hpp"
+#include <Common/FramebufferBase.hpp>
 
 #include <cstddef>
 #include <utility>
@@ -7,7 +7,7 @@
 
 namespace Render {
 
-class GraphicBuffer : public FramebufferBase {
+class GraphicBuffer : public Common::FramebufferBase {
 public:
 
     enum Output {

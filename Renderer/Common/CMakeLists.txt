@@ -6,6 +6,8 @@ find_package(glad REQUIRED)
 
 add_library(${PROJECT_NAME}
     Mesh.cpp
+    DepthBuffer.cpp
+    FramebufferBase.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

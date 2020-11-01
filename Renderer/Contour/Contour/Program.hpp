@@ -24,6 +24,7 @@ class Program {
     // Lighting
     constexpr static std::string_view u_light_space_matrix = "lightSpaceMatrix";
     constexpr static std::string_view u_shadow_map_texture = "shadowMap";
+    constexpr static std::string_view u_light_position = "lightPosition";
 
     // Preparation - set uniforms and other important things.
     void prepareCamera(const glm::mat4& view, const glm::mat4& projection) const;
@@ -31,6 +32,7 @@ class Program {
     void prepareUniforms(const glm::mat4& transform) const;
 
     glm::mat4 _lightSpaceMatrix = glm::mat4(1);
+    glm::vec3 _lightPosition = glm::vec3(0);
     GLuint _shadowMapTexture = -1;
 
 public:
@@ -45,7 +47,7 @@ public:
               const glm::mat4& projectionTransform,
               const std::vector<std::pair<glm::mat4, const Common::Mesh&>>& transformedModels) const;
 
-    void SetLightSpaceMatrix(const glm::mat4& lightSpaceMatrix);
+    void SetLightSpace(const glm::mat4& lightView, const glm::mat4& lightProj);
 
     void SetShadowMapTexture(const GLuint textureId);
 

@@ -3,6 +3,7 @@
 #include "FramebufferBase.hpp"
 
 namespace Render {
+namespace Common {
 
 class DepthBuffer : public FramebufferBase {
     unsigned int _depthTexture = -1;
@@ -13,8 +14,9 @@ public:
     DepthBuffer(unsigned int width, unsigned int height);
     ~DepthBuffer();
 
-    unsigned int DepthBuffer::getTexture();
+    unsigned int DepthBuffer::getTexture() const;
 
 };
 
+} // namespace Common
 } // namespace Render

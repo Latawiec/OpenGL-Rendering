@@ -7,7 +7,6 @@ find_package(glm CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME}
     GraphicBuffer.cpp
-    DepthBuffer.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

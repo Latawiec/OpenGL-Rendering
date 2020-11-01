@@ -55,8 +55,10 @@ void Program::Draw(const glm::mat4& viewTransform,
     }
 }
 
-void Program::SetLightSpaceMatrix(const glm::mat4& lightSpaceMatrix) {
-    _lightSpaceMatrix = lightSpaceMatrix;
+void Program::SetLightSpace(const glm::mat4& lightView, const glm::mat4& lightProj) {
+    _lightSpaceMatrix = lightProj * lightView;
+    const auto& lastColumn = lightView[3];
+    _lightPosition = { lastColumn.x, lastColumn.y, lastColumn.z };
 }
 
 void Program::SetShadowMapTexture(const GLuint textureId) {
@@ -80,6 +82,7 @@ void Program::prepareUniforms(const glm::mat4& transform) const
     _program.set<unsigned int>(u_mesh_id, generateId());
     _program.set(u_model, transform);
     _program.set(u_light_space_matrix, _lightSpaceMatrix);
+    _program.set(u_light_position, _lightPosition);
 }
 
 } // namespace Contour
