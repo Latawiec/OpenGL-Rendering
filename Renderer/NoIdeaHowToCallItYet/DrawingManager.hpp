@@ -4,6 +4,7 @@
 #include "Shadow/Program.hpp"
 #include "Shadow/LightNode.hpp"
 #include "ShadowMapDrawer.hpp"
+#include "EdgeDetector/Program.hpp"
 #include "Node.hpp"
 #include "CameraNode.hpp"
 #include "MeshNode.hpp"
@@ -28,6 +29,9 @@ class DrawingManager : private INodeVisitor {
     GraphicBuffer deferredBuffers;
 
     DebugUtils::TextureProgram textureDrawProgram;
+    // Debug...
+    EdgeDetector::Program edgeProgram;
+    
 
     struct Camera {
         glm::mat4 projection;
@@ -97,8 +101,11 @@ public:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glViewport(0, 0, windowWidth, windowHeight);
             //textureDrawProgram.draw(depthBuffer.getTexture());
-            //edgeProgram.Draw(deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
-            textureDrawProgram.draw(deferredBuffers.getTexture(GraphicBuffer::Output::Albedo));
+            {
+                edgeProgram.SetImageSize(windowWidth/2, windowHeight/2);
+                edgeProgram.Draw(deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
+            }
+            //textureDrawProgram.draw(deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
         }
     }
 };
