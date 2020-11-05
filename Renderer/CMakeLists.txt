@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.9)
 
-add_subdirectory(NoIdeaHowToCallItYet)
+add_subdirectory(Pipeline)
 add_subdirectory(Texture)
 add_subdirectory(EdgeDetector)
 add_subdirectory(Common)
 add_subdirectory(Shadow)
-add_subdirectory(Contour)
+add_subdirectory(MappingProgram)
 add_subdirectory(DebugUtils)
 add_subdirectory(Camera)
 add_subdirectory(Node)

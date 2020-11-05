@@ -45,5 +45,5 @@ private:
     };
 };
 
-} // namespace Contour
+} // namespace MappingProgram
 } // namespace Render 

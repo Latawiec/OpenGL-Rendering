@@ -15,13 +15,13 @@ PRIVATE
     glm
     Renderer_Node
     Renderer_Common
-    Renderer_Contour
+    Renderer_MappingProgram
 )
 
 add_dependencies(${PROJECT_NAME}
     Renderer_Node
     Renderer_Common
-    Renderer_Contour
+    Renderer_MappingProgram
 )
 
 target_include_directories(${PROJECT_NAME}

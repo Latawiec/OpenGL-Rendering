@@ -1,12 +1,12 @@
-#include "Contour/Program.hpp"
+#include "MappingProgram/Program.hpp"
 #include "read_file.hpp"
 
-#ifndef CONTOUR_PROGRAM_DIR
-#define CONTOUR_PROGRAM_DIR "Path not provided."
+#ifndef MAPPING_PROGRAM_DIR
+#define MAPPING_PROGRAM_DIR "Path not provided."
 #endif
 
 namespace Render {
-namespace Contour {
+namespace MappingProgram {
 namespace /*anonymous*/ {
 
 // Unique-id will just be a monotonic counter.
@@ -20,8 +20,8 @@ static std::uint16_t generateId() {
 
 Program::Program()
 : _program (
-    Shader<ShaderType::Vertex>(Utils::readFile(CONTOUR_PROGRAM_DIR "/Contour.vert.glsl").c_str()),
-    Shader<ShaderType::Fragment>(Utils::readFile(CONTOUR_PROGRAM_DIR "/Contour.frag.glsl").c_str())
+    Shader<ShaderType::Vertex>(Utils::readFile(MAPPING_PROGRAM_DIR "/MappingProgram.vert.glsl").c_str()),
+    Shader<ShaderType::Fragment>(Utils::readFile(MAPPING_PROGRAM_DIR "/MappingProgram.frag.glsl").c_str())
 )
 {}
 
@@ -85,5 +85,5 @@ void Program::prepareUniforms(const glm::mat4& transform) const
     _program.set(u_light_position, _lightPosition);
 }
 
-} // namespace Contour
+} // namespace MappingProgram
 } // namespace Render

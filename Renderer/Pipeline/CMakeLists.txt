@@ -1,41 +1,34 @@
 cmake_minimum_required(VERSION 3.9)
 
-project(Renderer_Contour)
+project(Renderer)
 
-find_package(OpenGL REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME}
-    Program.cpp
+    GraphicBuffer.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
-PRIVATE
+PUBLIC
     Utils
     glad::glad
     glm
     Renderer_Node
-PUBLIC
-    Renderer_ShaderProgram
-    Renderer_Common
-    Renderer_Texture
+    Renderer_MappingProgram
+    Renderer_Shadow
+    Renderer_DebugUtils_TextureProgram
 )
 
 add_dependencies(${PROJECT_NAME}
     Utils
     Renderer_Node
-    Renderer_Texture
-    Renderer_Common
-    Renderer_ShaderProgram
-)
-
-target_compile_definitions(${PROJECT_NAME}
-PRIVATE
-    CONTOUR_PROGRAM_DIR="${PROJECT_SOURCE_DIR}"
+    Renderer_MappingProgram
+    Renderer_Shadow
+    Renderer_DebugUtils_TextureProgram
 )
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC
-    .
+.
 )

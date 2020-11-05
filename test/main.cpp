@@ -5,7 +5,7 @@
 
 #include "BasicCamera.hpp"
 #include "Common/Mesh.hpp"
-#include "Contour/Program.hpp"
+#include "MappingProgram/Program.hpp"
 #include "Shadow/Program.hpp"
 #include "EdgeDetector/Program.hpp"
 #include "GraphicBuffer.hpp"
@@ -51,7 +51,7 @@ int main() {
     DebugUtils::TextureProgram textureDrawProgram;
     EdgeDetector::Program edgeProgram;
     edgeProgram.SetImageSize(windowWidth/2, windowHeight/2);
-    Contour::Program program;
+    MappingProgram::Program program;
 
      glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
 

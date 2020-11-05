@@ -12,7 +12,7 @@ add_dependencies(${PROJECT_NAME}
     Assets
     Utils
     Renderer
-    Renderer_Contour
+    Renderer_MappingProgram
     Renderer_Camera
     Renderer_Importer
     Renderer_EdgeDetector
@@ -24,7 +24,7 @@ PRIVATE
     Assets
     Utils
     Renderer
-    Renderer_Contour
+    Renderer_MappingProgram
     Renderer_Camera
     Renderer_Importer
     Renderer_EdgeDetector

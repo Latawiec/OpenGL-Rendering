@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Contour/Program.hpp"
+#include "MappingProgram/Program.hpp"
 #include "Shadow/Program.hpp"
 #include "Shadow/LightNode.hpp"
 #include "ShadowMapDrawer.hpp"
@@ -21,7 +21,7 @@ namespace Render {
 class DrawingManager : private INodeVisitor {
 
 
-    DrawingExecutor<Contour::Program, Common::Mesh> _contourProgramExecutor;
+    DrawingExecutor<MappingProgram::Program, Common::Mesh> _contourProgramExecutor;
     ShadowMapDrawer _shadowMapDrawer;
     // more programs soon...
 

@@ -6,7 +6,7 @@
 #include "ShaderProgram.hpp"
 
 namespace Render {
-namespace Contour {
+namespace MappingProgram {
 
 class Program {
 
@@ -57,5 +57,5 @@ public:
     Program& operator=(Program&&) = delete;
 };
 
-} // namespace Contour
+} // namespace MappingProgram
 } // namespace Render 

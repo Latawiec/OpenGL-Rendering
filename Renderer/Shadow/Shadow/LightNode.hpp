@@ -10,14 +10,8 @@
 namespace Render {
 
 class LightNode : public Node {
-public:
-    enum Type {
-        Directional
-        // More?
-    };
 
 private:
-    const Type _type = Type::Directional;
     glm::mat4 _lightProjection;
     Common::DepthBuffer _shadowMapBuffer;
 
