@@ -14,17 +14,17 @@ PUBLIC
     Utils
     glad::glad
     glm
-    Renderer_Node
+    # Renderer_Node
     Renderer_MappingProgram
-    Renderer_Shadow
+    # Renderer_Shadow
     Renderer_DebugUtils_TextureProgram
 )
 
 add_dependencies(${PROJECT_NAME}
     Utils
-    Renderer_Node
+    # Renderer_Node
     Renderer_MappingProgram
-    Renderer_Shadow
+    # Renderer_Shadow
     Renderer_DebugUtils_TextureProgram
 )
 

@@ -49,14 +49,14 @@ public:
     _VAO(VAO),
     _elementsCount(elementsCount) {}
 
-    VertexDataBase(VertexDataBase&& other) {
+    VertexDataBase(VertexDataBase&& other) noexcept {
         this->_VAO = other._VAO;
         this->_elementsCount = other._elementsCount;
         other._VAO = -1;
         other._elementsCount = 0;
     }
 
-    VertexDataBase& operator=(VertexDataBase&& other) {
+    VertexDataBase& operator=(VertexDataBase&& other) noexcept {
         this->_VAO = other._VAO;
         this->_elementsCount = other._elementsCount;
 

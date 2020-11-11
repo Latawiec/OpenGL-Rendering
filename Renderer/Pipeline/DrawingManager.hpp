@@ -1,11 +1,11 @@
 #pragma once
 
 #include "MappingProgram/Program.hpp"
-#include "Shadow/Program.hpp"
-#include "Shadow/LightNode.hpp"
-#include "ShadowMapDrawer.hpp"
+//#include "Shadow/Program.hpp"
+//#include "Shadow/LightNode.hpp"
+//#include "ShadowMapDrawer.hpp"
 #include "EdgeDetector/Program.hpp"
-#include "Node.hpp"
+//#include "Node.hpp"
 #include "CameraNode.hpp"
 #include "MeshNode.hpp"
 #include "INodeVisitor.hpp"
@@ -22,7 +22,7 @@ class DrawingManager : private INodeVisitor {
 
 
     DrawingExecutor<MappingProgram::Program, Common::Mesh> _contourProgramExecutor;
-    ShadowMapDrawer _shadowMapDrawer;
+    //ShadowMapDrawer _shadowMapDrawer;
     // more programs soon...
 
     int windowWidth, windowHeight;
@@ -40,7 +40,7 @@ class DrawingManager : private INodeVisitor {
 
     void queueMesh(const glm::mat4& transform, const Common::Mesh& mesh) {
         _contourProgramExecutor.QueueMesh(transform, mesh);
-        _shadowMapDrawer.QueueMesh(transform, mesh);
+        //_shadowMapDrawer.QueueMesh(transform, mesh);
     }
 
     void Accept(const CameraNode& node, const glm::mat4& transform) override {
@@ -79,21 +79,21 @@ public:
     void Draw() {
         _shadowMapDrawer.DrawShadowMaps();
         {
-            const auto& shadowMapsInfo = _shadowMapDrawer.GetShadowMapsInfo();
-            if (shadowMapsInfo.size() > 0) {
-                // We have harcoded single light so...
-                const auto& singleLightInfo = shadowMapsInfo[0];
-                _contourProgramExecutor.GetProgram().SetLightSpace(singleLightInfo.viewTransform, singleLightInfo.projectionTransform);
-                _contourProgramExecutor.GetProgram().SetShadowMapTexture(singleLightInfo.shadowMap.getTexture());
-            }
+            // const auto& shadowMapsInfo = _shadowMapDrawer.GetShadowMapsInfo();
+            // if (shadowMapsInfo.size() > 0) {
+            //     // We have harcoded single light so...
+            //     const auto& singleLightInfo = shadowMapsInfo[0];
+            //     _contourProgramExecutor.GetProgram().SetLightSpace(singleLightInfo.viewTransform, singleLightInfo.projectionTransform);
+            //     _contourProgramExecutor.GetProgram().SetShadowMapTexture(singleLightInfo.shadowMap.getTexture());
+            // }
             Common::FramebufferBase::ScopedBinding bind(deferredBuffers);
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             _contourProgramExecutor.Draw(camera.view, camera.projection);
         }
         _contourProgramExecutor.Clear();
-        _shadowMapDrawer.Clear();
-        _shadowMapDrawer.ClearLights();
+        // _shadowMapDrawer.Clear();
+        // _shadowMapDrawer.ClearLights();
 
         // Testing
         {

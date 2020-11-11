@@ -15,7 +15,7 @@ PRIVATE
     Utils
     glad::glad
     glm
-    Renderer_Node
+    # Renderer_Node
 PUBLIC
     Renderer_ShaderProgram
     Renderer_Common
@@ -24,7 +24,7 @@ PUBLIC
 
 add_dependencies(${PROJECT_NAME}
     Utils
-    Renderer_Node
+    # Renderer_Node
     Renderer_Texture
     Renderer_Common
     Renderer_ShaderProgram

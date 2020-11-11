@@ -11,7 +11,6 @@ class MeshNode : public Node {
     std::unique_ptr<Common::Mesh> _mesh = nullptr;
 
 public:
-    MeshNode() = default;
     ~MeshNode() override = default;
 
     void Visit(INodeVisitor& visitor, const glm::mat4& transform) const override;

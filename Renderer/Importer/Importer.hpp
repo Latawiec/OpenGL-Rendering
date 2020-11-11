@@ -3,14 +3,13 @@
 #include <memory>
 #include <string>
 
-#include "Node.hpp"
+#include "Common/Scene.hpp"
 
 namespace Render {
 
 class Importer {
-
 public:
-    static std::unique_ptr<Node> importGltf(const std::string& filename);
+    static bool importGltf(const std::string& filename, Common::Scene& scene);
 };
 
 } // namespace Render

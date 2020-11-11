@@ -6,12 +6,13 @@
 #include "BasicCamera.hpp"
 #include "Common/Mesh.hpp"
 #include "MappingProgram/Program.hpp"
-#include "Shadow/Program.hpp"
+//#include "Shadow/Program.hpp"
 #include "EdgeDetector/Program.hpp"
 #include "GraphicBuffer.hpp"
 #include "TextureProgram.hpp"
-#include "DrawingManager.hpp"
+//#include "DrawingManager.hpp"
 #include <Common/DepthBuffer.hpp>
+#include <Common/Scene.hpp>
 #include "Texture.hpp"
 #include "Importer.hpp"
 
@@ -55,17 +56,20 @@ int main() {
 
      glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
 
-    DrawingManager drawingManager(windowWidth, windowHeight);
-    auto shadowingLight = std::make_unique<LightNode>();
-    auto& stolenLight = *shadowingLight;
-    shadowingLight->SetTransform(glm::translate(glm::mat4(1), glm::vec3(5, 2.5, 1)));
-    auto imported = Importer::importGltf(ASSETS_DIR "/scene_test.gltf");
-    imported->AddChildNode(std::move(shadowingLight));
+    //DrawingManager drawingManager(windowWidth, windowHeight);
+    //auto shadowingLight = std::make_unique<LightNode>();
+    //auto& stolenLight = *shadowingLight;
+    //shadowingLight->SetTransform(glm::translate(glm::mat4(1), glm::vec3(5, 2.5, 1)));
+    Common::Scene mainScene;
+    auto imported = Importer::importGltf(ASSETS_DIR "/scene_test_skin.gltf", mainScene);
+    std::cout << "SCENE!\n" << std::endl;
+    std::cout << mainScene << std::endl;
+    //imported->AddChildNode(std::move(shadowingLight));
 
     while(!glfwWindowShouldClose(window)) {
-        stolenLight.SetTransform(glm::translate(glm::mat4(1), glm::vec3(5 * glm::sin(glfwGetTime()), 2.5, 1)));
-        drawingManager.QueueNodes(*imported);
-        drawingManager.Draw();
+        //stolenLight.SetTransform(glm::translate(glm::mat4(1), glm::vec3(5 * glm::sin(glfwGetTime()), 2.5, 1)));
+        // drawingManager.QueueNodes(*imported);
+        // drawingManager.Draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

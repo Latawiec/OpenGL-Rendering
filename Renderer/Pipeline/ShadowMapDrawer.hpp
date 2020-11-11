@@ -4,7 +4,7 @@
 
 #include "DrawingExecutor.hpp"
 #include <Common/DepthBuffer.hpp>
-#include <Shadow/Program.hpp>
+//#include <Shadow/Program.hpp>
 #include <Common/Mesh.hpp>
 
 namespace Render {

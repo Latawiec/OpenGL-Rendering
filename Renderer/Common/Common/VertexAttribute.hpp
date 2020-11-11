@@ -13,6 +13,8 @@ enum VertexAttribute : GLuint {
     NORMAL = 1,
     UV_MAP = 2,
     EDGE_INFO = 3,
+    JOINT = 4,
+    JOINT_WEIGHT = 5,
     SIZE
 };
 

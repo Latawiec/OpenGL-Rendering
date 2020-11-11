@@ -10,8 +10,8 @@
 #include "Common/VertexData.hpp"
 #include "Common/VertexAttribute.hpp"
 #include "Common/Mesh.hpp"
-#include "MeshNode.hpp"
-#include "CameraNode.hpp"
+#include "Common/NodeLink.hpp"
+#include "Common/Camera.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
@@ -21,7 +21,10 @@
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 namespace Render {
+using namespace Common;
 namespace /*anonymous*/ {
+    using gltfId = std::size_t; // basically index in array...
+    using SceneId = std::uint64_t;
     static const std::string ProgramType = "ProgramType";
     static const std::string ContourProgramType = "Contour";
 
@@ -29,8 +32,10 @@ namespace /*anonymous*/ {
     static const std::string NormalsAttribute = "NORMAL";
     static const std::string UvAttribute = "TEXCOORD_0";
     static const std::string EdgeColourAttribute = "COLOR_0";
+    static const std::string JointsAttribute = "JOINTS_0";
+    static const std::string JointsWeightsAttribute = "WEIGHTS_0";
 
-    std::unique_ptr<Node> processContourMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
+    Common::Mesh processContourMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
         GLuint VAO;
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
@@ -43,20 +48,25 @@ namespace /*anonymous*/ {
         const auto& uvAccessorId = primitive.attributes.at(UvAttribute);
         const auto& edgeInfoAccessorId = primitive.attributes.at(EdgeColourAttribute);
 
+        const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
+        const auto& jointsWeightsAccessorId = primitive.attributes.at(JointsWeightsAttribute);
+
         const auto& indicesAccessorId = primitive.indices;
         
         const std::map<Common::VertexAttribute, const int&> locationToAccessorMap {
             { Common::VertexAttribute::POSITION, positionAccessorId },
             { Common::VertexAttribute::NORMAL, normalAccessorId },
             { Common::VertexAttribute::UV_MAP, uvAccessorId },
-            { Common::VertexAttribute::EDGE_INFO, edgeInfoAccessorId }
+            { Common::VertexAttribute::EDGE_INFO, edgeInfoAccessorId },
+            { Common::VertexAttribute::JOINT, jointsAccessorId },
+            { Common::VertexAttribute::JOINT_WEIGHT, jointsWeightsAccessorId }
         };
 
         for (const auto&[attrLocation, accessorId] : locationToAccessorMap) {
             const auto& accessor = model.accessors[accessorId]; 
             const auto& bufferView = model.bufferViews[accessor.bufferView];
             const auto& buffer = model.buffers[bufferView.buffer];
-            const int attrSize = accessor.type != TINYGLTF_TYPE_SCALAR ? accessor.type : 1;
+            const int attrSize = accessor.type % 32;
             const int byteStride = accessor.ByteStride(bufferView);
 
             GLuint glBuffer;
@@ -75,8 +85,7 @@ namespace /*anonymous*/ {
         const auto& indicesAccessor = model.accessors[indicesAccessorId];
         const auto& indicesBufferView = model.bufferViews[indicesAccessor.bufferView];
         const auto& indicesBuffer = model.buffers[indicesBufferView.buffer];
-        const int indicesSize = indicesAccessor.type != TINYGLTF_TYPE_SCALAR ? indicesAccessor.type : 1;
-        const int indicesByteStride = indicesAccessor.ByteStride(indicesBufferView);
+        const int indicesSize =  indicesAccessor.type % 32;
 
         GLuint glBuffer;
         glGenBuffers(1, &glBuffer);
@@ -89,69 +98,112 @@ namespace /*anonymous*/ {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         // glDeleteBuffers(1, &glBuffer); Why the hell can't I delete these? :(
 
-        auto result = std::make_unique<MeshNode>();
-        result->SetMesh(std::make_unique<Common::Mesh>(VertexDataBase(VAO, indicesAccessor.count)));
-        return result;
+        if (!model.skins.empty()) {
+            const auto& inverseBindMatricesAccessorId = model.skins[0].inverseBindMatrices;
+            const auto& inverseBindMatricesAccessor = model.accessors[inverseBindMatricesAccessorId];
+            const auto& inverseBindMatricesBufferView = model.bufferViews[inverseBindMatricesAccessor.bufferView];
+            const auto& inverseBindMatricesBuffer = model.buffers[inverseBindMatricesBufferView.buffer];
+            const auto inverseBindMatricesCount = inverseBindMatricesAccessor.count;
+            const auto inverseBindMatricesStride = inverseBindMatricesAccessor.ByteStride(inverseBindMatricesBufferView);
+
+            std::vector<glm::mat4> inverseBindMatrices(inverseBindMatricesCount);
+            std::memcpy(inverseBindMatrices.data(),
+                &inverseBindMatricesBuffer.data.at(0) + inverseBindMatricesBufferView.byteOffset,
+                inverseBindMatricesBufferView.byteLength
+            );
+            std::cout << "Bind matrices!\n"; 
+        }
+
+        return Common::Mesh{ VertexDataBase(VAO, indicesAccessor.count) };
     }
 }
 
-std::unique_ptr<Node> processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
-    // It's high time we figure out what type of mesh it is.
-    // We need to figure it out based on custom properties.
-    
-    // I have no idea how mesh can have multiple Primitives so, ignore rest:
-    const auto& material = model.materials[mesh.primitives[0].material];
-    const auto& materialCustomProperties = material.extras;
+Common::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
 
-    if (materialCustomProperties.Has(ProgramType) && materialCustomProperties.Get(ProgramType).IsString()) {
-        const auto& materialType = materialCustomProperties.Get(ProgramType).Get<std::string>();
+    const auto& material = model.materials[mesh.primitives[0].material];
+    const auto& properties = material.extras;
+
+    if (properties.Has(ProgramType) && properties.Get(ProgramType).IsString()) {
+        const auto& materialType = properties.Get(ProgramType).Get<std::string>();
         if (materialType == ContourProgramType) {
             return processContourMesh(model, mesh);
         }
     }
-    return nullptr;
+
+    return {};
 }
 
-std::unique_ptr<Node> processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {
-    return std::make_unique<CameraNode>(camera.perspective.yfov,  800.f/600.f);
+Common::Camera processCamera(const tinygltf::Camera& camera) {
+    return Common::Camera(camera.perspective.yfov, 800.f/600.f);
 }
 
-std::unique_ptr<Node> processElement(const tinygltf::Model& model, const tinygltf::Node& node) {
-    if (node.mesh != -1) {
-        return processMesh(model, model.meshes[node.mesh]);
-    } 
+glm::mat4 processNodeTransform(const tinygltf::Node& node) {
+    const auto scaleVec = node.scale.size() == 0 ? glm::vec3(1.0) : glm::vec3(node.scale[0], node.scale[1], node.scale[2]);
+    const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
+    const auto translationVec = node.translation.size() == 0 ? glm::vec3(0.0) : glm::vec3(node.translation[0], node.translation[1], node.translation[2]);
+    
+    const auto scaleMatrix = glm::scale(glm::mat4(1.0), scaleVec);
+    const auto rotateMatrix = glm::mat4_cast(rotationQuat);
+    const auto translateMatrix = glm::translate(glm::mat4(1.0), translationVec);
+
+    return translateMatrix * rotateMatrix * scaleMatrix;
+}
+
+Common::NodeLink processNode(
+    const tinygltf::Model& model,
+    const gltfId nodeIndex,
+    Common::Scene& scene,
+    std::map<gltfId, SceneId>& meshes,
+    std::map<gltfId, SceneId>& cameras,
+    std::map<gltfId, SceneId>& skins,
+    std::map<gltfId, SceneId>& nodes)
+{
+    const auto& node = model.nodes[nodeIndex];
+    const auto nodeTransform = processNodeTransform(node);
+    auto sceneNode = Common::Node{nodeTransform};
+    #ifndef NDEBUG
+    sceneNode.SetName(node.name);
+    #endif
+    const auto nodeId = scene.AddNode(std::move(sceneNode));
+    nodes.insert({ nodeIndex, nodeId });
+    uint16_t nodeLinkProperties = 0x0;
+    Common::NodeLink result(nodeId, 0x0);
 
     if (node.camera != -1) {
-        return processCamera(model, model.cameras[node.camera]);
+        if (!cameras.contains(node.camera)) {
+            auto processedCamera = processCamera(model.cameras[node.camera]);
+            const auto cameraId = scene.AddCamera(std::move(processedCamera));
+            cameras.insert({ node.camera, cameraId });
+        }
+        result.SetCamera(cameras[node.camera]);
+        nodeLinkProperties |= NodeLink::Properties::CAMERA;
     }
 
-    return std::make_unique<Node>();
+    if (node.mesh != -1) {
+        if (!meshes.contains(node.mesh)) {
+            auto processedMesh = processMesh(model, model.meshes[node.mesh]);
+            const auto meshId = scene.AddMesh(std::move(processedMesh));
+            meshes.insert({ node.mesh, meshId });
+        }
+        result.SetMesh(meshes[node.mesh]);
+        nodeLinkProperties |= NodeLink::Properties::MESH;
+        nodeLinkProperties |= NodeLink::Properties::CASTS_SHADOW;
+    }
+
+    if (node.skin != -1) {
+
+    }
+
+    for (std::size_t index = 0; index < node.children.size(); index++) {
+        result.AddChild(
+            processNode(model, node.children[index], scene, meshes, cameras, skins, nodes)
+        );
+    }
+
+    return result;
 }
 
-std::unique_ptr<Node> processModelNodes(const tinygltf::Model& model, const tinygltf::Node& node) {
-
-    std::unique_ptr<Node> root = processElement(model, node);
-    {
-        const auto scaleVec = node.scale.size() == 0 ? glm::vec3(1.0) : glm::vec3(node.scale[0], node.scale[1], node.scale[2]);
-        const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
-        const auto translationVec = node.translation.size() == 0 ? glm::vec3(0.0) : glm::vec3(node.translation[0], node.translation[1], node.translation[2]);
-        
-        const auto scaleMatrix = glm::scale(glm::mat4(1.0), scaleVec);
-        const auto rotateMatrix = glm::mat4_cast(rotationQuat);
-        const auto translateMatrix = glm::translate(glm::mat4(1.0), translationVec);
-        root->SetTransform(translateMatrix * rotateMatrix * scaleMatrix);
-    }
-    
-    for (size_t i = 0; i < node.children.size(); ++i) {
-        assert((node.children[i] >= 0) && (node.children[i] < model.nodes.size()));
-        const auto& childNode = model.nodes[node.children[i]];
-        auto processedNode = processModelNodes(model, childNode);
-        root->AddChildNode(std::move(processedNode));
-    }
-    return root;
-}
-
-std::unique_ptr<Node> Importer::importGltf(const std::string& filename) {
+bool Importer::importGltf(const std::string& filename, Common::Scene& scene) {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string err, warn;
@@ -169,16 +221,26 @@ std::unique_ptr<Node> Importer::importGltf(const std::string& filename) {
         printf("Failed to parse glTF\n");
     }
 
-    auto modelRoot = std::make_unique<Node>();
-    const tinygltf::Scene &scene = model.scenes[model.defaultScene];
+    std::map<gltfId, SceneId> meshes;
+    std::map<gltfId, SceneId> cameras;
+    std::map<gltfId, SceneId> skins;
+    std::map<gltfId, SceneId> nodes;
 
-    for (size_t i = 0; i < scene.nodes.size(); ++i) {
-        assert((scene.nodes[i] >= 0) && (scene.nodes[i] < model.nodes.size()));
-        auto childNode = processModelNodes(model, model.nodes[scene.nodes[i]]);
-        modelRoot->AddChildNode(std::move(childNode));
+    const auto sceneRootNodeId = scene.AddNode({});
+    Common::NodeLink sceneRootNodeLink{ sceneRootNodeId, 0x0 };
+
+    const tinygltf::Scene &gltfScene = model.scenes[model.defaultScene];
+
+    for (size_t i = 0; i < gltfScene.nodes.size(); ++i) {
+        assert((gltfScene.nodes[i] >= 0) && (gltfScene.nodes[i] < model.nodes.size()));
+        sceneRootNodeLink.AddChild(
+            processNode(model, gltfScene.nodes[i], scene,meshes, cameras, skins, nodes)
+        );
     }
 
-    return modelRoot;
+    scene.AddNodeHierarchy(std::move(sceneRootNodeLink));
+
+    return true;
 }
 
 } // namespace Render

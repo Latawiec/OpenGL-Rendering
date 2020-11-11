@@ -15,14 +15,14 @@ PRIVATE
     glm
     Utils
     Renderer_Common
-    Renderer_Node
+    # Renderer_Node
     Renderer_ShaderProgram
 )
 
 add_dependencies(${PROJECT_NAME}
     Utils
     Renderer_Common
-    Renderer_Node
+    # Renderer_Node
     Renderer_ShaderProgram
 )
 

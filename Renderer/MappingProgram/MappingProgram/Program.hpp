@@ -25,6 +25,9 @@ class Program {
     constexpr static std::string_view u_light_space_matrix = "lightSpaceMatrix";
     constexpr static std::string_view u_shadow_map_texture = "shadowMap";
     constexpr static std::string_view u_light_position = "lightPosition";
+    // Skinning
+    constexpr static std::string_view u_joint_matrix = "jointMatrix";
+    
 
     // Preparation - set uniforms and other important things.
     void prepareCamera(const glm::mat4& view, const glm::mat4& projection) const;

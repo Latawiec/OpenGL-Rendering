@@ -6,9 +6,17 @@ namespace Render {
 namespace Common {
 
 class Mesh {
-    const VertexDataBase _vertexData;
+    VertexDataBase _vertexData;
 public:
+    Mesh() = default;  
     Mesh(VertexDataBase&& vertexData);
+
+    Mesh(Mesh&& other) noexcept = default;
+    Mesh& operator=(Mesh&& other) noexcept = default;
+
+    Mesh(const Mesh& other) = delete;
+    Mesh& operator=(const Mesh& other) = delete;
+
     const VertexDataBase& getVertexData() const;
 };
 
