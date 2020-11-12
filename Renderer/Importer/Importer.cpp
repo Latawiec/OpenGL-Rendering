@@ -18,6 +18,8 @@
 #include <iostream>
 #include <array>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 namespace Render {
@@ -48,8 +50,8 @@ namespace /*anonymous*/ {
         const auto& uvAccessorId = primitive.attributes.at(UvAttribute);
         const auto& edgeInfoAccessorId = primitive.attributes.at(EdgeColourAttribute);
 
-        const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
-        const auto& jointsWeightsAccessorId = primitive.attributes.at(JointsWeightsAttribute);
+        // const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
+        // const auto& jointsWeightsAccessorId = primitive.attributes.at(JointsWeightsAttribute);
 
         const auto& indicesAccessorId = primitive.indices;
         
@@ -57,9 +59,9 @@ namespace /*anonymous*/ {
             { Common::VertexAttribute::POSITION, positionAccessorId },
             { Common::VertexAttribute::NORMAL, normalAccessorId },
             { Common::VertexAttribute::UV_MAP, uvAccessorId },
-            { Common::VertexAttribute::EDGE_INFO, edgeInfoAccessorId },
-            { Common::VertexAttribute::JOINT, jointsAccessorId },
-            { Common::VertexAttribute::JOINT_WEIGHT, jointsWeightsAccessorId }
+            { Common::VertexAttribute::EDGE_INFO, edgeInfoAccessorId }
+            // { Common::VertexAttribute::JOINT, jointsAccessorId },
+            // { Common::VertexAttribute::JOINT_WEIGHT, jointsWeightsAccessorId }
         };
 
         for (const auto&[attrLocation, accessorId] : locationToAccessorMap) {
@@ -98,21 +100,21 @@ namespace /*anonymous*/ {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         // glDeleteBuffers(1, &glBuffer); Why the hell can't I delete these? :(
 
-        if (!model.skins.empty()) {
-            const auto& inverseBindMatricesAccessorId = model.skins[0].inverseBindMatrices;
-            const auto& inverseBindMatricesAccessor = model.accessors[inverseBindMatricesAccessorId];
-            const auto& inverseBindMatricesBufferView = model.bufferViews[inverseBindMatricesAccessor.bufferView];
-            const auto& inverseBindMatricesBuffer = model.buffers[inverseBindMatricesBufferView.buffer];
-            const auto inverseBindMatricesCount = inverseBindMatricesAccessor.count;
-            const auto inverseBindMatricesStride = inverseBindMatricesAccessor.ByteStride(inverseBindMatricesBufferView);
+        // if (!model.skins.empty()) {
+        //     const auto& inverseBindMatricesAccessorId = model.skins[0].inverseBindMatrices;
+        //     const auto& inverseBindMatricesAccessor = model.accessors[inverseBindMatricesAccessorId];
+        //     const auto& inverseBindMatricesBufferView = model.bufferViews[inverseBindMatricesAccessor.bufferView];
+        //     const auto& inverseBindMatricesBuffer = model.buffers[inverseBindMatricesBufferView.buffer];
+        //     const auto inverseBindMatricesCount = inverseBindMatricesAccessor.count;
+        //     const auto inverseBindMatricesStride = inverseBindMatricesAccessor.ByteStride(inverseBindMatricesBufferView);
 
-            std::vector<glm::mat4> inverseBindMatrices(inverseBindMatricesCount);
-            std::memcpy(inverseBindMatrices.data(),
-                &inverseBindMatricesBuffer.data.at(0) + inverseBindMatricesBufferView.byteOffset,
-                inverseBindMatricesBufferView.byteLength
-            );
-            std::cout << "Bind matrices!\n"; 
-        }
+        //     std::vector<glm::mat4> inverseBindMatrices(inverseBindMatricesCount);
+        //     std::memcpy(inverseBindMatrices.data(),
+        //         &inverseBindMatricesBuffer.data.at(0) + inverseBindMatricesBufferView.byteOffset,
+        //         inverseBindMatricesBufferView.byteLength
+        //     );
+        //     std::cout << "Bind matrices!\n"; 
+        // }
 
         return Common::Mesh{ VertexDataBase(VAO, indicesAccessor.count) };
     }
@@ -133,8 +135,8 @@ Common::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mes
     return {};
 }
 
-Common::Camera processCamera(const tinygltf::Camera& camera) {
-    return Common::Camera(camera.perspective.yfov, 800.f/600.f);
+Common::Camera processCamera(const glm::mat4& cameraOrientation, const tinygltf::Camera& camera) {
+    return Common::Camera(cameraOrientation, camera.perspective.yfov, 800.f/600.f);
 }
 
 glm::mat4 processNodeTransform(const tinygltf::Node& node) {
@@ -167,11 +169,11 @@ Common::NodeLink processNode(
     const auto nodeId = scene.AddNode(std::move(sceneNode));
     nodes.insert({ nodeIndex, nodeId });
     uint16_t nodeLinkProperties = 0x0;
-    Common::NodeLink result(nodeId, 0x0);
+    Common::NodeLink result(nodeId);
 
     if (node.camera != -1) {
         if (!cameras.contains(node.camera)) {
-            auto processedCamera = processCamera(model.cameras[node.camera]);
+            auto processedCamera = processCamera(nodeTransform, model.cameras[node.camera]);
             const auto cameraId = scene.AddCamera(std::move(processedCamera));
             cameras.insert({ node.camera, cameraId });
         }
@@ -186,13 +188,15 @@ Common::NodeLink processNode(
             meshes.insert({ node.mesh, meshId });
         }
         result.SetMesh(meshes[node.mesh]);
-        nodeLinkProperties |= NodeLink::Properties::MESH;
+        nodeLinkProperties |= NodeLink::Properties::CONTOUR_MESH;
         nodeLinkProperties |= NodeLink::Properties::CASTS_SHADOW;
     }
 
     if (node.skin != -1) {
-
+        nodeLinkProperties |= NodeLink::Properties::SKINNED;
     }
+
+    result.SetProperties(nodeLinkProperties);
 
     for (std::size_t index = 0; index < node.children.size(); index++) {
         result.AddChild(

@@ -4,12 +4,8 @@ namespace Render {
 namespace Common {
 
 NodeLink::NodeLink()
-: _cachedTransform(1)
-, _node(IdGenerator::INVALID)
-, _mesh(IdGenerator::INVALID)
-, _camera(IdGenerator::INVALID)
-, _skin(IdGenerator::INVALID)
-, _properties(0x0) {}
+: _node(IdGenerator::INVALID)
+{}
 
 NodeLink::NodeLink(IdGenerator::Type node, uint16_t properties)
 : _cachedTransform(1)
@@ -25,6 +21,10 @@ IdGenerator::Type NodeLink::GetNode() const {
 
 void NodeLink::AddChild(NodeLink&& node) {
     _childLinks.push_back(std::move(node));
+}
+
+std::vector<NodeLink>& NodeLink::GetChildren() {
+    return _childLinks;
 }
 
 const std::vector<NodeLink>& NodeLink::GetChildren() const {
@@ -53,6 +53,18 @@ void NodeLink::SetSkin(IdGenerator::Type skin) {
 
 IdGenerator::Type NodeLink::GetSkin() const {
     return _skin;
+}
+
+void NodeLink::SetProperties(uint16_t properties) {
+    _properties = properties;
+}
+
+bool NodeLink::HasProperties(const uint16_t required) const {
+    return (_properties & required) == required;
+}
+
+uint16_t NodeLink::GetProperties() const {
+    return _properties;
 }
 
 void NodeLink::CacheTransform(const glm::mat4& transform) {

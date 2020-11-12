@@ -11,7 +11,7 @@ add_executable(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME}
     Assets
     Utils
-    Renderer
+    Renderer_Pipeline
     Renderer_MappingProgram
     Renderer_Camera
     Renderer_Importer
@@ -23,7 +23,7 @@ target_link_libraries(${PROJECT_NAME}
 PRIVATE
     Assets
     Utils
-    Renderer
+    Renderer_Pipeline
     Renderer_MappingProgram
     Renderer_Camera
     Renderer_Importer

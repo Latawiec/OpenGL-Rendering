@@ -21,14 +21,33 @@ struct Scene {
     Scene();
 
     IdGenerator::Type AddNode(Node&& node);
-    IdGenerator::Type AddMesh(Mesh&& mesh);
-    IdGenerator::Type AddCamera(Camera&& camera);
-    IdGenerator::Type AddSkin(Skin&& skin);
-    void AddNodeHierarchy(NodeLink&& nodeLink);
+    Node& GetNode(const IdGenerator::Type& id);
+    const Node& GetNode(const IdGenerator::Type& id) const;
 
+    IdGenerator::Type AddMesh(Mesh&& mesh);
+    Mesh& GetMesh(const IdGenerator::Type& id);
+    const Mesh& GetMesh(const IdGenerator::Type& id) const;
+
+    IdGenerator::Type AddCamera(Camera&& camera);
+    Camera& GetCamera(const IdGenerator::Type& id);
+    const Camera& GetCamera(const IdGenerator::Type& id) const;
+
+    IdGenerator::Type AddSkin(Skin&& skin);
+    Skin& GetSkin(const IdGenerator::Type& id);
+    const Skin& GetSkin(const IdGenerator::Type& id) const;
+
+    void AddNodeHierarchy(NodeLink&& nodeLink);
+    NodeLink& GetNodeHierarchy();
     const NodeLink& GetNodeHierarchy() const;
 
+    void UpdateNodes();
+
 private:
+    IdGenerator _nodeIdGenerator;
+    IdGenerator _meshIdGenerator;
+    IdGenerator _cameraIdGenerator;
+    IdGenerator _skinIdGenerator;
+
     std::map<IdGenerator::Type, Node> _nodes;
     std::map<IdGenerator::Type, Mesh> _meshes;
     std::map<IdGenerator::Type, Camera> _cameras;
@@ -36,10 +55,7 @@ private:
 
     NodeLink _sceneRoot;
 
-    IdGenerator _nodeIdGenerator;
-    IdGenerator _meshIdGenerator;
-    IdGenerator _cameraIdGenerator;
-    IdGenerator _skinIdGenerator;
+    void updateLink(const glm::mat4& parentTransform, NodeLink& link);
 
     // smthing smthing activeCamera; don't know if pointer or ref yet. Can there be no active camera?...
     #ifndef NDEBUG

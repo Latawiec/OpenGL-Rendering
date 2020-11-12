@@ -1,4 +1,4 @@
-#include "GraphicBuffer.hpp"
+#include "Pipeline/GraphicBuffer.hpp"
 
 namespace Render {
 

@@ -12,19 +12,20 @@ namespace Common {
 struct NodeLink {
 
     enum Properties : uint16_t {
-        MESH         = 1 << 0,
+        CONTOUR_MESH = 1 << 0,
         CASTS_SHADOW = 1 << 1,
-        SKIN         = 1 << 2,
+        SKINNED      = 1 << 2,
         CAMERA       = 1 << 3
     };
 
     NodeLink();
 
-    NodeLink(IdGenerator::Type node, uint16_t properties);
+    NodeLink(IdGenerator::Type node, uint16_t properties = 0x0);
 
     IdGenerator::Type GetNode() const;
 
     void AddChild(NodeLink&& node);
+    std::vector<NodeLink>& GetChildren();
     const std::vector<NodeLink>& GetChildren() const;
 
     void SetMesh(IdGenerator::Type mesh);
@@ -35,6 +36,10 @@ struct NodeLink {
 
     void SetSkin(IdGenerator::Type skin);
     IdGenerator::Type GetSkin() const;
+
+    void SetProperties(uint16_t properties);
+    bool HasProperties(const uint16_t required) const;
+    uint16_t GetProperties() const;
 
     void CacheTransform(const glm::mat4& transform);
     const glm::mat4& GetCachedTransform() const;
