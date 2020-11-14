@@ -42,6 +42,9 @@ private:
 
     DebugUtils::TextureProgram _textureDrawProgram;
     EdgeDetector::Program _edgeProgram;
+
+    // I'll put it here becasue I don't know how to handle it yet.
+    // std::map<IdGenerator::Type, std::vector<glm::mat4>> _preparedJointTransforms;
 };
 
 } // namespace Render

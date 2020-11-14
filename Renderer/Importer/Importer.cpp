@@ -15,6 +15,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
+
+#include <unordered_map>
 #include <iostream>
 #include <array>
 
@@ -25,8 +27,6 @@
 namespace Render {
 using namespace Common;
 namespace /*anonymous*/ {
-    using gltfId = std::size_t; // basically index in array...
-    using SceneId = std::uint64_t;
     static const std::string ProgramType = "ProgramType";
     static const std::string ContourProgramType = "Contour";
 
@@ -36,6 +36,8 @@ namespace /*anonymous*/ {
     static const std::string EdgeColourAttribute = "COLOR_0";
     static const std::string JointsAttribute = "JOINTS_0";
     static const std::string JointsWeightsAttribute = "WEIGHTS_0";
+
+    static const std::string CameraOrientationNodeName = "Camera_Orientation";
 
     Common::Mesh processContourMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
         GLuint VAO;
@@ -122,6 +124,9 @@ namespace /*anonymous*/ {
 
 Common::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
 
+    if (mesh.primitives[0].material == -1) {
+        return {};
+    }
     const auto& material = model.materials[mesh.primitives[0].material];
     const auto& properties = material.extras;
 
@@ -135,8 +140,12 @@ Common::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mes
     return {};
 }
 
-Common::Camera processCamera(const glm::mat4& cameraOrientation, const tinygltf::Camera& camera) {
-    return Common::Camera(cameraOrientation, camera.perspective.yfov, 800.f/600.f);
+Common::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {
+    return Common::Camera{ static_cast<float>(camera.perspective.yfov), 800.f/600.f, glm::mat4{1} };
+}
+
+Common::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera, const glm::mat4& cameraOrientation) {
+    return Common::Camera{ static_cast<float>(camera.perspective.yfov), 800.f/600.f, cameraOrientation };
 }
 
 glm::mat4 processNodeTransform(const tinygltf::Node& node) {
@@ -151,68 +160,177 @@ glm::mat4 processNodeTransform(const tinygltf::Node& node) {
     return translateMatrix * rotateMatrix * scaleMatrix;
 }
 
-Common::NodeLink processNode(
-    const tinygltf::Model& model,
-    const gltfId nodeIndex,
+void Importer::convertNodes(
     Common::Scene& scene,
-    std::map<gltfId, SceneId>& meshes,
-    std::map<gltfId, SceneId>& cameras,
-    std::map<gltfId, SceneId>& skins,
-    std::map<gltfId, SceneId>& nodes)
+    const tinygltf::Model& gltfModel)
 {
-    const auto& node = model.nodes[nodeIndex];
-    const auto nodeTransform = processNodeTransform(node);
-    auto sceneNode = Common::Node{nodeTransform};
-    #ifndef NDEBUG
-    sceneNode.SetName(node.name);
-    #endif
-    const auto nodeId = scene.AddNode(std::move(sceneNode));
-    nodes.insert({ nodeIndex, nodeId });
-    uint16_t nodeLinkProperties = 0x0;
-    Common::NodeLink result(nodeId);
+    const auto nodesCount = gltfModel.nodes.size();
+    nodeConversionData.convertedNodes.reserve(nodesCount);
 
-    if (node.camera != -1) {
-        if (!cameras.contains(node.camera)) {
-            auto processedCamera = processCamera(nodeTransform, model.cameras[node.camera]);
-            const auto cameraId = scene.AddCamera(std::move(processedCamera));
-            cameras.insert({ node.camera, cameraId });
+    for (size_t i = 0; i < nodesCount; ++i) {
+        const tinygltf::Node& gltfNode = gltfModel.nodes[i]; 
+        // I don't know if every software does it, but Blender gives me a weird "Camera_Orientation" node. So we need to patch it up.
+        const bool isCameraOrientation = (gltfNode.camera != -1) && (gltfNode.name == CameraOrientationNodeName);
+        const glm::mat4 nodeTransform = isCameraOrientation ? glm::mat4{1} : processNodeTransform(gltfNode);
+        Common::Node convertedNode { nodeTransform };
+        #ifndef NDEBUG
+        convertedNode.SetName(gltfNode.name);
+        #endif
+        const SceneId sceneNodeId = scene.AddNode(std::move(convertedNode));
+        nodeConversionData.convertedNodes.push_back(sceneNodeId);
+
+        if (isCameraOrientation) {
+            // Also remember it, and we'll put it in Camera object as Orientation matrix.
+            nodeConversionData.cameraToOrientationNode[gltfNode.camera] = i;
         }
-        result.SetCamera(cameras[node.camera]);
-        nodeLinkProperties |= NodeLink::Properties::CAMERA;
     }
+}
 
-    if (node.mesh != -1) {
-        if (!meshes.contains(node.mesh)) {
-            auto processedMesh = processMesh(model, model.meshes[node.mesh]);
-            const auto meshId = scene.AddMesh(std::move(processedMesh));
-            meshes.insert({ node.mesh, meshId });
+void Importer::convertMeshes(
+    Common::Scene& scene,
+    const tinygltf::Model& gltfModel)
+{
+    const auto meshesCount = gltfModel.meshes.size();
+    meshConversionData.convertedMeshes.reserve(meshesCount);
+
+    for (size_t i = 0; i < meshesCount; ++i) {
+        const tinygltf::Mesh& gltfMesh = gltfModel.meshes[i];
+        Common::Mesh convertedMesh = processMesh(gltfModel, gltfMesh); 
+        const SceneId sceneMeshId = scene.AddMesh(std::move(convertedMesh));
+        meshConversionData.convertedMeshes.push_back(sceneMeshId);
+    }
+}
+
+void Importer::convertCameras (
+    Common::Scene& scene,
+    const tinygltf::Model& gltfModel)
+{
+    const auto camerasCount = gltfModel.cameras.size();
+    cameraConversionData.convertedCameras.reserve(camerasCount);
+
+    for (gltfId i = 0; i < camerasCount; ++i) {
+        const tinygltf::Camera& gltfCamera = gltfModel.cameras[i];
+        const bool cameraHasOrientationTransform = nodeConversionData.cameraToOrientationNode.contains(i);
+        if (cameraHasOrientationTransform) {
+            const tinygltf::Node& gltfNode = gltfModel.nodes[nodeConversionData.cameraToOrientationNode[i]];
+            const glm::mat4 orientationTransform = processNodeTransform(gltfNode);
+            Common::Camera convertedCamera = processCamera(gltfModel, gltfCamera, orientationTransform);
+            cameraConversionData.convertedCameras.push_back(scene.AddCamera(std::move(convertedCamera)));
+        } else {
+            Common::Camera convertedCamera = processCamera(gltfModel, gltfCamera);
+            cameraConversionData.convertedCameras.push_back(scene.AddCamera(std::move(convertedCamera)));
         }
-        result.SetMesh(meshes[node.mesh]);
-        nodeLinkProperties |= NodeLink::Properties::CONTOUR_MESH;
-        nodeLinkProperties |= NodeLink::Properties::CASTS_SHADOW;
     }
+}
 
-    if (node.skin != -1) {
-        nodeLinkProperties |= NodeLink::Properties::SKINNED;
-    }
+Skin::BoneLink Importer::traverseSkinNodes(
+    std::unordered_map<gltfId, size_t>& skinBoneNodesMissing,
+    const tinygltf::Model& gltfModel,
+    const size_t nodeIndex)
+{
+    Skin::BoneLink result { skinBoneNodesMissing[nodeIndex] };
+    skinBoneNodesMissing.erase(nodeIndex);
 
-    result.SetProperties(nodeLinkProperties);
+    // Check if we done.
+    if (skinBoneNodesMissing.empty()) return result;
 
-    for (std::size_t index = 0; index < node.children.size(); index++) {
-        result.AddChild(
-            processNode(model, node.children[index], scene, meshes, cameras, skins, nodes)
-        );
+    const auto node = gltfModel.nodes[nodeIndex];
+    const auto childNodesCount = node.children.size();
+    for (size_t i = 0; i < childNodesCount; ++i) {
+        const auto gltfChildNodeId = node.children[i];
+        if (skinBoneNodesMissing.contains(gltfChildNodeId)) {
+            result.childBoneLinks.push_back(traverseSkinNodes(skinBoneNodesMissing, gltfModel, gltfChildNodeId));
+            // Check if we done.
+            if (skinBoneNodesMissing.empty()) return result;
+        }
     }
 
     return result;
 }
 
+void Importer::convertSkins (
+    Common::Scene& scene,
+    const tinygltf::Model& gltfModel)
+{
+    const auto skinsCount = gltfModel.skins.size();
+    skinConversionData.convertedSkins.reserve(skinsCount);
+
+    for (size_t i = 0; i < skinsCount; ++i) {
+        const auto& invBindMatricesAccessorId = gltfModel.skins[i].inverseBindMatrices;
+        const auto& invBindMatricesAccessor = gltfModel.accessors[invBindMatricesAccessorId];
+        const auto& invBindMatricesBufferView = gltfModel.bufferViews[invBindMatricesAccessor.bufferView];
+        const auto& invBindMatricesBuffer = gltfModel.buffers[invBindMatricesBufferView.buffer];
+        const glm::mat4* invBindMatricesArray = reinterpret_cast<const glm::mat4*>(&invBindMatricesBuffer.data.at(0) + invBindMatricesBufferView.byteOffset);
+
+        const tinygltf::Skin& gltfSkin = gltfModel.skins[i];
+        
+        std::unordered_map<Skin::JointTransformIndex, Skin::Bone> skinBones;
+        skinBones.reserve(gltfSkin.joints.size());
+
+        std::unordered_map<gltfId, size_t> skinBoneNodesMissing; // Mapped to indices.
+        skinBoneNodesMissing.reserve(gltfSkin.joints.size());
+
+        for (size_t j = 0; j < gltfSkin.joints.size(); ++j) {
+            const auto glftJointNodeId = gltfSkin.joints[j];
+            skinBoneNodesMissing[gltfSkin.joints[j]] = j;
+            skinBones[j] = { invBindMatricesArray[j], nodeConversionData.convertedNodes[glftJointNodeId] };
+        }
+        
+        // I assume that first node in this list is root node (please...);
+        const auto skinRootNodeId = gltfSkin.joints[0];
+        Skin::BoneLink skinRootLink = traverseSkinNodes(skinBoneNodesMissing, gltfModel, skinRootNodeId);
+
+        Skin convertedSkin { std::move(skinBones), std::move(skinRootLink) };
+        skinConversionData.convertedSkins.push_back(scene.AddSkin(std::move(convertedSkin)));
+    }
+}
+
+NodeLink Importer::traverseNodes(const tinygltf::Model& gltfModel, const size_t nodeIndex) {
+    NodeLink nodeLink { nodeConversionData.convertedNodes[nodeIndex], 0x0 };
+    uint16_t properties = 0x0;
+    const auto& gltfNode = gltfModel.nodes[nodeIndex];
+
+    // Mesh
+    if (gltfNode.mesh != -1) {
+        properties |= NodeLink::Properties::CONTOUR_MESH;
+        properties |= NodeLink::Properties::CASTS_SHADOW;
+        nodeLink.SetMesh(meshConversionData.convertedMeshes[gltfNode.mesh]);
+    }
+
+    // Camera
+    if (gltfNode.camera != -1) {
+        properties |= NodeLink::Properties::CAMERA;
+        nodeLink.SetCamera(cameraConversionData.convertedCameras[gltfNode.camera]);
+    }
+
+    // Skin
+    if (gltfNode.skin != -1) {
+        properties |= NodeLink::Properties::SKINNED;
+        nodeLink.SetSkin(skinConversionData.convertedSkins[gltfNode.skin]);
+    }
+
+    nodeLink.SetProperties(properties);
+
+    for (const auto& childNodeId : gltfNode.children) {
+        nodeLink.AddChild(traverseNodes(gltfModel, childNodeId));
+    }
+
+    return nodeLink;
+}
+
+void Importer::clearCache() {
+    nodeConversionData = {};
+    meshConversionData = {};
+    cameraConversionData = {};
+    skinConversionData = {};
+}
+
 bool Importer::importGltf(const std::string& filename, Common::Scene& scene) {
-    tinygltf::Model model;
+    tinygltf::Model gltfModel;
     tinygltf::TinyGLTF loader;
     std::string err, warn;
 
-    bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, filename);
+    bool ret = loader.LoadASCIIFromFile(&gltfModel, &err, &warn, filename);
     if (!warn.empty()) {
         printf("Warn: %s\n", warn.c_str());
     }
@@ -225,24 +343,24 @@ bool Importer::importGltf(const std::string& filename, Common::Scene& scene) {
         printf("Failed to parse glTF\n");
     }
 
-    std::map<gltfId, SceneId> meshes;
-    std::map<gltfId, SceneId> cameras;
-    std::map<gltfId, SceneId> skins;
-    std::map<gltfId, SceneId> nodes;
-
-    const auto sceneRootNodeId = scene.AddNode({});
-    Common::NodeLink sceneRootNodeLink{ sceneRootNodeId, 0x0 };
-
-    const tinygltf::Scene &gltfScene = model.scenes[model.defaultScene];
-
-    for (size_t i = 0; i < gltfScene.nodes.size(); ++i) {
-        assert((gltfScene.nodes[i] >= 0) && (gltfScene.nodes[i] < model.nodes.size()));
-        sceneRootNodeLink.AddChild(
-            processNode(model, gltfScene.nodes[i], scene,meshes, cameras, skins, nodes)
-        );
+    if (!ret) {
+        return ret;
     }
 
-    scene.AddNodeHierarchy(std::move(sceneRootNodeLink));
+    convertNodes(scene, gltfModel);
+    convertMeshes(scene, gltfModel);
+    convertCameras(scene, gltfModel);
+    convertSkins(scene, gltfModel);
+    // Now that all is converted, set scene hierarchy.
+    const tinygltf::Scene &gltfScene = gltfModel.scenes[gltfModel.defaultScene];
+
+    for (size_t i = 0; i < gltfScene.nodes.size(); ++i) {
+        assert((gltfScene.nodes[i] >= 0) && (gltfScene.nodes[i] < gltfModel.nodes.size()));
+        const auto nodeId = gltfScene.nodes[i];
+        scene.AddNodeHierarchy(traverseNodes(gltfModel, nodeId));
+    }
+
+    clearCache();
 
     return true;
 }

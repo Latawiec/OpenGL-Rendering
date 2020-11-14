@@ -10,12 +10,14 @@ SceneDrawingManager::SceneDrawingManager(const int windowWidth, const int window
 , _height(windowHeight) {}
 
 void SceneDrawingManager::Draw(const Common::Scene& scene) {
+    // prepareSkins(scene, scene.GetNodeHierarchy());
     matchForQueue(scene, scene.GetNodeHierarchy());
     drawQueues();
 }
 
 void SceneDrawingManager::matchForQueue(const Common::Scene& scene, const Common::NodeLink& link) {
     const auto linkProperties = link.GetProperties();
+    
     if (link.HasProperties(Common::NodeLink::CONTOUR_MESH)) queueContourMesh(link.GetCachedTransform(), scene.GetMesh(link.GetMesh()));
     if (link.HasProperties(Common::NodeLink::CASTS_SHADOW)) queueShadowMesh(link.GetCachedTransform(), scene.GetMesh(link.GetMesh()));
     if (link.HasProperties(Common::NodeLink::CAMERA)) queueCamera(link.GetCachedTransform(), scene.GetCamera(link.GetCamera()));
@@ -24,6 +26,10 @@ void SceneDrawingManager::matchForQueue(const Common::Scene& scene, const Common
         matchForQueue(scene, childLink);
     }
 }
+
+// void SceneDrawingManager::prepareSkins(const Common::Scene& scene, const Common::NodeLink& link) {
+
+// }
 
 void SceneDrawingManager::queueContourMesh(const glm::mat4& transform, const Common::Mesh& mesh) {
     _contourProgramExecutor.QueueMesh(transform, mesh);
@@ -35,12 +41,7 @@ void SceneDrawingManager::queueShadowMesh(const glm::mat4& transform, const Comm
 
 void SceneDrawingManager::queueCamera(const glm::mat4& worldTransform, const Common::Camera& camera) {
     _activeCamera = {
-        // I have to do this wombo-combo because Blender provides me with this weird "Camera Orientation" matrix when exported.
-        // So I have to undo it from world transform, because I applied it already, then inverse world (as you usually do),
-        // and inverse-rotate it so that camera orientation is O.K. :(
-        //
-        // I wonder if other 3D software does it too... With this additional node for Camera Orientation
-        glm::inverse(camera.GetViewTransform()) * glm::inverse(glm::inverse(camera.GetViewTransform()) * worldTransform),
+        glm::inverse(worldTransform * camera.GetCameraOrientation()),
         camera.GetProjectionTransform()
     };
 }
@@ -62,6 +63,8 @@ void SceneDrawingManager::drawQueues() {
         _edgeProgram.Draw(_deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
         //_textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
     }
+
+    _contourProgramExecutor.Clear();
 }
 
 } // namespace Render

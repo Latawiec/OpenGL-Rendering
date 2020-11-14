@@ -49,9 +49,6 @@ void Program::Draw(const glm::mat4& viewTransform,
         prepareUniforms(meshTransform);
         ScopedBinding bind(mesh.getVertexData());
         glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
-        while (auto error = glGetError()) {
-           std::cerr << "Error: " << error << '\n';
-	    }
     }
 }
 
@@ -74,7 +71,7 @@ void Program::prepareCamera(const glm::mat4& view, const glm::mat4& projection) 
 void Program::prepareTextures() const
 {
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _shadowMapTexture);
+    //glBindTexture(GL_TEXTURE_2D, _shadowMapTexture);
 }
 
 void Program::prepareUniforms(const glm::mat4& transform) const

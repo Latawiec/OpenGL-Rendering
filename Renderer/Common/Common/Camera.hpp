@@ -13,7 +13,7 @@ struct Camera {
         Ortographic
     };
 
-    Camera(glm::mat4 viewTransform, const float fov, const float aspect);
+    Camera(const float fov, const float aspect, const glm::mat4& orientation);
     Camera(Camera&&) noexcept = default;
     Camera& operator=(Camera&&) noexcept = default;
 
@@ -21,10 +21,10 @@ struct Camera {
     Camera& operator=(const Camera&) noexcept = default;
 
     glm::mat4 GetProjectionTransform() const;
-    glm::mat4 GetViewTransform() const;
+    glm::mat4 GetCameraOrientation() const;
 
 private:
-    glm::mat4 _viewTransform;
+    glm::mat4 _cameraOrientation;
     float _fov;
     float _aspectRatio;
     const Type _type;

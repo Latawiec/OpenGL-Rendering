@@ -11,7 +11,7 @@
 #include "NodeLink.hpp"
 #include "IdGenerator.hpp"
 
-#include <map>
+#include <unordered_map>
 
 namespace Render {
 namespace Common {
@@ -48,10 +48,10 @@ private:
     IdGenerator _cameraIdGenerator;
     IdGenerator _skinIdGenerator;
 
-    std::map<IdGenerator::Type, Node> _nodes;
-    std::map<IdGenerator::Type, Mesh> _meshes;
-    std::map<IdGenerator::Type, Camera> _cameras;
-    std::map<IdGenerator::Type, Skin> _skins;
+    std::unordered_map<IdGenerator::Type, Node> _nodes;
+    std::unordered_map<IdGenerator::Type, Mesh> _meshes;
+    std::unordered_map<IdGenerator::Type, Camera> _cameras;
+    std::unordered_map<IdGenerator::Type, Skin> _skins;
 
     NodeLink _sceneRoot;
 
