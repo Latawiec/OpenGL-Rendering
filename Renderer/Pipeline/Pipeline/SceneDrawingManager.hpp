@@ -1,9 +1,10 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 
 #include <glm/glm.hpp>
 
+#include <Common/IdGenerator.hpp>
 #include <Common/Scene.hpp>
 #include <Common/NodeLink.hpp>
 #include <MappingProgram/Program.hpp>
@@ -29,6 +30,8 @@ private:
     void queueShadowMesh(const glm::mat4& transform, const Common::Mesh& mesh);
     void queueCamera(const glm::mat4& worldTransform, const Common::Camera& camera);
 
+    void prepareSkins(const Common::Scene& scene);
+
     void drawQueues();
 
     struct {
@@ -44,7 +47,7 @@ private:
     EdgeDetector::Program _edgeProgram;
 
     // I'll put it here becasue I don't know how to handle it yet.
-    // std::map<IdGenerator::Type, std::vector<glm::mat4>> _preparedJointTransforms;
+    std::unordered_map<Common::IdGenerator::Type, std::vector<glm::mat4>> _preparedJointTransforms;
 };
 
 } // namespace Render

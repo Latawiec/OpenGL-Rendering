@@ -62,6 +62,16 @@ void Program::SetShadowMapTexture(const GLuint textureId) {
     _shadowMapTexture = textureId;
 }
 
+// Test
+void Program::SetJointTransforms(const glm::mat4* transforms) {
+    static int counter = 0;
+    counter++;
+    if (counter == 500) counter = 0;
+    _program.use();
+    _program.setArray("jointTransform", 32, transforms);
+    _program.set<float>("debugWeightsMultiplier", float(counter/500.f));
+}
+
 void Program::prepareCamera(const glm::mat4& view, const glm::mat4& projection) const
 {
     _program.set(u_view, view);
@@ -78,8 +88,8 @@ void Program::prepareUniforms(const glm::mat4& transform) const
 {
     _program.set<unsigned int>(u_mesh_id, generateId());
     _program.set(u_model, transform);
-    _program.set(u_light_space_matrix, _lightSpaceMatrix);
-    _program.set(u_light_position, _lightPosition);
+    // _program.set(u_light_space_matrix, _lightSpaceMatrix);
+    // _program.set(u_light_position, _lightPosition);
 }
 
 } // namespace MappingProgram

@@ -54,6 +54,8 @@ public:
 
     void SetShadowMapTexture(const GLuint textureId);
 
+    void SetJointTransforms(const glm::mat4* transforms);
+
     Program(Program&) = delete;
     Program(Program&&) = delete;
     Program& operator=(Program&) = delete;

@@ -17,7 +17,7 @@ struct Skin {
     using JointTransformIndex = std::size_t;
 
     struct Bone {
-        glm::mat4 inverseBindTransform = glm::mat4{1};
+        glm::mat4 inverseBindMatrix = glm::mat4{1};
         IdGenerator::Type nodeId = IdGenerator::INVALID;
     };
 

@@ -35,6 +35,7 @@ struct Scene {
     IdGenerator::Type AddSkin(Skin&& skin);
     Skin& GetSkin(const IdGenerator::Type& id);
     const Skin& GetSkin(const IdGenerator::Type& id) const;
+    const std::unordered_map<IdGenerator::Type, Skin>& GetSkins() const;
 
     void AddNodeHierarchy(NodeLink&& nodeLink);
     NodeLink& GetNodeHierarchy();

@@ -5,6 +5,7 @@
 #include <glad/glad.h>
 #include <stdint.h>
 #include <string_view>
+#include <vector>
 
 #ifndef NDEBUG
 #include <iostream>
@@ -121,6 +122,11 @@ public:
 		static_assert("Not implemented for given type.");
 	}
 
+	template<class T>
+	void setArray(const std::string_view name, const size_t count, const T* value) const {
+		static_array("Not implemented for given type.");
+	}
+
 private:
 	void linkProgram() {
 		glLinkProgram(_id);
@@ -157,5 +163,8 @@ void ShaderProgram::set<glm::vec3>(const std::string_view name, const glm::vec3 
 
 template<>
 void ShaderProgram::set<glm::vec2>(const std::string_view name, const glm::vec2 value) const;
+
+template<>
+void ShaderProgram::setArray<glm::mat4>(const std::string_view name, const std::size_t count, const glm::mat4* ptr) const;
 
 } // namespace Render

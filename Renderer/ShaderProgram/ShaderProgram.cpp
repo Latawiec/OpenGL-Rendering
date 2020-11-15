@@ -28,6 +28,11 @@ void ShaderProgram::set<glm::mat4>(const std::string_view name, const glm::mat4 
 }
 
 template<>
+void ShaderProgram::setArray<glm::mat4>(const std::string_view name, const std::size_t count, const glm::mat4* ptr) const {
+	glUniformMatrix4fv(glGetUniformLocation(_id, name.data()), count, GL_FALSE, glm::value_ptr(*ptr));
+}
+
+template<>
 void ShaderProgram::set<glm::vec3>(const std::string_view name, const glm::vec3 value) const {
 	glUniform3fv(glGetUniformLocation(_id, name.data()), 1, glm::value_ptr(value));
 }

@@ -1,6 +1,7 @@
 #include "Pipeline/SceneDrawingManager.hpp"
 
 #include <glad/glad.h>
+#include <unordered_map>
 
 namespace Render {
 
@@ -10,7 +11,7 @@ SceneDrawingManager::SceneDrawingManager(const int windowWidth, const int window
 , _height(windowHeight) {}
 
 void SceneDrawingManager::Draw(const Common::Scene& scene) {
-    // prepareSkins(scene, scene.GetNodeHierarchy());
+    prepareSkins(scene);
     matchForQueue(scene, scene.GetNodeHierarchy());
     drawQueues();
 }
@@ -27,9 +28,36 @@ void SceneDrawingManager::matchForQueue(const Common::Scene& scene, const Common
     }
 }
 
-// void SceneDrawingManager::prepareSkins(const Common::Scene& scene, const Common::NodeLink& link) {
+void setTransforms(
+    const glm::mat4& parentTransform,
+    std::vector<glm::mat4>& jointTransforms,
+    const Common::Scene& scene,
+    const Common::Skin& skin,
+    const Common::Skin::BoneLink& boneLink)
+{
+    const auto boneIndex = boneLink.boneIndex;
+    const Common::Skin::Bone& bone = skin.GetBones().at(boneIndex);
+    const Common::Node& node = scene.GetNode(bone.nodeId);
 
-// }
+    const glm::mat4 transform = parentTransform * node.GetTransform() * bone.inverseBindMatrix;
+
+    jointTransforms[boneIndex] = transform;
+
+    for (const auto& childBoneLink : boneLink.childBoneLinks) {
+        setTransforms(parentTransform * node.GetTransform(), jointTransforms, scene, skin, childBoneLink);
+    }
+}
+
+void SceneDrawingManager::prepareSkins(const Common::Scene& scene) {
+    _preparedJointTransforms = {};
+    for (const auto& [skinId, skin] : scene.GetSkins()) {
+        const auto& skinHierarchy = skin.GetBonesHierarchy();
+        const auto bonesCount = skin.GetBones().size();
+        _preparedJointTransforms[skinId] = { 32, glm::mat4{1} };
+        auto& skinJointTransforms = _preparedJointTransforms[skinId];
+        setTransforms(glm::mat4{1}, skinJointTransforms, scene, skin, skin.GetBonesHierarchy());
+    }
+}
 
 void SceneDrawingManager::queueContourMesh(const glm::mat4& transform, const Common::Mesh& mesh) {
     _contourProgramExecutor.QueueMesh(transform, mesh);
@@ -51,6 +79,8 @@ void SceneDrawingManager::drawQueues() {
         Common::FramebufferBase::ScopedBinding bind(_deferredBuffers);
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // TEST
+        _contourProgramExecutor.GetProgram().SetJointTransforms(_preparedJointTransforms[1].data());
         _contourProgramExecutor.Draw(_activeCamera.viewTransform, _activeCamera.projectionTransform);
     }
 
@@ -61,7 +91,7 @@ void SceneDrawingManager::drawQueues() {
         glViewport(0, 0, _width, _height);
         _edgeProgram.SetImageSize(_width/2, _height/2);
         _edgeProgram.Draw(_deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
-        //_textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
+        //_textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Normals));
     }
 
     _contourProgramExecutor.Clear();

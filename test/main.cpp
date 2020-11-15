@@ -51,7 +51,7 @@ int main() {
     SceneDrawingManager sceneDrawingManager(800, 600);
     Common::Scene mainScene;
     Importer gltfImporter;
-    auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test_skin.gltf", mainScene);
+    auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test_skin_2.gltf", mainScene);
     std::cout << "SCENE!\n" << std::endl;
     std::cout << mainScene << std::endl;
     //imported->AddChildNode(std::move(shadowingLight));

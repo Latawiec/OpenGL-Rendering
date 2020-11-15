@@ -52,8 +52,8 @@ namespace /*anonymous*/ {
         const auto& uvAccessorId = primitive.attributes.at(UvAttribute);
         const auto& edgeInfoAccessorId = primitive.attributes.at(EdgeColourAttribute);
 
-        // const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
-        // const auto& jointsWeightsAccessorId = primitive.attributes.at(JointsWeightsAttribute);
+        const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
+        const auto& jointsWeightsAccessorId = primitive.attributes.at(JointsWeightsAttribute);
 
         const auto& indicesAccessorId = primitive.indices;
         
@@ -61,9 +61,9 @@ namespace /*anonymous*/ {
             { Common::VertexAttribute::POSITION, positionAccessorId },
             { Common::VertexAttribute::NORMAL, normalAccessorId },
             { Common::VertexAttribute::UV_MAP, uvAccessorId },
-            { Common::VertexAttribute::EDGE_INFO, edgeInfoAccessorId }
-            // { Common::VertexAttribute::JOINT, jointsAccessorId },
-            // { Common::VertexAttribute::JOINT_WEIGHT, jointsWeightsAccessorId }
+            { Common::VertexAttribute::EDGE_INFO, edgeInfoAccessorId },
+            { Common::VertexAttribute::JOINT, jointsAccessorId },
+            { Common::VertexAttribute::JOINT_WEIGHT, jointsWeightsAccessorId }
         };
 
         for (const auto&[attrLocation, accessorId] : locationToAccessorMap) {
@@ -101,22 +101,6 @@ namespace /*anonymous*/ {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         // glDeleteBuffers(1, &glBuffer); Why the hell can't I delete these? :(
-
-        // if (!model.skins.empty()) {
-        //     const auto& inverseBindMatricesAccessorId = model.skins[0].inverseBindMatrices;
-        //     const auto& inverseBindMatricesAccessor = model.accessors[inverseBindMatricesAccessorId];
-        //     const auto& inverseBindMatricesBufferView = model.bufferViews[inverseBindMatricesAccessor.bufferView];
-        //     const auto& inverseBindMatricesBuffer = model.buffers[inverseBindMatricesBufferView.buffer];
-        //     const auto inverseBindMatricesCount = inverseBindMatricesAccessor.count;
-        //     const auto inverseBindMatricesStride = inverseBindMatricesAccessor.ByteStride(inverseBindMatricesBufferView);
-
-        //     std::vector<glm::mat4> inverseBindMatrices(inverseBindMatricesCount);
-        //     std::memcpy(inverseBindMatrices.data(),
-        //         &inverseBindMatricesBuffer.data.at(0) + inverseBindMatricesBufferView.byteOffset,
-        //         inverseBindMatricesBufferView.byteLength
-        //     );
-        //     std::cout << "Bind matrices!\n"; 
-        // }
 
         return Common::Mesh{ VertexDataBase(VAO, indicesAccessor.count) };
     }
@@ -226,7 +210,7 @@ void Importer::convertCameras (
 Skin::BoneLink Importer::traverseSkinNodes(
     std::unordered_map<gltfId, size_t>& skinBoneNodesMissing,
     const tinygltf::Model& gltfModel,
-    const size_t nodeIndex)
+    const gltfId nodeIndex)
 {
     Skin::BoneLink result { skinBoneNodesMissing[nodeIndex] };
     skinBoneNodesMissing.erase(nodeIndex);
@@ -263,7 +247,7 @@ void Importer::convertSkins (
         const glm::mat4* invBindMatricesArray = reinterpret_cast<const glm::mat4*>(&invBindMatricesBuffer.data.at(0) + invBindMatricesBufferView.byteOffset);
 
         const tinygltf::Skin& gltfSkin = gltfModel.skins[i];
-        
+
         std::unordered_map<Skin::JointTransformIndex, Skin::Bone> skinBones;
         skinBones.reserve(gltfSkin.joints.size());
 

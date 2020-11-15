@@ -64,6 +64,10 @@ const Skin& Scene::GetSkin(const IdGenerator::Type& id) const {
     return _skins.at(id);
 }
 
+const std::unordered_map<IdGenerator::Type, Skin>& Scene::GetSkins() const {
+    return _skins;
+}
+
 void Scene::AddNodeHierarchy(NodeLink&& nodeLink) {
     _sceneRoot.AddChild(std::move(nodeLink));
 }
