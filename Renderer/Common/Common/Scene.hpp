@@ -17,29 +17,36 @@ namespace Render {
 namespace Common {
 
 struct Scene {
+    using NodeIdType = IdGenerator::Type;
+    using MeshIdType = IdGenerator::Type;
+    using CameraIdType = IdGenerator::Type;
+    using SkinIdType = IdGenerator::Type;
+
 
     Scene();
 
-    IdGenerator::Type AddNode(Node&& node);
-    Node& GetNode(const IdGenerator::Type& id);
-    const Node& GetNode(const IdGenerator::Type& id) const;
+    NodeIdType AddNode(Node&& node);
+    Node& GetNode(const NodeIdType& id);
+    const Node& GetNode(const NodeIdType& id) const;
 
-    IdGenerator::Type AddMesh(Mesh&& mesh);
-    Mesh& GetMesh(const IdGenerator::Type& id);
-    const Mesh& GetMesh(const IdGenerator::Type& id) const;
+    MeshIdType AddMesh(Mesh&& mesh);
+    Mesh& GetMesh(const MeshIdType& id);
+    const Mesh& GetMesh(const MeshIdType& id) const;
 
-    IdGenerator::Type AddCamera(Camera&& camera);
-    Camera& GetCamera(const IdGenerator::Type& id);
-    const Camera& GetCamera(const IdGenerator::Type& id) const;
+    CameraIdType AddCamera(Camera&& camera);
+    Camera& GetCamera(const CameraIdType& id);
+    const Camera& GetCamera(const CameraIdType& id) const;
 
-    IdGenerator::Type AddSkin(Skin&& skin);
-    Skin& GetSkin(const IdGenerator::Type& id);
-    const Skin& GetSkin(const IdGenerator::Type& id) const;
-    const std::unordered_map<IdGenerator::Type, Skin>& GetSkins() const;
+    SkinIdType AddSkin(Skin&& skin);
+    Skin& GetSkin(const SkinIdType& id);
+    const Skin& GetSkin(const SkinIdType& id) const;
+    const std::unordered_map<SkinIdType, Skin>& GetSkins() const;
 
     void AddNodeHierarchy(NodeLink&& nodeLink);
     NodeLink& GetNodeHierarchy();
     const NodeLink& GetNodeHierarchy() const;
+
+    CameraIdType GetActiveCamera() const;
 
     void UpdateNodes();
 
@@ -49,10 +56,10 @@ private:
     IdGenerator _cameraIdGenerator;
     IdGenerator _skinIdGenerator;
 
-    std::unordered_map<IdGenerator::Type, Node> _nodes;
-    std::unordered_map<IdGenerator::Type, Mesh> _meshes;
-    std::unordered_map<IdGenerator::Type, Camera> _cameras;
-    std::unordered_map<IdGenerator::Type, Skin> _skins;
+    std::unordered_map<NodeIdType, Node> _nodes;
+    std::unordered_map<MeshIdType, Mesh> _meshes;
+    std::unordered_map<CameraIdType, Camera> _cameras;
+    std::unordered_map<SkinIdType, Skin> _skins;
 
     NodeLink _sceneRoot;
 

@@ -105,18 +105,6 @@ public:
 		}
 	}
 
-	unsigned int Id() const {
-		return _id;
-	}
-
-	operator unsigned int() const {
-		return _id;
-	}
-
-	void use() const {
-		glUseProgram(_id);
-	}
-
 	template<class T>
 	void set(const std::string_view name, const T value) const {
 		static_assert("Not implemented for given type.");
@@ -126,6 +114,11 @@ public:
 	void setArray(const std::string_view name, const size_t count, const T* value) const {
 		static_array("Not implemented for given type.");
 	}
+
+	struct ScopedBinding {
+        ScopedBinding(const ShaderProgram& shaderProgram) { glUseProgram(shaderProgram._id); }
+        ~ScopedBinding() { glUseProgram(0); }
+    };
 
 private:
 	void linkProgram() {

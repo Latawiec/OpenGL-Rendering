@@ -4,6 +4,8 @@ layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoords;
 layout (location = 3) in vec4 aEdgeColours;
+layout (location = 4) in vec4 aJoints;
+layout (location = 5) in vec4 aJointWeights;
 
 out VS_OUTPUT {
     vec3 Position;
@@ -15,6 +17,8 @@ out VS_OUTPUT {
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
+
+uniform mat4 jointTransform[32];
 
 uniform int mesh_id;
 
@@ -35,7 +39,13 @@ void main()
 }
 
 vec4 calculateWorldSkinnedPosition(in mat4 modelTransform, in vec3 fragPos) {
-    return model * vec4(fragPos, 1.0);
+    mat4 skinMatrix = 
+        aJointWeights.x * jointTransform[int(aJoints.x)] + 
+        aJointWeights.y * jointTransform[int(aJoints.y)] + 
+        aJointWeights.z * jointTransform[int(aJoints.z)] + 
+        aJointWeights.w * jointTransform[int(aJoints.w)];
+
+    return model * skinMatrix * vec4(fragPos, 1.0);
 }
 
 vec4 calculateWorldPosition(in mat4 modelTransform, in vec3 fragPos) {

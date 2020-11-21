@@ -85,9 +85,14 @@ void Scene::UpdateNodes() {
     updateLink(initialTransform, _sceneRoot);
 }
 
+IdGenerator::Type Scene::GetActiveCamera() const {
+    // just get any...
+    return _cameras.begin()->second;
+}
+
 void Scene::updateLink(const glm::mat4& parentTransform, NodeLink& link) {
     const Node& linkNode = _nodes[link.GetNode()];
-    const glm::mat4 transform = linkNode.GetTransform() * parentTransform;
+    const glm::mat4 transform =  parentTransform * linkNode.GetTransform();
     link.CacheTransform(transform);
     for (auto& linkChild : link.GetChildren()) {
         updateLink(transform, linkChild);

@@ -7,7 +7,7 @@ find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME}
-    Program.cpp
+    Impl.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

@@ -73,16 +73,13 @@ public:
         return _elementsCount;
     }
 
-    friend class ScopedBinding;
+    struct ScopedBinding {
+        ScopedBinding(const VertexDataBase& vertexData) { glBindVertexArray(vertexData._VAO); }
+        ~ScopedBinding() { glBindVertexArray(0); }
+    };
 };
 
-class ScopedBinding {
-    unsigned int _id;
-public:
-    template<class ... Ts>
-    ScopedBinding(const VertexDataBase& vertexData) : _id(vertexData._VAO) { glBindVertexArray(_id); }
-    ~ScopedBinding() { glBindVertexArray(0); }
-};
+
 
 template <Layout, class ... >
 class VertexData {};
