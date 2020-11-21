@@ -10,22 +10,18 @@
 namespace Render {
 namespace Pipeline {
 
-struct SkinnedMeshQueue {
+struct SkinnedMeshDrawer {
 
-    SkinnedMeshQueue(const Common::Scene& scene);
+    SkinnedMeshDrawer(const Common::Scene& scene);
 
-    void Queue(const Common::NodeLink& nodeLink);
-    void Draw(const std::unordered_map<Common::Scene::NodeIdType, glm::mat4>&);
+    void Draw(const glm::mat4& view,
+        const glm::mat4& proj,
+        const std::unordered_map<Common::Scene::NodeIdType, glm::mat4>& nodeGlobalTransforms);
 
 private:
-    struct QueuedElement {
-        const Common::Scene::NodeIdType;
-        const Common::Scene::MeshIdType;
-    };
     void prepareSkin(const Common::Scene::SkinIdType& skinId);
 
     const Common::Scene& _scene;
-    std::unordered_multimap<Common::Scene::SkinIdType, QueuedElement> _queue;
     std::unordered_map<Common::Scene::SkinIdType, std::array<glm::mat4, 32>> _jointTransforms;
 
     // Programs

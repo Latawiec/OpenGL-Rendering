@@ -22,6 +22,11 @@ struct Scene {
     using CameraIdType = IdGenerator::Type;
     using SkinIdType = IdGenerator::Type;
 
+    // Helper
+    struct SkinnedMesh {
+        MeshIdType meshId;
+        SkinIdType skinId;
+    };
 
     Scene();
 
@@ -46,9 +51,17 @@ struct Scene {
     NodeLink& GetNodeHierarchy();
     const NodeLink& GetNodeHierarchy() const;
 
-    CameraIdType GetActiveCamera() const;
+    void AttachCamera(const NodeIdType& nodeId, const CameraIdType& cameraId);
+    void DetachCamera(const NodeIdType& nodeId);
+    const std::unordered_map<NodeIdType, CameraIdType>& GetCameraNodes() const;
 
-    void UpdateNodes();
+    void AttachStaticMesh(const NodeIdType& nodeId, const MeshIdType& meshId);
+    void DetachStaticMesh(const NodeIdType& nodeId);
+    const std::unordered_map<NodeIdType, MeshIdType>& GetStaticMeshNodes() const;
+
+    void AttachSkinnedMesh(const NodeIdType& nodeId, const SkinnedMesh skinnedMesh);
+    void DetachSkinnedMesh(const NodeIdType& nodeId);
+    const std::unordered_map<NodeIdType, SkinnedMesh>& GetSkinnedMeshNodes() const;
 
 private:
     IdGenerator _nodeIdGenerator;
@@ -56,16 +69,19 @@ private:
     IdGenerator _cameraIdGenerator;
     IdGenerator _skinIdGenerator;
 
+    // Raw data
     std::unordered_map<NodeIdType, Node> _nodes;
     std::unordered_map<MeshIdType, Mesh> _meshes;
     std::unordered_map<CameraIdType, Camera> _cameras;
     std::unordered_map<SkinIdType, Skin> _skins;
 
+    // Data connections
+    std::unordered_map<NodeIdType, CameraIdType> _cameraNodes;
+    std::unordered_map<NodeIdType, MeshIdType> _staticMeshNodes;
+    std::unordered_map<NodeIdType, SkinnedMesh> _skinnedMeshNodes;
+
     NodeLink _sceneRoot;
 
-    void updateLink(const glm::mat4& parentTransform, NodeLink& link);
-
-    // smthing smthing activeCamera; don't know if pointer or ref yet. Can there be no active camera?...
     #ifndef NDEBUG
 public:
     static void printNodeLink(std::ostream& stream, Scene& scene, const NodeLink& nodeLink, int level = 0) {

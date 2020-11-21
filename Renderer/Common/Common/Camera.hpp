@@ -19,11 +19,12 @@ struct Camera {
     Camera(const Camera&) noexcept = default;
     Camera& operator=(const Camera&) noexcept = default;
 
-    glm::mat4 GetProjectionTransform() const;
-    glm::mat4 GetCameraOrientation() const;
+    const glm::mat4& GetProjectionTransform() const;
+    const glm::mat4& GetCameraOrientation() const;
 
 private:
     glm::mat4 _cameraOrientation;
+    glm::mat4 _projection;
     float _fov;
     float _aspectRatio;
     const Type _type;

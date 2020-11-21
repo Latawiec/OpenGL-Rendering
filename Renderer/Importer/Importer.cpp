@@ -269,34 +269,30 @@ void Importer::convertSkins (
     }
 }
 
-NodeLink Importer::traverseNodes(const tinygltf::Model& gltfModel, const size_t nodeIndex) {
-    NodeLink nodeLink { nodeConversionData.convertedNodes[nodeIndex], 0x0 };
-    uint16_t properties = 0x0;
-    const auto& gltfNode = gltfModel.nodes[nodeIndex];
+NodeLink Importer::traverseNodes(Common::Scene& scene, const tinygltf::Model& gltfModel, const size_t glftNodeId, const Common::Scene::NodeIdType parentNodeId) {
+    const auto& nodeId = nodeConversionData.convertedNodes[glftNodeId];
+    Common::NodeLink nodeLink { nodeId };
+    const auto& gltfNode = gltfModel.nodes[glftNodeId];
 
     // Mesh
     if (gltfNode.mesh != -1) {
-        properties |= NodeLink::Properties::CONTOUR_MESH;
-        properties |= NodeLink::Properties::CASTS_SHADOW;
-        nodeLink.SetMesh(meshConversionData.convertedMeshes[gltfNode.mesh]);
+        const auto& meshId = meshConversionData.convertedMeshes[gltfNode.mesh];
+        if (gltfNode.skin != -1) {
+            const auto& skinId = skinConversionData.convertedSkins[gltfNode.skin];
+            scene.AttachSkinnedMesh(nodeId, { meshId, skinId });
+        } else {
+            scene.AttachStaticMesh(nodeId, meshId);
+        }
     }
 
     // Camera
     if (gltfNode.camera != -1) {
-        properties |= NodeLink::Properties::CAMERA;
-        nodeLink.SetCamera(cameraConversionData.convertedCameras[gltfNode.camera]);
+        const auto& cameraId = cameraConversionData.convertedCameras[gltfNode.camera];
+        scene.AttachCamera(parentNodeId, cameraId);
     }
-
-    // Skin
-    if (gltfNode.skin != -1) {
-        properties |= NodeLink::Properties::SKINNED;
-        nodeLink.SetSkin(skinConversionData.convertedSkins[gltfNode.skin]);
-    }
-
-    nodeLink.SetProperties(properties);
 
     for (const auto& childNodeId : gltfNode.children) {
-        nodeLink.AddChild(traverseNodes(gltfModel, childNodeId));
+        nodeLink.AddChild(traverseNodes(scene, gltfModel, childNodeId, nodeId));
     }
 
     return nodeLink;
@@ -341,7 +337,7 @@ bool Importer::importGltf(const std::string& filename, Common::Scene& scene) {
     for (size_t i = 0; i < gltfScene.nodes.size(); ++i) {
         assert((gltfScene.nodes[i] >= 0) && (gltfScene.nodes[i] < gltfModel.nodes.size()));
         const auto nodeId = gltfScene.nodes[i];
-        scene.AddNodeHierarchy(traverseNodes(gltfModel, nodeId));
+        scene.AddNodeHierarchy(traverseNodes(scene, gltfModel, nodeId, 0));
     }
 
     clearCache();

@@ -29,12 +29,12 @@ Program::Program() {
 }
 
 void Program::Draw(const unsigned int& texture) const {
-    _program.use();
+    ShaderProgram::ScopedBinding programBinding{ _program };
 
     prepareTextures(texture);
     prepareUniforms();
 
-    ScopedBinding bind(_vertexData);
+    VertexDataBase::ScopedBinding dataBinding{ _vertexData };
     glDrawElements(GL_TRIANGLES, _vertexData.vertexCount(), GL_UNSIGNED_INT, 0);
 }
 

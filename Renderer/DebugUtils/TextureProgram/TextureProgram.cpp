@@ -27,13 +27,13 @@ TextureProgram::TextureProgram() {
 }
 
 void TextureProgram::draw(unsigned int texture) const {
-    _shaderProgram.use();
+    ShaderProgram::ScopedBinding programBinding{ _shaderProgram };
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     _shaderProgram.set(processedTextureName, 0);
 
-    ScopedBinding bind(_vertexData);
+    VertexDataBase::ScopedBinding dataBinding{ _vertexData };
     glDrawElements(GL_TRIANGLES, _vertexData.vertexCount(), GL_UNSIGNED_INT, 0);
 }
 

@@ -7,6 +7,9 @@ find_package(glm CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME}
     SceneDrawingManager.cpp
+    TransformProcessor.cpp
+    SkinnedMeshDrawer.cpp
+    StaticMeshDrawer.cpp
     GraphicBuffer.cpp
 )
 

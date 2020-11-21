@@ -48,7 +48,6 @@ int main() {
     //auto shadowingLight = std::make_unique<LightNode>();
     //auto& stolenLight = *shadowingLight;
     //shadowingLight->SetTransform(glm::translate(glm::mat4(1), glm::vec3(5, 2.5, 1)));
-    SceneDrawingManager sceneDrawingManager(800, 600);
     Common::Scene mainScene;
     Importer gltfImporter;
     auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test_skin_3.gltf", mainScene);
@@ -56,10 +55,10 @@ int main() {
     std::cout << mainScene << std::endl;
     //imported->AddChildNode(std::move(shadowingLight));
 
+    Pipeline::SceneDrawingManager sceneDrawingManager(mainScene, 800, 600);
     while(!glfwWindowShouldClose(window)) {
         //stolenLight.SetTransform(glm::translate(glm::mat4(1), glm::vec3(5 * glm::sin(glfwGetTime()), 2.5, 1)));
-        mainScene.UpdateNodes();
-        sceneDrawingManager.Draw(mainScene);
+        sceneDrawingManager.Draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -34,7 +34,7 @@ Static::Static()
 void Static::Draw(const Common::Mesh& mesh) const
 {
     _program.set<unsigned int>(Internal::u_mesh_id, generateId());
-    VertexArrayBase::ScopedBinding bind(mesh.getVertexData());
+    VertexDataBase::ScopedBinding dataBinding{ mesh.getVertexData() };
     glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
 }
 
@@ -53,6 +53,11 @@ void Static::SetModel(const glm::mat4& transform) const
     _program.set(Internal::u_model, transform);
 }
 
+ShaderProgram::ScopedBinding Static::Bind()
+{
+    return ShaderProgram::ScopedBinding(_program);
+}
+
 // Animated
 
 Animated::Animated()
@@ -65,7 +70,7 @@ Animated::Animated()
 void Animated::Draw(const Common::Mesh& mesh) const
 {
     _program.set<unsigned int>(Internal::u_mesh_id, generateId());
-    VertexArrayBase::ScopedBinding bind(mesh.getVertexData());
+    VertexDataBase::ScopedBinding dataBinding{ mesh.getVertexData() };
     glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
 }
 
@@ -87,6 +92,11 @@ void Animated::SetModel(const glm::mat4& transform) const
 void Animated::SetJoints(const JointsArray& transforms) const 
 {
     _program.setArray(Internal::u_joint_transform, transforms.size(), transforms.data());
+}
+
+ShaderProgram::ScopedBinding Animated::Bind()
+{
+    return ShaderProgram::ScopedBinding(_program);
 }
 
 } // namespace MappingProgram
