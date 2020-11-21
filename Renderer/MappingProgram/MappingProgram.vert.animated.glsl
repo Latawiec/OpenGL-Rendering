@@ -3,9 +3,8 @@
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoords;
-layout (location = 3) in vec4 aEdgeColours;
-layout (location = 4) in vec4 aJoints;
-layout (location = 5) in vec4 aJointWeights;
+layout (location = 3) in vec4 aJoints;
+layout (location = 4) in vec4 aJointWeights;
 
 out VS_OUTPUT {
     vec3 Position;

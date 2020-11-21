@@ -38,8 +38,8 @@ void SceneDrawingManager::Draw() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, _width, _height);
         // _edgeProgram.SetImageSize(_width/2, _height/2);
-        // _edgeProgram.Draw(_deferredBuffers.getTexture(GraphicBuffer::Output::EdgeInfo));
-        _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Position));
+        // _edgeProgram.Draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Normals));
+        _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Normals));
     }
 }
 

@@ -12,9 +12,8 @@ enum VertexAttribute : GLuint {
     POSITION = 0,
     NORMAL = 1,
     UV_MAP = 2,
-    EDGE_INFO = 3,
-    JOINT = 4,
-    JOINT_WEIGHT = 5,
+    JOINT = 3,
+    JOINT_WEIGHT = 4,
     SIZE
 };
 
