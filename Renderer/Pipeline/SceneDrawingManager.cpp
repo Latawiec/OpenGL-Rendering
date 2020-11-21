@@ -22,7 +22,7 @@ void SceneDrawingManager::Draw() {
     const auto& [nodeId, cameraId] = *_scene.GetCameraNodes().begin();
     const auto& camera = _scene.GetCamera(cameraId);
     const auto viewTransform = glm::inverse(_transformProcessor.GetNodeTransforms().at(nodeId) * camera.GetCameraOrientation());
-    const auto projTransform = glm::mat4{1};//camera.GetProjectionTransform();
+    const auto projTransform = camera.GetProjectionTransform();
 
     {
         Common::FramebufferBase::ScopedBinding bind(_deferredBuffers);

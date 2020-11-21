@@ -46,7 +46,7 @@ private:
     void convertCameras(Common::Scene& scene, const tinygltf::Model& gltfModel);
     void convertSkins(Common::Scene& scene, const tinygltf::Model& gltfModel);
     Common::Skin::BoneLink traverseSkinNodes(std::unordered_map<gltfId, size_t>& skinBoneNodesMissing, const tinygltf::Model& gltfModel, const size_t nodeIndex);
-    Common::NodeLink traverseNodes(Common::Scene& scene, const tinygltf::Model& gltfModel, const size_t glftNodeId, const Common::Scene::NodeIdType parentNodeId);
+    Common::NodeLink traverseNodes(Common::Scene& scene, const tinygltf::Model& gltfModel, const size_t glftNodeId);
 
     void clearCache();
 };
