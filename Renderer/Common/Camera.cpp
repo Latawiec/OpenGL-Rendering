@@ -6,8 +6,8 @@ namespace Render {
 namespace Common {
 
 Camera::Camera(const float fov, const float aspect, const glm::mat4& orientationMatrix = glm::mat4{1})
-: _cameraOrientation(orientationMatrix)
-, _projection(glm::perspective(_fov, _aspectRatio, 0.1f, 100.f))
+: _cameraOrientation{ orientationMatrix }
+, _projection{ glm::perspective(fov, aspect, 0.1f, 100.f) }
 , _fov(fov)
 , _aspectRatio(aspect)
 , _type(Type::Perspective) {}

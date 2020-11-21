@@ -22,7 +22,7 @@ const TransformProcessor::NodeIdTransformMap& TransformProcessor::GetNodeTransfo
 void TransformProcessor::updateLink(const glm::mat4& parentTransform, const Common::NodeLink& link)
 {
     const Common::Node& linkNode = _scene.GetNode(link.GetNode());
-    const glm::mat4 transform =  parentTransform * linkNode.GetTransform();
+    const glm::mat4 transform =  linkNode.GetTransform() * parentTransform;
     _globalNodeTransforms[link.GetNode()] = transform;
 
     for (auto& linkChild : link.GetChildren()) {

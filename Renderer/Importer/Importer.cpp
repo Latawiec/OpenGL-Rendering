@@ -50,21 +50,22 @@ namespace /*anonymous*/ {
         const auto& positionAccessorId = primitive.attributes.at(PositionAttribute);
         const auto& normalAccessorId = primitive.attributes.at(NormalsAttribute);
         const auto& uvAccessorId = primitive.attributes.at(UvAttribute);
-        const auto& edgeInfoAccessorId = primitive.attributes.at(EdgeColourAttribute);
 
-        const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
-        const auto& jointsWeightsAccessorId = primitive.attributes.at(JointsWeightsAttribute);
-
-        const auto& indicesAccessorId = primitive.indices;
-        
-        const std::map<Common::VertexAttribute, const int&> locationToAccessorMap {
+        std::map<Common::VertexAttribute, const int&> locationToAccessorMap {
             { Common::VertexAttribute::POSITION, positionAccessorId },
             { Common::VertexAttribute::NORMAL, normalAccessorId },
-            { Common::VertexAttribute::UV_MAP, uvAccessorId },
-            { Common::VertexAttribute::EDGE_INFO, edgeInfoAccessorId },
-            { Common::VertexAttribute::JOINT, jointsAccessorId },
-            { Common::VertexAttribute::JOINT_WEIGHT, jointsWeightsAccessorId }
+            { Common::VertexAttribute::UV_MAP, uvAccessorId }
         };
+
+        if (primitive.attributes.contains(JointsAttribute) && primitive.attributes.contains(JointsWeightsAttribute)) {
+            const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
+            const auto& jointsWeightsAccessorId = primitive.attributes.at(JointsWeightsAttribute);
+            locationToAccessorMap.insert({ Common::VertexAttribute::JOINT, jointsAccessorId });
+            locationToAccessorMap.insert({ Common::VertexAttribute::JOINT_WEIGHT, jointsWeightsAccessorId });
+        }
+
+        const auto& indicesAccessorId = primitive.indices;
+    
 
         for (const auto&[attrLocation, accessorId] : locationToAccessorMap) {
             const auto& accessor = model.accessors[accessorId]; 
@@ -125,11 +126,11 @@ Common::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mes
 }
 
 Common::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {
-    return Common::Camera{ static_cast<float>(camera.perspective.yfov), 800.f/600.f, glm::mat4{1} };
+    return Common::Camera(static_cast<float>(camera.perspective.yfov), 800.f/600.f, glm::mat4{1});
 }
 
 Common::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera, const glm::mat4& cameraOrientation) {
-    return Common::Camera{ static_cast<float>(camera.perspective.yfov), 800.f/600.f, cameraOrientation };
+    return Common::Camera(static_cast<float>(camera.perspective.yfov), 800.f/600.f, cameraOrientation);
 }
 
 glm::mat4 processNodeTransform(const tinygltf::Node& node) {

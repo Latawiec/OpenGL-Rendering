@@ -50,7 +50,7 @@ int main() {
     //shadowingLight->SetTransform(glm::translate(glm::mat4(1), glm::vec3(5, 2.5, 1)));
     Common::Scene mainScene;
     Importer gltfImporter;
-    auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test_skin_3.gltf", mainScene);
+    auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test_4.gltf", mainScene);
     std::cout << "SCENE!\n" << std::endl;
     std::cout << mainScene << std::endl;
     //imported->AddChildNode(std::move(shadowingLight));

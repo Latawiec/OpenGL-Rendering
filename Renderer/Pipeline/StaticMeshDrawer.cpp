@@ -16,9 +16,8 @@ void StaticMeshDrawer::Draw(const glm::mat4& view,
     _program.SetView(view);
     _program.SetProjection(proj);
 
-    for (const auto&[nodeId, skinnedMesh] : _scene.GetSkinnedMeshNodes()) {
-        const auto& [meshId, skinId] = skinnedMesh;
-        
+    for (const auto&[nodeId, meshId] : _scene.GetStaticMeshNodes()) {
+            
         const auto& model = nodeGlobalTransforms.at(nodeId);
         _program.SetModel(model);
 
