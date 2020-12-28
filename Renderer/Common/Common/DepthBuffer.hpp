@@ -14,7 +14,7 @@ public:
     DepthBuffer(unsigned int width, unsigned int height);
     ~DepthBuffer();
 
-    unsigned int DepthBuffer::getTexture() const;
+    unsigned int getTexture() const;
 
 };
 
