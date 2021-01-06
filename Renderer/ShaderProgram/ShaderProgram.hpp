@@ -112,7 +112,7 @@ public:
 
 	template<class T>
 	void setArray(const std::string_view name, const size_t count, const T* value) const {
-		static_array("Not implemented for given type.");
+		static_assert("Not implemented for given type.");
 	}
 
 	struct ScopedBinding {
