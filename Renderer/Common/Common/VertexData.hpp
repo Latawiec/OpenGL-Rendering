@@ -113,8 +113,6 @@ public:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
         glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         glDeleteBuffers(1, &EBO);
         glDeleteBuffers(1, &VBO);
@@ -169,8 +167,6 @@ public:
         layoutSequentialAttributes<VertexAttributeDescription...>();
 
         glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         glDeleteBuffers(1, &EBO);
         glDeleteBuffers(1, &VBO);

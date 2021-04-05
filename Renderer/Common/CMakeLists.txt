@@ -14,10 +14,16 @@ add_library(${PROJECT_NAME}
     Skin.cpp
     DepthBuffer.cpp
     FramebufferBase.cpp
+    Texture.cpp
+)
+
+add_dependencies(${PROJECT_NAME}
+    Utils
 )
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
+    Utils
     glad::glad
 )
 

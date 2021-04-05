@@ -5,9 +5,9 @@
 
 #include "BasicCamera.hpp"
 #include "Common/Mesh.hpp"
-#include <Common/Scene.hpp>
+#include "Common/Scene.hpp"
 #include <Pipeline/SceneDrawingManager.hpp>
-#include "Texture.hpp"
+#include "Common/Texture.hpp"
 #include "Importer.hpp"
 
 using namespace Render;

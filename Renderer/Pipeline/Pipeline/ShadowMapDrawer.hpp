@@ -4,29 +4,32 @@
 
 #include "DrawingExecutor.hpp"
 #include <Common/DepthBuffer.hpp>
-//#include <Shadow/Program.hpp>
 #include <Common/Mesh.hpp>
 
 namespace Render {
 
-class ShadowMapDrawer : public DrawingExecutor<Shadow::Program, Common::Mesh> {
-
-    struct ShadowMapInfo {
-        ShadowMapInfo(const Common::DepthBuffer& depthBuffer, const glm::mat4& view, const glm::mat4& proj)
-        : shadowMap(depthBuffer), viewTransform(view), projectionTransform(proj) {}
-        const Common::DepthBuffer& shadowMap;
-        const glm::mat4 viewTransform;
-        const glm::mat4 projectionTransform;
-    };
-
-    std::vector<ShadowMapInfo> _lights;    
+class ShadowMapDrawer {
 
 public:
-    void AddLight(const Common::DepthBuffer& shadowMap, const glm::mat4& view, const glm::mat4& projection) {
-        _lights.emplace_back(shadowMap, view, projection);
-    }
 
-    void DrawShadowMaps() {
+    ShadowMapDrawer(const Common::Scene& scene);
+    
+    void Draw() {
+
+        // Directional Light
+        const auto& shadowMaps = scene.GetDirectionalShadowMaps();
+        for (const auto& [nodeId, lightId] : scene.GetDirectionalLightNodes()) {
+            const bool castsShadow = shadowMaps.contains(lightId);
+            if (castsShadow) {
+                const auto& shadowMap = scene.GetDirectionalShadow(lightId);
+                const auto& node = scene.GetNode(nodeId);
+                const auto& light = scene.GetDirectionalLight(lightId);
+                drawDirectionalShadowMap(node, light, shadowMap);
+            }
+        }
+
+
+
         for (const auto& [shadowMap, view, projection] : _lights) {
             Common::FramebufferBase::ScopedBinding bind(shadowMap);
             glEnable(GL_DEPTH_TEST);
@@ -36,12 +39,9 @@ public:
         }
     }
 
-    void ClearLights() {
-        _lights.clear();
-    }
-
-    const std::vector<ShadowMapInfo>& GetShadowMapsInfo() const {
-        return _lights;
+private:
+    void drawDirectionalShadowMap(const Node& node, const Directional::Light&, const DepthBuffer& shadowMap) {
+        
     }
 };
 

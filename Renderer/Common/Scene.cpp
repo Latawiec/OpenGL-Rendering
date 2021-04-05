@@ -36,6 +36,34 @@ const Mesh& Scene::GetMesh(const Scene::MeshIdType& id) const {
     return _meshes.at(id);
 }
 
+Scene::TextureIdType Scene::AddTexture(Texture&& texture) {
+    const auto id = _textureIdGenerator.GenerateId();
+    _textures.emplace(id, std::move(texture));
+    return id;
+}
+
+Texture& Scene::GetTexture(const TextureIdType& id) {
+    return _textures.at(id);
+}
+
+const Texture& Scene::GetTexture(const TextureIdType& id) const {
+    return _textures.at(id);
+}
+
+Scene::MaterialIdType Scene::AddMaterial(BasicMaterial&& material) {
+    const auto id = _materialIdGenerator.GenerateId();
+    _materials.emplace(id, std::move(material));
+    return id;
+}
+
+Scene::BasicMaterial& Scene::GetMaterial(const MaterialIdType& id) {
+    return _materials.at(id);
+}
+
+const Scene::BasicMaterial& Scene::GetMaterial(const MaterialIdType& id) const {
+    return _materials.at(id);
+}
+
 Scene::CameraIdType Scene::AddCamera(Camera&& camera) {
     const auto id = _cameraIdGenerator.GenerateId();
     _cameras.insert({ id, std::move(camera) });

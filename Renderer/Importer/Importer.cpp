@@ -12,6 +12,7 @@
 #include "Common/Mesh.hpp"
 #include "Common/NodeLink.hpp"
 #include "Common/Camera.hpp"
+#include "Common/Texture.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
@@ -133,6 +134,10 @@ Common::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camer
     return Common::Camera(static_cast<float>(camera.perspective.yfov), 800.f/600.f, cameraOrientation);
 }
 
+Common::Texture processTexture(const tinygltf::Model& model, const tinygltf::Image& image) {
+    return Common::Texture(image.width, image.height, image.component, image.image.data());
+}
+
 glm::mat4 processNodeTransform(const tinygltf::Node& node) {
     const auto scaleVec = node.scale.size() == 0 ? glm::vec3(1.0) : glm::vec3(node.scale[0], node.scale[1], node.scale[2]);
     const auto rotationQuat = node.rotation.size() == 0 ? glm::quat(1.0, 0.0, 0.0, 0.0) : glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
@@ -205,6 +210,50 @@ void Importer::convertCameras (
             Common::Camera convertedCamera = processCamera(gltfModel, gltfCamera);
             cameraConversionData.convertedCameras.push_back(scene.AddCamera(std::move(convertedCamera)));
         }
+    }
+}
+
+void Importer::convertTextures (
+    Common::Scene& scene,
+    const tinygltf::Model& gltfModel
+    )
+{
+    const auto imagesCount = gltfModel.images.size();
+    texturesConversionData.convertedTextures.reserve(imagesCount);
+
+    for (gltfId i = 0; i < imagesCount; ++i) {
+        const tinygltf::Image& gltfImage = gltfModel.images[i];
+        // Lets just assume it for safety now.
+        assert(gltfImage.bits == 8);
+        Common::Texture convertedTexture = processTexture(gltfModel, gltfImage);
+        texturesConversionData.convertedTextures.push_back(scene.AddTexture(std::move(convertedTexture)));
+    }
+}
+
+void Importer::convertMaterials (
+    Common::Scene& scene,
+    const tinygltf::Model& gltfModel
+    )
+{
+    const auto materialsCount = gltfModel.materials.size();
+    materialsConversionData.convertedMaterials.reserve(materialsCount);
+
+    for (gltfId i = 0; i < materialsCount; ++i) {
+        const tinygltf::Material& gltfMaterial = gltfModel.materials[i];
+        const gltfId albedoTexture = gltfMaterial.pbrMetallicRoughness.baseColorTexture.index;
+        const gltfId metallicRoughnessTexture = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index;
+        const gltfId normalTexture = gltfMaterial.normalTexture.index;
+        // todo more...
+        const Scene::TextureIdType albedoId = albedoTexture != -1 ? texturesConversionData.convertedTextures[albedoTexture] : 0;
+        const Scene::TextureIdType metallicRoughnessId = metallicRoughnessTexture != -1 ? texturesConversionData.convertedTextures[metallicRoughnessTexture] : 0;
+        const Scene::TextureIdType normalId = normalTexture != -1 ? texturesConversionData.convertedTextures[normalTexture] : 0;
+
+        Scene::BasicMaterial material;
+        material.setTexture<Scene::BasicMaterial::ETexture::Albedo>(albedoId);
+        material.setTexture<Scene::BasicMaterial::ETexture::MetallicRoughness>(metallicRoughnessId);
+        material.setTexture<Scene::BasicMaterial::ETexture::Normal>(normalId);
+
+        materialsConversionData.convertedMaterials.push_back(std::move(scene.AddMaterial(std::move(material))));
     }
 }
 
@@ -332,6 +381,8 @@ bool Importer::importGltf(const std::string& filename, Common::Scene& scene) {
     convertMeshes(scene, gltfModel);
     convertCameras(scene, gltfModel);
     convertSkins(scene, gltfModel);
+    convertTextures(scene, gltfModel);
+    convertMaterials(scene, gltfModel);
     // Now that all is converted, set scene hierarchy.
     const tinygltf::Scene &gltfScene = gltfModel.scenes[gltfModel.defaultScene];
 

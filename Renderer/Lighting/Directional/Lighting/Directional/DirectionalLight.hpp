@@ -8,12 +8,15 @@ namespace Render {
 namespace Lighting {
 namespace Directional {
 
+/**
+ * Simple directional light (Sun light) description.
+ * 
+ * It is a light that has no defined source. Light affecting an object always has
+ * the same vector, without care about objects position.
+ * 
+ * Light always shines from this->GetDirection().
+ */
 struct DirectionalLight {
-    
-    constexpr static int ShadowMapWidth = 1024;
-    constexpr static int ShadowMapHeight = 1024;
-    constexpr static float ShadowMapNearPlane = 1.f;
-    constexpr static float ShadowMapFarPlane = 10.f;
 
     DirectionalLight();
     DirectionalLight(const glm::vec3 direction, const glm::vec4 color = { 1, 1, 1, 1 });
@@ -23,15 +26,14 @@ struct DirectionalLight {
 
     void SetDirection(const glm::vec3& direction);
     const glm::vec3& GetDirection() const;
-    const glm::mat4& GetProjectionTransform() const;
-    const glm::mat4& GetViewTransform() const;
 
-    const Common::DepthBuffer& GetShadowMap() const;
+    void SetCastingShadow(bool castsShadow);
+    bool IsCastingShadow() const;
 
 private:
     glm::vec4 _color;
     glm::vec3 _direction;
-    Common::DepthBuffer _shadowMap;
+    bool _castsShadow = false;
 };
     
 } // Render

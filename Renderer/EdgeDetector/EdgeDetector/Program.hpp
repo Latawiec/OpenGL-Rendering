@@ -2,7 +2,7 @@
 
 #include <string_view>
 
-#include "Texture.hpp"
+#include "Common/Texture.hpp"
 #include "Common/VertexData.hpp"
 #include "ShaderProgram.hpp"
 

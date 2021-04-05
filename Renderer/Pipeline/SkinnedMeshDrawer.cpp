@@ -58,8 +58,10 @@ void SkinnedMeshDrawer::Draw(const glm::mat4& view,
 void SkinnedMeshDrawer::prepareSkin(const Common::Scene::SkinIdType& skinId) {
     const auto& skin = _scene.GetSkin(skinId);
     const auto& skinHierarchy = skin.GetBonesHierarchy();
-    const auto bonesCount = skin.GetBones().size();
-    if (!_jointTransforms.contains(skinId)) _jointTransforms[skinId] = {};
+    if (!_jointTransforms.contains(skinId))
+    {
+        _jointTransforms[skinId] = {};
+    }
     auto& skinJointTransforms = _jointTransforms[skinId];
     skinJointTransforms.fill(glm::mat4(1));
     setTransforms(glm::mat4{1}, skinJointTransforms, _scene, skin, skinHierarchy);

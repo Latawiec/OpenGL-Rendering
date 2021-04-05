@@ -35,6 +35,14 @@ private:
     } cameraConversionData;
 
     struct {
+        std::vector<SceneId> convertedTextures;
+    } texturesConversionData;
+
+    struct {
+        std::vector<SceneId> convertedMaterials;
+    } materialsConversionData;
+
+    struct {
         std::unordered_map<gltfId, std::vector<Common::Skin::Bone>> skinsConvertedBones;
         std::unordered_map<gltfId, std::unordered_set<gltfId>> skinsBoneNodes;
         std::unordered_map<gltfId, Common::Skin::BoneLink> skinsHierarchy;
@@ -45,6 +53,8 @@ private:
     void convertMeshes(Common::Scene& scene, const tinygltf::Model& gltfModel);
     void convertCameras(Common::Scene& scene, const tinygltf::Model& gltfModel);
     void convertSkins(Common::Scene& scene, const tinygltf::Model& gltfModel);
+    void convertTextures(Common::Scene& scene, const tinygltf::Model& gltfModel);
+    void convertMaterials(Common::Scene& scene, const tinygltf::Model& gltfModel);
     Common::Skin::BoneLink traverseSkinNodes(std::unordered_map<gltfId, size_t>& skinBoneNodesMissing, const tinygltf::Model& gltfModel, const size_t nodeIndex);
     Common::NodeLink traverseNodes(Common::Scene& scene, const tinygltf::Model& gltfModel, const size_t glftNodeId);
 
