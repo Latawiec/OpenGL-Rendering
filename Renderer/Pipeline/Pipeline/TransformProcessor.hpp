@@ -9,7 +9,7 @@ namespace Render {
 namespace Pipeline {
 
 struct TransformProcessor {
-    using NodeIdTransformMap = std::unordered_map<Common::Scene::NodeIdType, glm::mat4>;
+    using NodeIdTransformMap = std::unordered_map<Common::Scene::Node::IdType, glm::mat4>;
 
     TransformProcessor(const Common::Scene& scene);
 

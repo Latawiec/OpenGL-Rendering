@@ -13,10 +13,13 @@ namespace Common {
  * to change the type with overwritten ++ operator, that'd do some more magic.
  * No need for it now...
  */
+template<class T>
 struct IdGenerator {
-    using Type = uint64_t;
+    using Type = T;
     constexpr static Type INVALID = 0;
-    Type GenerateId();
+    Type GenerateId() {
+        _lastGeneratedId++;
+    }
 private:
     Type _lastGeneratedId = 1; // 0 is invalid.
 };

@@ -76,21 +76,23 @@ Texture::Texture(const int width, const int height, const int channelCount, cons
 }
 
 Texture::Texture(Texture&& other) {
+    const auto hold = _texture;
     this->_texture = other._texture;
     this->_width = other._width;
     this->_height = other._height;
     this->_channelsCount = other._channelsCount;
 
-    other._texture = -1;
+    other._texture = hold;
 }
 
 Texture& Texture::operator=(Texture&& other) {
+    const auto hold = _texture;
     this->_texture = other._texture;
     this->_width = other._width;
     this->_height = other._height;
     this->_channelsCount = other._channelsCount;
 
-    other._texture = -1;
+    other._texture = hold;
     return *this;
 }
 

@@ -11,6 +11,7 @@ class Texture {
     int _width, _height, _channelsCount;
     unsigned int _texture;
 public:
+    using IdType = uint64_t;
 
     enum Wrap : GLint {
         Clamp = GL_CLAMP_TO_EDGE,

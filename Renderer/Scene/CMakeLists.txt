@@ -6,7 +6,6 @@ find_package(glad REQUIRED)
 
 add_library(${PROJECT_NAME}
     Camera.cpp
-    IdGenerator.cpp
     Mesh.cpp
     Node.cpp
     NodeLink.cpp

@@ -244,9 +244,9 @@ void Importer::convertMaterials (
         const gltfId metallicRoughnessTexture = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index;
         const gltfId normalTexture = gltfMaterial.normalTexture.index;
         // todo more...
-        const Scene::TextureIdType albedoId = albedoTexture != -1 ? texturesConversionData.convertedTextures[albedoTexture] : 0;
-        const Scene::TextureIdType metallicRoughnessId = metallicRoughnessTexture != -1 ? texturesConversionData.convertedTextures[metallicRoughnessTexture] : 0;
-        const Scene::TextureIdType normalId = normalTexture != -1 ? texturesConversionData.convertedTextures[normalTexture] : 0;
+        const Scene::Texture::IdType albedoId = albedoTexture != -1 ? texturesConversionData.convertedTextures[albedoTexture] : 0;
+        const Scene::Texture::IdType metallicRoughnessId = metallicRoughnessTexture != -1 ? texturesConversionData.convertedTextures[metallicRoughnessTexture] : 0;
+        const Scene::Texture::IdType normalId = normalTexture != -1 ? texturesConversionData.convertedTextures[normalTexture] : 0;
 
         Scene::BasicMaterial material;
         material.setTexture<Scene::BasicMaterial::ETexture::Albedo>(albedoId);

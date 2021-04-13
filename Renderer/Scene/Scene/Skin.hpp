@@ -14,6 +14,7 @@ namespace Common {
 struct Node;
 
 struct Skin {
+    using IdType = uint64_t;
     using JointTransformIndex = std::size_t;
 
     struct Bone {

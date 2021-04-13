@@ -7,6 +7,7 @@ namespace Render {
 namespace Common {
 
 struct Camera { 
+    using IdType = uint64_t;
     enum class Type : uint8_t {
         Perspective,
         Ortographic

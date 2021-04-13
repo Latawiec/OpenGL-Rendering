@@ -16,7 +16,7 @@ struct StaticMeshDrawer {
 
     void Draw(const glm::mat4& view,
         const glm::mat4& proj,
-        const std::unordered_map<Common::Scene::NodeIdType, glm::mat4>& nodeGlobalTransforms);
+        const std::unordered_map<Common::Scene::Node::IdType, glm::mat4>& nodeGlobalTransforms);
 
 private:
     const Common::Scene& _scene;
