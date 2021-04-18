@@ -156,6 +156,15 @@ BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool 
 }
 #endif
 
+    // Setup textures
+    if (_hasBaseColorTexture) {
+        glProgramUniform1i(_program, glGetUniformLocation(_program, BaseColorSamplerUniform.data()), GL_TEXTURE0 + BaseColorTextureLocation);
+    }
+
+    if (_hasNormalMapTexture) {
+        glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), GL_TEXTURE0 + NormalMapTextureLocation);
+    }
+
     // Delete shader as we only need program.
     glDetachShader(_program, shader);
     glDeleteShader(shader);  
@@ -191,12 +200,14 @@ void BasePassFragmentProgram::PrepareView(const SceneViewData& sceneView) const 
 void BasePassFragmentProgram::PrepareElement(const SceneObjectData& sceneObject) const {
     if (_hasBaseColorTexture) {
         assert(sceneObject.baseColorTexture != nullptr);
-        glProgramUniform1i(_program, glGetUniformLocation(_program, BaseColorSamplerUniform.data()), static_cast<unsigned int>(*sceneObject.baseColorTexture));
+        glActiveTexture(GL_TEXTURE0 + BaseColorTextureLocation);
+        glBindTexture(GL_TEXTURE_2D, static_cast<unsigned int>(*sceneObject.baseColorTexture));
     }
     
     if (_hasNormalMapTexture) {
         assert(sceneObject.normalMapTexture != nullptr);
-        glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), static_cast<unsigned int>(*sceneObject.normalMapTexture));
+        glActiveTexture(GL_TEXTURE0 + NormalMapTextureLocation);
+        glBindTexture(GL_TEXTURE_2D, static_cast<unsigned int>(*sceneObject.baseColorTexture));
     }
 }
 

@@ -24,7 +24,6 @@ void SceneDrawingManager::Draw() {
         glViewport(0, 0, _width, _height);
         // _edgeProgram.SetImageSize(_width/2, _height/2);
         // _edgeProgram.Draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Normals));
-        const auto& texture = _scene.GetTexture(1);
         _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Albedo));
     }
 }

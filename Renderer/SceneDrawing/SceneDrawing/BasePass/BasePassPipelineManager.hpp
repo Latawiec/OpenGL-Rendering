@@ -64,6 +64,8 @@ class BasePassFragmentProgram {
     // Uniform names
     static constexpr std::string_view BaseColorSamplerUniform = "baseColor";
     static constexpr std::string_view NormalMapSamplerUniform = "normalMap";
+    static constexpr unsigned int BaseColorTextureLocation = 0;
+    static constexpr unsigned int NormalMapTextureLocation = 1;
 
     BasePassFragmentProgram(const BasePassFragmentProgram& other) = delete;
     BasePassFragmentProgram& operator=(const BasePassFragmentProgram& other) = delete;

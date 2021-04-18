@@ -84,7 +84,6 @@ namespace /*anonymous*/ {
             glVertexAttribPointer(attrLocation, attrSize, accessor.componentType,
                                   accessor.normalized ? GL_TRUE : GL_FALSE,
                                   byteStride, BUFFER_OFFSET(accessor.byteOffset));
-            // glDeleteBuffers(1, &glBuffer); Why the hell can't I delete these? :(
         }
 
         // Indices
@@ -102,7 +101,6 @@ namespace /*anonymous*/ {
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        // glDeleteBuffers(1, &glBuffer); Why the hell can't I delete these? :(
 
         return Common::Mesh{ VertexDataBase(VAO, indicesAccessor.count) };
     }
