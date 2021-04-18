@@ -1,13 +1,15 @@
 #pragma once
-#include <Scene/FramebufferBase.hpp>
+
+#include "../SceneDrawing/FramebufferBase.hpp"
 
 #include <cstddef>
 #include <utility>
 #include "always_fail.hpp"
 
+namespace Renderer {
 namespace SceneDrawing {
 
-class GraphicBuffer : public Render::Common::FramebufferBase {
+class GraphicBuffer : public Renderer::SceneDrawing::FramebufferBase {
 public:
 
     enum Output {
@@ -48,3 +50,4 @@ template<>
 void GraphicBuffer::setupTexture<GraphicBuffer::Output::EdgeInfo>();
 
 } // namespace SceneDrawing
+} // namespace Renderer

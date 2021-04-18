@@ -3,18 +3,14 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "BasicCamera.hpp"
-#include "Scene/Mesh.hpp"
-#include "Scene/Scene.hpp"
-#include <SceneDrawing/SceneDrawingManager.hpp>
-#include "Scene/Texture.hpp"
 #include "Importer.hpp"
-
-using namespace Render;
+#include <Scene/Base/Mesh.hpp>
+#include <Scene/Base/Texture.hpp>
+#include <Scene/Scene.hpp>
+#include <SceneDrawing/SceneDrawingManager.hpp>
 
 int main() {
 
-    Render::Camera::BasicCamera camera;
     constexpr int windowWidth = 800;
     constexpr int windowHeight= 600;
 
@@ -38,24 +34,20 @@ int main() {
 	}
 
     glViewport(0, 0, windowWidth, windowHeight);
-    camera.updateAspectRatio(static_cast<float>(windowWidth)/static_cast<float>(windowHeight));
-
-    camera.updateRotation(0.f, -110.0f);
-    camera.updatePosition(-10.f, 4.f, 1.f);
 
     glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
 
     //auto shadowingLight = std::make_unique<LightNode>();
     //auto& stolenLight = *shadowingLight;
     //shadowingLight->SetTransform(glm::translate(glm::mat4(1), glm::vec3(5, 2.5, 1)));
-    Common::Scene mainScene;
-    Importer gltfImporter;
+    Renderer::Scene::Scene mainScene;
+    Renderer::Importer::Importer gltfImporter;
     auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test.gltf", mainScene);
     std::cout << "SCENE!\n" << std::endl;
     std::cout << mainScene << std::endl;
     //imported->AddChildNode(std::move(shadowingLight));
 
-    SceneDrawing::SceneDrawingManager sceneDrawingManager(mainScene, 800, 600);
+    Renderer::SceneDrawing::SceneDrawingManager sceneDrawingManager(mainScene, 800, 600);
     while(!glfwWindowShouldClose(window)) {
         //stolenLight.SetTransform(glm::translate(glm::mat4(1), glm::vec3(5 * glm::sin(glfwGetTime()), 2.5, 1)));
         sceneDrawingManager.Draw();

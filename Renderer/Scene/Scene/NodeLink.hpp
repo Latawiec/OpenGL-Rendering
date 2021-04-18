@@ -1,27 +1,27 @@
 #pragma once
 
-#include "Node.hpp"
+#include "Base/Node.hpp"
 
 #include <vector>
 
-namespace Render {
-namespace Common {
+namespace Renderer {
+namespace Scene {
 
 struct NodeLink {
 
     NodeLink();
-    NodeLink(Node::IdType node);
+    NodeLink(Base::Node::IdType node);
 
-    Node::IdType GetNode() const;
+    Base::Node::IdType GetNode() const;
 
     void AddChild(NodeLink&& node);
     std::vector<NodeLink>& GetChildren();
     const std::vector<NodeLink>& GetChildren() const;
 
 private:
-    Node::IdType _node;
+    Base::Node::IdType _node;
     std::vector<NodeLink> _childLinks;
 };
 
-} // namespace Common
-} // namespace Render
+} // namespace Scene
+} // namespace Renderer

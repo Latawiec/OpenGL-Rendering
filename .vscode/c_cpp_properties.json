@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "${env:VCPKG_ROOT}/installed/x64-windows/include/",
                 "${env:VCPKG_ROOT}/installed/x86-windows/include/",
-                "${workspaceFolder}/Renderer/Scene"
+                "${workspaceFolder}/Renderer/Scene",
+                "${workspaceFolder}/Renderer/Utils"
             ],
             "defines": [
                 "_DEBUG",

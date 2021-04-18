@@ -13,15 +13,11 @@ target_link_libraries(${PROJECT_NAME}
 PRIVATE
     nlohmann_json::nlohmann_json
     glm
-    # Renderer_Node
-    Renderer_Common
-    Renderer_MappingProgram
+    Renderer_Scene
 )
 
 add_dependencies(${PROJECT_NAME}
-    # Renderer_Node
-    Renderer_Common
-    Renderer_MappingProgram
+    Renderer_Scene
 )
 
 target_include_directories(${PROJECT_NAME}

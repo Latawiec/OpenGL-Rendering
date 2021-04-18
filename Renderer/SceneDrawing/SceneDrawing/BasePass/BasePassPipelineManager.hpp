@@ -5,6 +5,7 @@
 #include <string_view>
 #include <glm/glm.hpp>
 
+namespace Renderer {
 namespace SceneDrawing {
 namespace BasePass {
 
@@ -21,8 +22,8 @@ struct SceneViewData {
 struct SceneObjectData {
     int meshId;
     glm::mat4 objectModelTransform{1};
-    const Render::Common::Texture* baseColorTexture = nullptr;
-    const Render::Common::Texture* normalMapTexture = nullptr;
+    const Renderer::Scene::Base::Texture* baseColorTexture = nullptr;
+    const Renderer::Scene::Base::Texture* normalMapTexture = nullptr;
     const JointsArray* jointsArray = nullptr;
 };
 
@@ -151,3 +152,4 @@ public:
 
 } // namespace BasePass
 } // namespace SceneDrawing
+} // namespace Renderer

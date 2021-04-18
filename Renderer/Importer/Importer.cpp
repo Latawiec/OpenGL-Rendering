@@ -7,12 +7,12 @@
 #include <tiny_gltf.h>
 #include <glad/glad.h>
 
-#include "Scene/VertexData.hpp"
-#include "Scene/VertexAttribute.hpp"
-#include "Scene/Mesh.hpp"
+#include "Scene/Base/VertexData.hpp"
+#include "Scene/Base/VertexAttribute.hpp"
+#include "Scene/Base/Mesh.hpp"
+#include "Scene/Base/Camera.hpp"
+#include "Scene/Base/Texture.hpp"
 #include "Scene/NodeLink.hpp"
-#include "Scene/Camera.hpp"
-#include "Scene/Texture.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
@@ -25,8 +25,9 @@
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
-namespace Render {
-using namespace Common;
+namespace Renderer {
+namespace Importer {
+
 namespace /*anonymous*/ {
     static const std::string ProgramType = "ProgramType";
     static const std::string ContourProgramType = "Contour";
@@ -40,7 +41,7 @@ namespace /*anonymous*/ {
 
     static const std::string CameraOrientationNodeName = "Camera_Orientation";
 
-    Common::Mesh processContourMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
+    Scene::Base::Mesh processContourMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
         GLuint VAO;
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
@@ -52,17 +53,17 @@ namespace /*anonymous*/ {
         const auto& normalAccessorId = primitive.attributes.at(NormalsAttribute);
         const auto& uvAccessorId = primitive.attributes.at(UvAttribute);
 
-        std::map<Common::VertexAttribute, const int&> locationToAccessorMap {
-            { Common::VertexAttribute::POSITION, positionAccessorId },
-            { Common::VertexAttribute::NORMAL, normalAccessorId },
-            { Common::VertexAttribute::UV_MAP, uvAccessorId }
+        std::map<Scene::Base::VertexAttributeLocation, const int&> locationToAccessorMap {
+            { Scene::Base::VertexAttributeLocation::POSITION, positionAccessorId },
+            { Scene::Base::VertexAttributeLocation::NORMAL, normalAccessorId },
+            { Scene::Base::VertexAttributeLocation::UV_MAP, uvAccessorId }
         };
 
         if (primitive.attributes.contains(JointsAttribute) && primitive.attributes.contains(JointsWeightsAttribute)) {
             const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
             const auto& jointsWeightsAccessorId = primitive.attributes.at(JointsWeightsAttribute);
-            locationToAccessorMap.insert({ Common::VertexAttribute::JOINT, jointsAccessorId });
-            locationToAccessorMap.insert({ Common::VertexAttribute::JOINT_WEIGHT, jointsWeightsAccessorId });
+            locationToAccessorMap.insert({ Scene::Base::VertexAttributeLocation::JOINT, jointsAccessorId });
+            locationToAccessorMap.insert({ Scene::Base::VertexAttributeLocation::JOINT_WEIGHT, jointsWeightsAccessorId });
         }
 
         const auto& indicesAccessorId = primitive.indices;
@@ -102,11 +103,11 @@ namespace /*anonymous*/ {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        return Common::Mesh{ VertexDataBase(VAO, indicesAccessor.count) };
+        return Scene::Base::Mesh{ Scene::Base::VertexDataBase(VAO, indicesAccessor.count) };
     }
 }
 
-Common::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
+Scene::Base::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
 
     if (mesh.primitives[0].material == -1) {
         return {};
@@ -124,16 +125,16 @@ Common::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mes
     return {};
 }
 
-Common::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {
-    return Common::Camera(static_cast<float>(camera.perspective.yfov), 800.f/600.f, glm::mat4{1});
+Scene::Base::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {
+    return Scene::Base::Camera(static_cast<float>(camera.perspective.yfov), 800.f/600.f, glm::mat4{1});
 }
 
-Common::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera, const glm::mat4& cameraOrientation) {
-    return Common::Camera(static_cast<float>(camera.perspective.yfov), 800.f/600.f, cameraOrientation);
+Scene::Base::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera, const glm::mat4& cameraOrientation) {
+    return Scene::Base::Camera(static_cast<float>(camera.perspective.yfov), 800.f/600.f, cameraOrientation);
 }
 
-Common::Texture processTexture(const tinygltf::Model& model, const tinygltf::Image& image) {
-    return Common::Texture(image.width, image.height, image.component, image.image.data());
+Scene::Base::Texture processTexture(const tinygltf::Model& model, const tinygltf::Image& image) {
+    return Scene::Base::Texture(image.width, image.height, image.component, image.image.data());
 }
 
 glm::mat4 processNodeTransform(const tinygltf::Node& node) {
@@ -149,7 +150,7 @@ glm::mat4 processNodeTransform(const tinygltf::Node& node) {
 }
 
 void Importer::convertNodes(
-    Common::Scene& scene,
+    Scene::Scene& scene,
     const tinygltf::Model& gltfModel)
 {
     const auto nodesCount = gltfModel.nodes.size();
@@ -160,7 +161,7 @@ void Importer::convertNodes(
         // I don't know if every software does it, but Blender gives me a weird "Camera_Orientation" node. So we need to patch it up.
         const bool isCameraOrientation = (gltfNode.camera != -1) && (gltfNode.name == CameraOrientationNodeName);
         const glm::mat4 nodeTransform = isCameraOrientation ? glm::mat4{1} : processNodeTransform(gltfNode);
-        Common::Node convertedNode { nodeTransform };
+        Scene::Base::Node convertedNode { nodeTransform };
         #ifndef NDEBUG
         convertedNode.SetName(gltfNode.name);
         #endif
@@ -175,7 +176,7 @@ void Importer::convertNodes(
 }
 
 void Importer::convertMeshes(
-    Common::Scene& scene,
+    Scene::Scene& scene,
     const tinygltf::Model& gltfModel)
 {
     const auto meshesCount = gltfModel.meshes.size();
@@ -183,14 +184,14 @@ void Importer::convertMeshes(
 
     for (size_t i = 0; i < meshesCount; ++i) {
         const tinygltf::Mesh& gltfMesh = gltfModel.meshes[i];
-        Common::Mesh convertedMesh = processMesh(gltfModel, gltfMesh); 
+        Scene::Base::Mesh convertedMesh = processMesh(gltfModel, gltfMesh); 
         const SceneId sceneMeshId = scene.AddMesh(std::move(convertedMesh));
         meshConversionData.convertedMeshes.push_back(sceneMeshId);
     }
 }
 
 void Importer::convertCameras (
-    Common::Scene& scene,
+    Scene::Scene& scene,
     const tinygltf::Model& gltfModel)
 {
     const auto camerasCount = gltfModel.cameras.size();
@@ -202,17 +203,17 @@ void Importer::convertCameras (
         if (cameraHasOrientationTransform) {
             const tinygltf::Node& gltfNode = gltfModel.nodes[nodeConversionData.cameraToOrientationNode[i]];
             const glm::mat4 orientationTransform = processNodeTransform(gltfNode);
-            Common::Camera convertedCamera = processCamera(gltfModel, gltfCamera, orientationTransform);
+            Scene::Base::Camera convertedCamera = processCamera(gltfModel, gltfCamera, orientationTransform);
             cameraConversionData.convertedCameras.push_back(scene.AddCamera(std::move(convertedCamera)));
         } else {
-            Common::Camera convertedCamera = processCamera(gltfModel, gltfCamera);
+            Scene::Base::Camera convertedCamera = processCamera(gltfModel, gltfCamera);
             cameraConversionData.convertedCameras.push_back(scene.AddCamera(std::move(convertedCamera)));
         }
     }
 }
 
 void Importer::convertTextures (
-    Common::Scene& scene,
+    Scene::Scene& scene,
     const tinygltf::Model& gltfModel
     )
 {
@@ -223,13 +224,13 @@ void Importer::convertTextures (
         const tinygltf::Image& gltfImage = gltfModel.images[i];
         // Lets just assume it for safety now.
         assert(gltfImage.bits == 8);
-        Common::Texture convertedTexture = processTexture(gltfModel, gltfImage);
+        Scene::Base::Texture convertedTexture = processTexture(gltfModel, gltfImage);
         texturesConversionData.convertedTextures.push_back(scene.AddTexture(std::move(convertedTexture)));
     }
 }
 
 void Importer::convertMaterials (
-    Common::Scene& scene,
+    Scene::Scene& scene,
     const tinygltf::Model& gltfModel
     )
 {
@@ -242,25 +243,25 @@ void Importer::convertMaterials (
         const gltfId metallicRoughnessTexture = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index;
         const gltfId normalTexture = gltfMaterial.normalTexture.index;
         // todo more...
-        const Texture::IdType albedoId = albedoTexture != -1 ? texturesConversionData.convertedTextures[albedoTexture] : 0;
-        const Texture::IdType metallicRoughnessId = metallicRoughnessTexture != -1 ? texturesConversionData.convertedTextures[metallicRoughnessTexture] : 0;
-        const Texture::IdType normalId = normalTexture != -1 ? texturesConversionData.convertedTextures[normalTexture] : 0;
+        const Scene::Base::Texture::IdType albedoId = albedoTexture != -1 ? texturesConversionData.convertedTextures[albedoTexture] : 0;
+        const Scene::Base::Texture::IdType metallicRoughnessId = metallicRoughnessTexture != -1 ? texturesConversionData.convertedTextures[metallicRoughnessTexture] : 0;
+        const Scene::Base::Texture::IdType normalId = normalTexture != -1 ? texturesConversionData.convertedTextures[normalTexture] : 0;
 
-        Material material;
-        material.setTexture<Material::ETexture::Albedo>(albedoId);
-        material.setTexture<Material::ETexture::MetallicRoughness>(metallicRoughnessId);
-        material.setTexture<Material::ETexture::Normal>(normalId);
+        Scene::Base::Material material;
+        material.setTexture<Scene::Base::Material::ETexture::Albedo>(albedoId);
+        material.setTexture<Scene::Base::Material::ETexture::MetallicRoughness>(metallicRoughnessId);
+        material.setTexture<Scene::Base::Material::ETexture::Normal>(normalId);
 
         materialsConversionData.convertedMaterials.push_back(std::move(scene.AddMaterial(std::move(material))));
     }
 }
 
-Skin::BoneLink Importer::traverseSkinNodes(
+Scene::Base::Skin::BoneLink Importer::traverseSkinNodes(
     std::unordered_map<gltfId, size_t>& skinBoneNodesMissing,
     const tinygltf::Model& gltfModel,
     const gltfId nodeIndex)
 {
-    Skin::BoneLink result { skinBoneNodesMissing[nodeIndex] };
+    Scene::Base::Skin::BoneLink result { skinBoneNodesMissing[nodeIndex] };
     skinBoneNodesMissing.erase(nodeIndex);
 
     // Check if we done.
@@ -281,7 +282,7 @@ Skin::BoneLink Importer::traverseSkinNodes(
 }
 
 void Importer::convertSkins (
-    Common::Scene& scene,
+    Scene::Scene& scene,
     const tinygltf::Model& gltfModel)
 {
     const auto skinsCount = gltfModel.skins.size();
@@ -296,7 +297,7 @@ void Importer::convertSkins (
 
         const tinygltf::Skin& gltfSkin = gltfModel.skins[i];
 
-        std::unordered_map<Skin::JointTransformIndex, Skin::Bone> skinBones;
+        std::unordered_map<Scene::Base::Skin::JointTransformIndex, Scene::Base::Skin::Bone> skinBones;
         skinBones.reserve(gltfSkin.joints.size());
 
         std::unordered_map<gltfId, size_t> skinBoneNodesMissing; // Mapped to indices.
@@ -310,16 +311,16 @@ void Importer::convertSkins (
         
         // I assume that first node in this list is root node (please...);
         const auto skinRootNodeId = gltfSkin.joints[0];
-        Skin::BoneLink skinRootLink = traverseSkinNodes(skinBoneNodesMissing, gltfModel, skinRootNodeId);
+        Scene::Base::Skin::BoneLink skinRootLink = traverseSkinNodes(skinBoneNodesMissing, gltfModel, skinRootNodeId);
 
-        Skin convertedSkin { std::move(skinBones), std::move(skinRootLink) };
+        Scene::Base::Skin convertedSkin { std::move(skinBones), std::move(skinRootLink) };
         skinConversionData.convertedSkins.push_back(scene.AddSkin(std::move(convertedSkin)));
     }
 }
 
-NodeLink Importer::traverseNodes(Common::Scene& scene, const tinygltf::Model& gltfModel, const size_t glftNodeId) {
+Scene::NodeLink Importer::traverseNodes(Scene::Scene& scene, const tinygltf::Model& gltfModel, const size_t glftNodeId) {
     const auto& nodeId = nodeConversionData.convertedNodes[glftNodeId];
-    Common::NodeLink nodeLink { nodeId };
+    Scene::NodeLink nodeLink { nodeId };
     const auto& gltfNode = gltfModel.nodes[glftNodeId];
 
     // Scene elements
@@ -360,7 +361,7 @@ void Importer::clearCache() {
     skinConversionData = {};
 }
 
-bool Importer::importGltf(const std::string& filename, Common::Scene& scene) {
+bool Importer::importGltf(const std::string& filename, Scene::Scene& scene) {
     tinygltf::Model gltfModel;
     tinygltf::TinyGLTF loader;
     std::string err, warn;
@@ -402,4 +403,5 @@ bool Importer::importGltf(const std::string& filename, Common::Scene& scene) {
     return true;
 }
 
-} // namespace Render
+} // namespace Importer
+} // namespace Renderer

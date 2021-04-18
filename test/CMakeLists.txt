@@ -10,24 +10,18 @@ add_executable(${PROJECT_NAME}
 
 add_dependencies(${PROJECT_NAME}
     Assets
-    Utils
-    Renderer_Pipeline
-    Renderer_MappingProgram
-    Renderer_Camera
+    Renderer_Utils
+    Renderer_SceneDrawing
+    Renderer_Scene
     Renderer_Importer
-    Renderer_EdgeDetector
-    Renderer_DebugUtils_TextureProgram
 )
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
-    Assets
-    Utils
-    Renderer_Pipeline
-    Renderer_MappingProgram
-    Renderer_Camera
-    Renderer_Importer
-    Renderer_EdgeDetector
-    Renderer_DebugUtils_TextureProgram
     glfw
+    Assets
+    Renderer_Utils
+    Renderer_SceneDrawing
+    Renderer_Scene
+    Renderer_Importer
 )

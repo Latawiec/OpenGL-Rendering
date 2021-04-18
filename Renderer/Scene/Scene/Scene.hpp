@@ -4,67 +4,56 @@
 #include <iostream>
 #endif
 
-#include "Mesh.hpp"
-#include "Camera.hpp"
-#include "Node.hpp"
-#include "Skin.hpp"
-#include "Texture.hpp"
-#include "Material.hpp"
+#include "Base/Camera.hpp"
+#include "Base/Material.hpp"
+#include "Base/Mesh.hpp"
+#include "Base/Node.hpp"
+#include "Base/Skin.hpp"
+#include "Base/Texture.hpp"
 #include "NodeLink.hpp"
-#include "IdGenerator.hpp"
+#include "SceneObject.hpp"
+
+#include <id_generator.hpp>
 
 #include <array>
 #include <unordered_map>
 
-namespace Render {
-namespace Common {
+namespace Renderer {
+namespace Scene {
 
 struct Scene {
 
-    // Helper
-    struct SkinnedMesh {
-        Mesh::IdType meshId;
-        Skin::IdType skinId;
-    };
-
-    struct SceneObject {
-        Node::IdType nodeId = Node::INVALID_ID;
-        Mesh::IdType meshId = Mesh::INVALID_ID;
-        Skin::IdType skinId = Skin::INVALID_ID;
-        Material::IdType materialId = Material::INVALID_ID;
-    };
-
     struct SceneView {
-        Node::IdType nodeId = Node::INVALID_ID;
-        Camera::IdType cameraId = Camera::INVALID_ID;
+        Base::Node::IdType nodeId = Base::Node::INVALID_ID;
+        Base::Camera::IdType cameraId = Base::Camera::INVALID_ID;
     };
 
     Scene();
 
-    Node::IdType AddNode(Node&& node);
-    Node& GetNode(const Node::IdType& id);
-    const Node& GetNode(const Node::IdType& id) const;
+    Base::Node::IdType AddNode(Base::Node&& node);
+    Base::Node& GetNode(const Base::Node::IdType& id);
+    const Base::Node& GetNode(const Base::Node::IdType& id) const;
 
-    Mesh::IdType AddMesh(Mesh&& mesh);
-    Mesh& GetMesh(const Mesh::IdType& id);
-    const Mesh& GetMesh(const Mesh::IdType& id) const;
+    Base::Mesh::IdType AddMesh(Base::Mesh&& mesh);
+    Base::Mesh& GetMesh(const Base::Mesh::IdType& id);
+    const Base::Mesh& GetMesh(const Base::Mesh::IdType& id) const;
 
-    Texture::IdType AddTexture(Texture&& texture);
-    Texture& GetTexture(const Texture::IdType& id);
-    const Texture& GetTexture(const Texture::IdType& id) const;
+    Base::Texture::IdType AddTexture(Base::Texture&& texture);
+    Base::Texture& GetTexture(const Base::Texture::IdType& id);
+    const Base::Texture& GetTexture(const Base::Texture::IdType& id) const;
 
-    Material::IdType AddMaterial(Material&& material);
-    Material& GetMaterial(const Material::IdType& id);
-    const Material& GetMaterial(const Material::IdType& id) const;
+    Base::Material::IdType AddMaterial(Base::Material&& material);
+    Base::Material& GetMaterial(const Base::Material::IdType& id);
+    const Base::Material& GetMaterial(const Base::Material::IdType& id) const;
 
-    Camera::IdType AddCamera(Camera&& camera);
-    Camera& GetCamera(const Camera::IdType& id);
-    const Camera& GetCamera(const Camera::IdType& id) const;
+    Base::Camera::IdType AddCamera(Base::Camera&& camera);
+    Base::Camera& GetCamera(const Base::Camera::IdType& id);
+    const Base::Camera& GetCamera(const Base::Camera::IdType& id) const;
 
-    Skin::IdType AddSkin(Skin&& skin);
-    Skin& GetSkin(const Skin::IdType& id);
-    const Skin& GetSkin(const Skin::IdType& id) const;
-    const std::unordered_map<Skin::IdType, Skin>& GetSkins() const;
+    Base::Skin::IdType AddSkin(Base::Skin&& skin);
+    Base::Skin& GetSkin(const Base::Skin::IdType& id);
+    const Base::Skin& GetSkin(const Base::Skin::IdType& id) const;
+    const std::unordered_map<Base::Skin::IdType, Base::Skin>& GetSkins() const;
 
     void AddNodeHierarchy(NodeLink&& nodeLink);
     NodeLink& GetNodeHierarchy();
@@ -77,20 +66,20 @@ struct Scene {
     const std::vector<SceneView>& GetSceneViews() const;
 
 private:
-    IdGenerator<Node::IdType> _nodeIdGenerator;
-    IdGenerator<Mesh::IdType> _meshIdGenerator;
-    IdGenerator<Texture::IdType> _textureIdGenerator;
-    IdGenerator<Material::IdType> _materialIdGenerator;
-    IdGenerator<Camera::IdType> _cameraIdGenerator;
-    IdGenerator<Skin::IdType> _skinIdGenerator;
+    Utils::IdGenerator<Base::Node::IdType> _nodeIdGenerator;
+    Utils::IdGenerator<Base::Mesh::IdType> _meshIdGenerator;
+    Utils::IdGenerator<Base::Texture::IdType> _textureIdGenerator;
+    Utils::IdGenerator<Base::Material::IdType> _materialIdGenerator;
+    Utils::IdGenerator<Base::Camera::IdType> _cameraIdGenerator;
+    Utils::IdGenerator<Base::Skin::IdType> _skinIdGenerator;
 
     // Raw data
-    std::unordered_map<Node::IdType, Node> _nodes;
-    std::unordered_map<Mesh::IdType, Mesh> _meshes;
-    std::unordered_map<Camera::IdType, Camera> _cameras;
-    std::unordered_map<Skin::IdType, Skin> _skins;
-    std::unordered_map<Texture::IdType, Texture> _textures;
-    std::unordered_map<Material::IdType, Material> _materials;
+    std::unordered_map<Base::Node::IdType, Base::Node> _nodes;
+    std::unordered_map<Base::Mesh::IdType, Base::Mesh> _meshes;
+    std::unordered_map<Base::Camera::IdType, Base::Camera> _cameras;
+    std::unordered_map<Base::Skin::IdType, Base::Skin> _skins;
+    std::unordered_map<Base::Texture::IdType, Base::Texture> _textures;
+    std::unordered_map<Base::Material::IdType, Base::Material> _materials;
 
     // Data connections
     std::vector<SceneObject> _sceneObjects;
@@ -111,5 +100,5 @@ public:
 #endif
 };
 
-} // namespace Common
-} // namespace Render
+} // namespace Scene
+} // namespace Renderer

@@ -1,29 +1,28 @@
 cmake_minimum_required(VERSION 3.9)
 
-project(Renderer_Common)
+project(Renderer_Scene)
 
 find_package(glad REQUIRED)
 
 add_library(${PROJECT_NAME}
-    Camera.cpp
-    Mesh.cpp
-    Node.cpp
-    NodeLink.cpp
-    Scene.cpp
-    Skin.cpp
-    DepthBuffer.cpp
-    FramebufferBase.cpp
-    Texture.cpp
+    src/Camera.cpp
+    src/Mesh.cpp
+    src/Node.cpp
+    src/NodeLink.cpp
+    src/Scene.cpp
+    src/Skin.cpp
+    src/Texture.cpp
 )
 
 add_dependencies(${PROJECT_NAME}
-    Utils
+    Renderer_Utils
 )
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
-    Utils
     glad::glad
+PUBLIC
+    Renderer_Utils
 )
 
 target_include_directories(${PROJECT_NAME}

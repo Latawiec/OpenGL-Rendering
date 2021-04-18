@@ -36,6 +36,5 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
 
 add_subdirectory(Renderer)
-add_subdirectory(Utils)
 add_subdirectory(Assets)
 add_subdirectory(test)
