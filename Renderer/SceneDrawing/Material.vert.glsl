@@ -1,4 +1,4 @@
-#version 330 core
+
 
 #ifndef SKINNED_MESH
 #define SKINNED_MESH 0
@@ -16,6 +16,11 @@ out VS_OUTPUT {
     vec4 Silouette;
     vec2 TexCoords;
 } OUT;
+
+out gl_PerVertex
+{
+    vec4 gl_Position;
+};
 
 uniform mat4 model;
 uniform mat4 view;
@@ -50,7 +55,7 @@ vec4 calculateWorldPosition(in mat4 modelTransform, in vec3 fragPos) {
         aJointWeights.z * jointTransform[int(aJoints.z)] + 
         aJointWeights.w * jointTransform[int(aJoints.w)];
 
-    return model * skinMatrix * vec4(fragPos, 1.0);
+    return modelTransform * skinMatrix * vec4(fragPos, 1.0);
 }
 #else 
 vec4 calculateWorldPosition(in mat4 modelTransform, in vec3 fragPos) {

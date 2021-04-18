@@ -12,6 +12,7 @@ class Texture {
     unsigned int _texture;
 public:
     using IdType = uint64_t;
+    constexpr static IdType INVALID_ID = 0;
 
     enum Wrap : GLint {
         Clamp = GL_CLAMP_TO_EDGE,

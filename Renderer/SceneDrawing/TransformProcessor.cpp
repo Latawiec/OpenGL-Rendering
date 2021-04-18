@@ -1,9 +1,8 @@
-#include "Pipeline/TransformProcessor.hpp"
+#include "SceneDrawing/TransformProcessor.hpp"
 
-namespace Render {
-namespace Pipeline {
+namespace SceneDrawing {
 
-TransformProcessor::TransformProcessor(const Common::Scene& scene)
+TransformProcessor::TransformProcessor(const Render::Common::Scene& scene)
 : _scene(scene)
 {}
 
@@ -19,9 +18,9 @@ const TransformProcessor::NodeIdTransformMap& TransformProcessor::GetNodeTransfo
     return _globalNodeTransforms;
 }
 
-void TransformProcessor::updateLink(const glm::mat4& parentTransform, const Common::NodeLink& link)
+void TransformProcessor::updateLink(const glm::mat4& parentTransform, const Render::Common::NodeLink& link)
 {
-    const Common::Node& linkNode = _scene.GetNode(link.GetNode());
+    const Render::Common::Node& linkNode = _scene.GetNode(link.GetNode());
     const glm::mat4 transform =  linkNode.GetTransform() * parentTransform;
     _globalNodeTransforms[link.GetNode()] = transform;
 
@@ -30,5 +29,4 @@ void TransformProcessor::updateLink(const glm::mat4& parentTransform, const Comm
     }
 }
 
-} // namespace Pipeline
-} // namespace Render
+} // namespace SceneDrawing

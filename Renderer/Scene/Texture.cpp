@@ -1,4 +1,4 @@
-#include "Common/Texture.hpp"
+#include "Scene/Texture.hpp"
 #include "stb_image_proxy.hpp"
 
 

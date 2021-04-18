@@ -1,13 +1,13 @@
 #pragma once
-#include <Common/FramebufferBase.hpp>
+#include <Scene/FramebufferBase.hpp>
 
 #include <cstddef>
 #include <utility>
 #include "always_fail.hpp"
 
-namespace Render {
+namespace SceneDrawing {
 
-class GraphicBuffer : public Common::FramebufferBase {
+class GraphicBuffer : public Render::Common::FramebufferBase {
 public:
 
     enum Output {
@@ -47,4 +47,4 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::Depth>();
 template<>
 void GraphicBuffer::setupTexture<GraphicBuffer::Output::EdgeInfo>();
 
-} // namespace Render
+} // namespace SceneDrawing

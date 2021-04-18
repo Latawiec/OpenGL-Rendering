@@ -8,9 +8,8 @@ find_package(glm CONFIG REQUIRED)
 add_library(${PROJECT_NAME}
     SceneDrawingManager.cpp
     TransformProcessor.cpp
-    SkinnedMeshDrawer.cpp
-    StaticMeshDrawer.cpp
     GraphicBuffer.cpp
+    BasePassPipelineManager.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -30,6 +29,12 @@ add_dependencies(${PROJECT_NAME}
     Renderer_MappingProgram
     Renderer_EdgeDetector
     Renderer_DebugUtils_TextureProgram
+)
+
+target_compile_definitions(${PROJECT_NAME}
+PRIVATE
+    BASE_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/Material.frag.glsl"
+    BASE_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/Material.vert.glsl"
 )
 
 target_include_directories(${PROJECT_NAME}

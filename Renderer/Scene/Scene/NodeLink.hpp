@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IdGenerator.hpp"
+#include "Node.hpp"
 
 #include <vector>
 
@@ -10,16 +10,16 @@ namespace Common {
 struct NodeLink {
 
     NodeLink();
-    NodeLink(IdGenerator::Type node);
+    NodeLink(Node::IdType node);
 
-    IdGenerator::Type GetNode() const;
+    Node::IdType GetNode() const;
 
     void AddChild(NodeLink&& node);
     std::vector<NodeLink>& GetChildren();
     const std::vector<NodeLink>& GetChildren() const;
 
 private:
-    IdGenerator::Type _node;
+    Node::IdType _node;
     std::vector<NodeLink> _childLinks;
 };
 

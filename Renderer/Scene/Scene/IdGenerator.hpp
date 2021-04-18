@@ -16,9 +16,8 @@ namespace Common {
 template<class T>
 struct IdGenerator {
     using Type = T;
-    constexpr static Type INVALID = 0;
     Type GenerateId() {
-        _lastGeneratedId++;
+        return _lastGeneratedId++;
     }
 private:
     Type _lastGeneratedId = 1; // 0 is invalid.

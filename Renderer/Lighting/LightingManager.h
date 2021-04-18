@@ -4,7 +4,7 @@
 
 #include "Node.hpp"
 #include "IdGenerator.hpp"
-#include "Common/DepthBuffer.hpp"
+#include "Scene/DepthBuffer.hpp"
 
 namespace Render {
 namespace Lighting {

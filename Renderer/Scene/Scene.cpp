@@ -1,42 +1,42 @@
-#include "Common/Scene.hpp"
+#include "Scene/Scene.hpp"
 
 namespace Render {
 namespace Common {
 
 Scene::Scene() {
-    const IdGenerator::Type rootNodeId = AddNode({});
+    const Node::IdType rootNodeId = AddNode({});
     _sceneRoot = NodeLink(rootNodeId);
 }
 
-Scene::Node::IdType Scene::AddNode(Node&& node) {
+Node::IdType Scene::AddNode(Node&& node) {
     const auto id = _nodeIdGenerator.GenerateId();
     _nodes.insert({ id, std::move(node) });
     return id;
 }
 
-Node& Scene::GetNode(const Scene::Node::IdType& id) {
+Node& Scene::GetNode(const Node::IdType& id) {
     return _nodes.at(id);
 }
 
-const Node& Scene::GetNode(const Scene::Node::IdType& id) const {
+const Node& Scene::GetNode(const Node::IdType& id) const {
     return _nodes.at(id);
 }
 
-Scene::Mesh::IdType Scene::AddMesh(Mesh&& mesh) {
+Mesh::IdType Scene::AddMesh(Mesh&& mesh) {
     const auto id = _meshIdGenerator.GenerateId();
     _meshes.insert({ id, std::move(mesh) });
     return id;
 }
 
-Mesh& Scene::GetMesh(const Scene::Mesh::IdType& id) {
+Mesh& Scene::GetMesh(const Mesh::IdType& id) {
     return _meshes.at(id);
 }
 
-const Mesh& Scene::GetMesh(const Scene::Mesh::IdType& id) const {
+const Mesh& Scene::GetMesh(const Mesh::IdType& id) const {
     return _meshes.at(id);
 }
 
-Scene::Texture::IdType Scene::AddTexture(Texture&& texture) {
+Texture::IdType Scene::AddTexture(Texture&& texture) {
     const auto id = _textureIdGenerator.GenerateId();
     _textures.emplace(id, std::move(texture));
     return id;
@@ -50,49 +50,49 @@ const Texture& Scene::GetTexture(const Texture::IdType& id) const {
     return _textures.at(id);
 }
 
-Scene::Material::IdType Scene::AddMaterial(BasicMaterial&& material) {
+Material::IdType Scene::AddMaterial(Material&& material) {
     const auto id = _materialIdGenerator.GenerateId();
     _materials.emplace(id, std::move(material));
     return id;
 }
 
-Scene::BasicMaterial& Scene::GetMaterial(const Material::IdType& id) {
+Material& Scene::GetMaterial(const Material::IdType& id) {
     return _materials.at(id);
 }
 
-const Scene::BasicMaterial& Scene::GetMaterial(const Material::IdType& id) const {
+const Material& Scene::GetMaterial(const Material::IdType& id) const {
     return _materials.at(id);
 }
 
-Scene::Camera::IdType Scene::AddCamera(Camera&& camera) {
+Camera::IdType Scene::AddCamera(Camera&& camera) {
     const auto id = _cameraIdGenerator.GenerateId();
     _cameras.insert({ id, std::move(camera) });
     return id;
 }
 
-Camera& Scene::GetCamera(const Scene::Camera::IdType& id) {
+Camera& Scene::GetCamera(const Camera::IdType& id) {
     return _cameras.at(id);
 }
 
-const Camera& Scene::GetCamera(const Scene::Camera::IdType& id) const {
+const Camera& Scene::GetCamera(const Camera::IdType& id) const {
     return _cameras.at(id);
 }
 
-Scene::Skin::IdType Scene::AddSkin(Skin&& skin) {
+Skin::IdType Scene::AddSkin(Skin&& skin) {
     const auto id = _skinIdGenerator.GenerateId();
     _skins.insert({ id, std::move(skin) });
     return id;
 }
 
-Skin& Scene::GetSkin(const Scene::Skin::IdType& id) {
+Skin& Scene::GetSkin(const Skin::IdType& id) {
     return _skins.at(id);
 }
 
-const Skin& Scene::GetSkin(const Scene::Skin::IdType& id) const {
+const Skin& Scene::GetSkin(const Skin::IdType& id) const {
     return _skins.at(id);
 }
 
-const std::unordered_map<Scene::Skin::IdType, Skin>& Scene::GetSkins() const {
+const std::unordered_map<Skin::IdType, Skin>& Scene::GetSkins() const {
     return _skins;
 }
 
@@ -108,40 +108,20 @@ const NodeLink& Scene::GetNodeHierarchy() const {
     return _sceneRoot;
 }
 
-void Scene::AttachCamera(const Node::IdType& nodeId, const Camera::IdType& cameraId) {
-    _cameraNodes[nodeId] = cameraId;
+void Scene::AddSceneObject(const SceneObject& sceneObject) {
+    _sceneObjects.push_back(sceneObject);
 }
 
-void Scene::DetachCamera(const Node::IdType& nodeId) {
-    _cameraNodes.erase(nodeId);
+const std::vector<Scene::SceneObject>& Scene::GetSceneObjects() const {
+    return _sceneObjects;
 }
 
-const std::unordered_map<Scene::Node::IdType, Scene::Camera::IdType>& Scene::GetCameraNodes() const {
-    return _cameraNodes;
+void Scene::AddSceneView(const Scene::SceneView& sceneView) {
+    _sceneViews.push_back(sceneView);
 }
 
-void Scene::AttachStaticMesh(const Node::IdType& nodeId, const Mesh::IdType& meshId) {
-    _staticMeshNodes[nodeId] = meshId;
-}
-
-void Scene::DetachStaticMesh(const Node::IdType& nodeId) {
-    _staticMeshNodes.erase(nodeId);
-}
-
-const std::unordered_map<Scene::Node::IdType, Scene::Mesh::IdType>& Scene::GetStaticMeshNodes() const {
-    return _staticMeshNodes;
-}
-
-void Scene::AttachSkinnedMesh(const Node::IdType& nodeId, const Scene::SkinnedMesh skinnedMesh) {
-    _skinnedMeshNodes[nodeId] = skinnedMesh;
-}
-
-void Scene::DetachSkinnedMesh(const Node::IdType& nodeId) {
-    _skinnedMeshNodes.erase(nodeId);
-}
-
-const std::unordered_map<Scene::Node::IdType, Scene::SkinnedMesh>& Scene::GetSkinnedMeshNodes() const {
-    return _skinnedMeshNodes;
+const std::vector<Scene::SceneView>& Scene::GetSceneViews() const {
+    return _sceneViews;
 }
 
 #ifndef NDEBUG

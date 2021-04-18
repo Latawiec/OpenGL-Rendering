@@ -1,7 +1,7 @@
 #include "Pipeline/SkinnedMeshDrawer.hpp"
 
 namespace Render {
-namespace Pipeline {
+namespace SceneDrawing {
 namespace /* anonymous */ {
 
 void setTransforms(
@@ -32,7 +32,7 @@ SkinnedMeshDrawer::SkinnedMeshDrawer(const Common::Scene& scene)
 
 void SkinnedMeshDrawer::Draw(const glm::mat4& view,
     const glm::mat4& proj,
-    const std::unordered_map<Common::Scene::Node::IdType, glm::mat4>& nodeGlobalTransforms)
+    const std::unordered_map<Common::Node::IdType, glm::mat4>& nodeGlobalTransforms)
 {
     const auto binding = _program.Bind();
     _program.SetView(view);
@@ -55,7 +55,7 @@ void SkinnedMeshDrawer::Draw(const glm::mat4& view,
     }
 }
 
-void SkinnedMeshDrawer::prepareSkin(const Common::Scene::Skin::IdType& skinId) {
+void SkinnedMeshDrawer::prepareSkin(const Common::Skin::IdType& skinId) {
     const auto& skin = _scene.GetSkin(skinId);
     const auto& skinHierarchy = skin.GetBonesHierarchy();
     if (!_jointTransforms.contains(skinId))

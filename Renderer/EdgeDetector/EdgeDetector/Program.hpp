@@ -2,8 +2,8 @@
 
 #include <string_view>
 
-#include "Common/Texture.hpp"
-#include "Common/VertexData.hpp"
+#include "Scene/Texture.hpp"
+#include "Scene/VertexData.hpp"
 #include "ShaderProgram.hpp"
 
 namespace Render {

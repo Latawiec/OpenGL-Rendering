@@ -1,4 +1,4 @@
-#include "Common/FramebufferBase.hpp"
+#include "Scene/FramebufferBase.hpp"
 
 namespace Render {
 namespace Common {

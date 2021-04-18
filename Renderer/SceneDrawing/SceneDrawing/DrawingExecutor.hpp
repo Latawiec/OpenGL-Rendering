@@ -3,7 +3,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-namespace Render {
+namespace SceneDrawing {
 
 /**
  * This is a non-owning helper to draw elements with their proper transforms. 
@@ -39,4 +39,4 @@ public:
     }
 };
 
-} // namespace Render
+} // namespace SceneDrawing

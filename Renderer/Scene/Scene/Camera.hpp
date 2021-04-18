@@ -8,6 +8,8 @@ namespace Common {
 
 struct Camera { 
     using IdType = uint64_t;
+    constexpr static IdType INVALID_ID = 0;
+    
     enum class Type : uint8_t {
         Perspective,
         Ortographic

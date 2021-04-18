@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IdGenerator.hpp"
+#include "Node.hpp"
 
 #include <vector>
 #include <optional>
@@ -15,11 +15,12 @@ struct Node;
 
 struct Skin {
     using IdType = uint64_t;
+    constexpr static IdType INVALID_ID = 0;
     using JointTransformIndex = std::size_t;
 
     struct Bone {
         glm::mat4 inverseBindMatrix = glm::mat4{1};
-        IdGenerator::Type nodeId = IdGenerator::INVALID;
+        Node::IdType nodeId = Node::INVALID_ID;
     };
 
     struct BoneLink {

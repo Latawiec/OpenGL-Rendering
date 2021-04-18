@@ -12,6 +12,7 @@ namespace Common {
 
 struct Node {
     using IdType = uint64_t;
+    constexpr static IdType INVALID_ID = 0;
 
     Node();
     Node(const glm::mat4& transform);

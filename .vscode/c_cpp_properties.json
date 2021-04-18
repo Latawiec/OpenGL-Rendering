@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${env:VCPKG_ROOT}/installed/x64-windows/include/",
-                "${env:VCPKG_ROOT}/installed/x86-windows/include/"
+                "${env:VCPKG_ROOT}/installed/x86-windows/include/",
+                "${workspaceFolder}/Renderer/Scene"
             ],
             "defines": [
                 "_DEBUG",

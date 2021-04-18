@@ -1,6 +1,6 @@
-#include "Pipeline/GraphicBuffer.hpp"
+#include "SceneDrawing/GraphicBuffer.hpp"
 
-namespace Render {
+namespace SceneDrawing {
 
 GraphicBuffer::GraphicBuffer(unsigned int width, unsigned int height)
 : FramebufferBase(width, height)
@@ -79,4 +79,4 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::EdgeInfo>() {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, outputTexture, 0);
 }
 
-} // namespace Render
+} // namespace SceneDrawing

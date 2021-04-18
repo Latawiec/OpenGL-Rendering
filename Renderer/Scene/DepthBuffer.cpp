@@ -1,4 +1,4 @@
-#include "Common/DepthBuffer.hpp"
+#include "Scene/DepthBuffer.hpp"
 
 #include <glad/glad.h>
 

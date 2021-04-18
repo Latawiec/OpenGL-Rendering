@@ -5,7 +5,7 @@
 #include <unordered_set>
 #include <string>
 
-#include "Common/Scene.hpp"
+#include "Scene/Scene.hpp"
 
 namespace tinygltf {
 struct Model;

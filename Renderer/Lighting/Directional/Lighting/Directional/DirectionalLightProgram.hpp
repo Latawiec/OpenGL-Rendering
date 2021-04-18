@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common/Mesh.hpp"
+#include "Scene/Mesh.hpp"
 #include "ShaderProgram.hpp"
 
 namespace Render::Lighting::Directional {

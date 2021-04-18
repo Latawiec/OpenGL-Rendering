@@ -27,6 +27,18 @@ struct Scene {
         Skin::IdType skinId;
     };
 
+    struct SceneObject {
+        Node::IdType nodeId = Node::INVALID_ID;
+        Mesh::IdType meshId = Mesh::INVALID_ID;
+        Skin::IdType skinId = Skin::INVALID_ID;
+        Material::IdType materialId = Material::INVALID_ID;
+    };
+
+    struct SceneView {
+        Node::IdType nodeId = Node::INVALID_ID;
+        Camera::IdType cameraId = Camera::INVALID_ID;
+    };
+
     Scene();
 
     Node::IdType AddNode(Node&& node);
@@ -54,33 +66,15 @@ struct Scene {
     const Skin& GetSkin(const Skin::IdType& id) const;
     const std::unordered_map<Skin::IdType, Skin>& GetSkins() const;
 
-    // void AddDirectionalLight(Directional::Light light);
-    // void AddShadow(const Light::IdType& id, uint8_t quality);
-    // void RemoveShadow(const Light::IdType& id);
-    // Directional::Light& GetDirectionalLight(const Light::IdType& id);
-    // const Directional::Light& GetDirectionalLight(const Light::IdType& id) const;
-    // const DepthBuffer& GetDirectionalShadow(const Light::IdType& id) const;
-
     void AddNodeHierarchy(NodeLink&& nodeLink);
     NodeLink& GetNodeHierarchy();
     const NodeLink& GetNodeHierarchy() const;
 
-    void AttachCamera(const Node::IdType& nodeId, const Camera::IdType& cameraId);
-    void DetachCamera(const Node::IdType& nodeId);
-    const std::unordered_map<Node::IdType, Camera::IdType>& GetCameraNodes() const;
+    void AddSceneObject(const SceneObject& sceneObject);
+    const std::vector<SceneObject>& GetSceneObjects() const;
 
-    void AttachStaticMesh(const Node::IdType& nodeId, const Mesh::IdType& meshId);
-    void DetachStaticMesh(const Node::IdType& nodeId);
-    const std::unordered_map<Node::IdType, Mesh::IdType>& GetStaticMeshNodes() const;
-
-    void AttachSkinnedMesh(const Node::IdType& nodeId, const SkinnedMesh skinnedMesh);
-    void DetachSkinnedMesh(const Node::IdType& nodeId);
-    const std::unordered_map<Node::IdType, SkinnedMesh>& GetSkinnedMeshNodes() const;
-
-    // void AttachLight(const Node::IdType& nodeId, const Light::IdType& lightId);
-    // void DetachLight(const Node::IdType& nodeId, const Light::IdType& lightId);
-    // const std::unordered_map<Node::IdType, Directional::Light>& GetDirectionalLightNodes() const;
-    // const std::unordered_map<Light::IdType, DepthBuffer>& GetDirectionalShadowMaps() const;
+    void AddSceneView(const SceneView& sceneView);
+    const std::vector<SceneView>& GetSceneViews() const;
 
 private:
     IdGenerator<Node::IdType> _nodeIdGenerator;
@@ -98,15 +92,9 @@ private:
     std::unordered_map<Texture::IdType, Texture> _textures;
     std::unordered_map<Material::IdType, Material> _materials;
 
-    // std::unordered_map<Light::IdType, Directional::Light> _directionalLights;
-    // std::unordered_map<Light::IdType, DepthBuffer> _directionalShadowMaps;
-
     // Data connections
-    std::unordered_map<Node::IdType, Camera::IdType> _cameraNodes;
-    std::unordered_map<Node::IdType, Mesh::IdType> _staticMeshNodes;
-    std::unordered_map<Node::IdType, SkinnedMesh> _skinnedMeshNodes;
-    // std::unordered_map<Node::IdType, Light::IdType> _directionalLightNodes;
-
+    std::vector<SceneObject> _sceneObjects;
+    std::vector<SceneView> _sceneViews;
 
     NodeLink _sceneRoot;
 

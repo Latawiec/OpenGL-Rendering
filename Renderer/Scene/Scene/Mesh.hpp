@@ -7,6 +7,7 @@ namespace Common {
 
 struct Mesh {
     using IdType = uint64_t;
+    constexpr static IdType INVALID_ID = 0;
 
     Mesh() = default;  
     Mesh(VertexDataBase&& vertexData);

@@ -4,10 +4,10 @@
 #include <GLFW/glfw3.h>
 
 #include "BasicCamera.hpp"
-#include "Common/Mesh.hpp"
-#include "Common/Scene.hpp"
-#include <Pipeline/SceneDrawingManager.hpp>
-#include "Common/Texture.hpp"
+#include "Scene/Mesh.hpp"
+#include "Scene/Scene.hpp"
+#include <SceneDrawing/SceneDrawingManager.hpp>
+#include "Scene/Texture.hpp"
 #include "Importer.hpp"
 
 using namespace Render;
@@ -19,8 +19,8 @@ int main() {
     constexpr int windowHeight= 600;
 
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "LearnOpenGL", NULL, NULL);
@@ -55,7 +55,7 @@ int main() {
     std::cout << mainScene << std::endl;
     //imported->AddChildNode(std::move(shadowingLight));
 
-    Pipeline::SceneDrawingManager sceneDrawingManager(mainScene, 800, 600);
+    SceneDrawing::SceneDrawingManager sceneDrawingManager(mainScene, 800, 600);
     while(!glfwWindowShouldClose(window)) {
         //stolenLight.SetTransform(glm::translate(glm::mat4(1), glm::vec3(5 * glm::sin(glfwGetTime()), 2.5, 1)));
         sceneDrawingManager.Draw();

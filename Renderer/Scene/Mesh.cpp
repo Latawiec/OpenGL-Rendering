@@ -1,4 +1,4 @@
-#include "Common/Mesh.hpp"
+#include "Scene/Mesh.hpp"
 
 namespace Render {
 namespace Common {

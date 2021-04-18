@@ -1,17 +1,17 @@
-#include "Common/NodeLink.hpp"
+#include "Scene/NodeLink.hpp"
 
 namespace Render {
 namespace Common {
 
 NodeLink::NodeLink()
-: _node(IdGenerator::INVALID)
+: _node(Node::INVALID_ID)
 {}
 
-NodeLink::NodeLink(IdGenerator::Type node)
+NodeLink::NodeLink(Node::IdType node)
 : _node(node)
 {}
 
-IdGenerator::Type NodeLink::GetNode() const {
+Node::IdType NodeLink::GetNode() const {
     return _node;
 }
 

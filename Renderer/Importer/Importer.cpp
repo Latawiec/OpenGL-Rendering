@@ -7,12 +7,12 @@
 #include <tiny_gltf.h>
 #include <glad/glad.h>
 
-#include "Common/VertexData.hpp"
-#include "Common/VertexAttribute.hpp"
-#include "Common/Mesh.hpp"
-#include "Common/NodeLink.hpp"
-#include "Common/Camera.hpp"
-#include "Common/Texture.hpp"
+#include "Scene/VertexData.hpp"
+#include "Scene/VertexAttribute.hpp"
+#include "Scene/Mesh.hpp"
+#include "Scene/NodeLink.hpp"
+#include "Scene/Camera.hpp"
+#include "Scene/Texture.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
@@ -244,14 +244,14 @@ void Importer::convertMaterials (
         const gltfId metallicRoughnessTexture = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index;
         const gltfId normalTexture = gltfMaterial.normalTexture.index;
         // todo more...
-        const Scene::Texture::IdType albedoId = albedoTexture != -1 ? texturesConversionData.convertedTextures[albedoTexture] : 0;
-        const Scene::Texture::IdType metallicRoughnessId = metallicRoughnessTexture != -1 ? texturesConversionData.convertedTextures[metallicRoughnessTexture] : 0;
-        const Scene::Texture::IdType normalId = normalTexture != -1 ? texturesConversionData.convertedTextures[normalTexture] : 0;
+        const Texture::IdType albedoId = albedoTexture != -1 ? texturesConversionData.convertedTextures[albedoTexture] : 0;
+        const Texture::IdType metallicRoughnessId = metallicRoughnessTexture != -1 ? texturesConversionData.convertedTextures[metallicRoughnessTexture] : 0;
+        const Texture::IdType normalId = normalTexture != -1 ? texturesConversionData.convertedTextures[normalTexture] : 0;
 
-        Scene::BasicMaterial material;
-        material.setTexture<Scene::BasicMaterial::ETexture::Albedo>(albedoId);
-        material.setTexture<Scene::BasicMaterial::ETexture::MetallicRoughness>(metallicRoughnessId);
-        material.setTexture<Scene::BasicMaterial::ETexture::Normal>(normalId);
+        Material material;
+        material.setTexture<Material::ETexture::Albedo>(albedoId);
+        material.setTexture<Material::ETexture::MetallicRoughness>(metallicRoughnessId);
+        material.setTexture<Material::ETexture::Normal>(normalId);
 
         materialsConversionData.convertedMaterials.push_back(std::move(scene.AddMaterial(std::move(material))));
     }
@@ -324,21 +324,28 @@ NodeLink Importer::traverseNodes(Common::Scene& scene, const tinygltf::Model& gl
     Common::NodeLink nodeLink { nodeId };
     const auto& gltfNode = gltfModel.nodes[glftNodeId];
 
-    // Mesh
+    // Scene elements
     if (gltfNode.mesh != -1) {
-        const auto& meshId = meshConversionData.convertedMeshes[gltfNode.mesh];
+        const auto& gltfMesh = gltfModel.meshes[gltfNode.mesh];
+        Scene::SceneObject obj;
+        obj.nodeId = nodeId;
+        obj.meshId = meshConversionData.convertedMeshes[gltfNode.mesh];;
+
         if (gltfNode.skin != -1) {
-            const auto& skinId = skinConversionData.convertedSkins[gltfNode.skin];
-            scene.AttachSkinnedMesh(nodeId, { meshId, skinId });
-        } else {
-            scene.AttachStaticMesh(nodeId, meshId);
+            obj.skinId = skinConversionData.convertedSkins[gltfNode.skin];
         }
+
+        if (gltfMesh.primitives[0].material != -1) {
+            obj.materialId = materialsConversionData.convertedMaterials[gltfMesh.primitives[0].material];
+        }
+
+        scene.AddSceneObject(obj);
     }
 
     // Camera
     if (gltfNode.camera != -1) {
         const auto& cameraId = cameraConversionData.convertedCameras[gltfNode.camera];
-        scene.AttachCamera(nodeId, cameraId);
+        scene.AddSceneView({ nodeId, cameraId });
     }
 
     for (const auto& childNodeId : gltfNode.children) {

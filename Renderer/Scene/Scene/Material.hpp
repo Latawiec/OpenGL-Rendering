@@ -9,22 +9,12 @@ namespace Render {
 namespace Common {
 
 
-static constexpr int MaxJointsCount = 32;
-using JointsArray = std::array<glm::mat4, MaxJointsCount>;
+
 
 struct Material {
     using IdType = uint64_t;
-    using PropertiesSet = uint64_t;
+    constexpr static IdType INVALID_ID = 0;
 
-    enum class Properties : uint64_t { 
-        // Vertex variants
-        SKIN = 1 << 0,
-
-        // Fragment variants
-        SHADOW_MAPPED = 1 << 1,
-        BASE_COLOUR_TEXTURE = 1 << 2,
-        NORMAL_MAP_TEXTURE = 1 << 3
-    };
 
     enum class EDithering : uint8_t {
         NONE = 0,
@@ -65,12 +55,7 @@ struct Material {
     EDithering getDithering() const { return _dithering; }
     void setDithering(EDithering value) { _dithering = value; }
 
-    void addProperties(PropertiesSet properties) { _properties |= properties; }
-    void removeProperties(PropertiesSet properties) { _properties ^= properties; }
-    PropertiesSet getProperties() const { return _properties; }
-
 private:
-    PropertiesSet _properties = 0;
     std::array<Texture::IdType, size_t(ETexture::SIZE)> _textures = {};
     EDithering _dithering = EDithering::NONE;
 

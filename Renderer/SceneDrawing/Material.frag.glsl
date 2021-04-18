@@ -1,4 +1,4 @@
-#version 330
+
 
 #ifndef SHADOW_MAPPED
 #define SHADOW_MAPPED 0
@@ -44,7 +44,7 @@ void main()
     PositionMap = IN.Position;
     ColorMap = SampleBaseColor(IN.TexCoords);
     NormalMap = SampleNormalMap(IN.TexCoords);
-    ContourMap = IN.ContourMap;
+    SilhouetteMap = IN.Silouette;
 
     //ColorMap = (1.4f - ShadowCalculation(IN.FragPosLightSpace)) * vec4(1);
 }

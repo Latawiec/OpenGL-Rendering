@@ -1,4 +1,4 @@
-#include "Common/Node.hpp"
+#include "Scene/Node.hpp"
 
 namespace Render {
 namespace Common {

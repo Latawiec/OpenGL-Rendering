@@ -1,4 +1,4 @@
-#include "Common/Skin.hpp"
+#include "Scene/Skin.hpp"
 
 
 namespace Render {
