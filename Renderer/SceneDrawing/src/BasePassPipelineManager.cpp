@@ -300,15 +300,15 @@ void BasePassPipelineManager::buildVariant(const PropertiesSet& properties)
     const auto& vertexProgram = _cachedVertexPrograms.at(vertexProperties);
     const auto& fragmentProgram = _cachedFragmentPrograms.at(fragmentProperties);
 
-    _buildPipelines.emplace(properties, BasePassPipeline(vertexProgram, fragmentProgram));
+    _builtPipelines.emplace(properties, BasePassPipeline(vertexProgram, fragmentProgram));
 }
 
 const BasePassPipeline& BasePassPipelineManager::GetPipeline(const PropertiesSet& properties)
 {
-    if (!_buildPipelines.contains(properties)) {
+    if (!_builtPipelines.contains(properties)) {
         buildVariant(properties);
     } 
-    return _buildPipelines.at(properties);
+    return _builtPipelines.at(properties);
 }
 
 } // namespace BasePass

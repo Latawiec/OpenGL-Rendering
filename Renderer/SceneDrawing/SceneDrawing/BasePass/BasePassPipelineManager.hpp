@@ -129,7 +129,7 @@ struct BasePassPipelineManager {
     };  
 
 private:
-    std::unordered_map<PropertiesSet, BasePassPipeline> _buildPipelines;
+    std::unordered_map<PropertiesSet, BasePassPipeline> _builtPipelines;
     std::unordered_map<PropertiesSet, BasePassVertexProgram> _cachedVertexPrograms;
     std::unordered_map<PropertiesSet, BasePassFragmentProgram> _cachedFragmentPrograms;
 
