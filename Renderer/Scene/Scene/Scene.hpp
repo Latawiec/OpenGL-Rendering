@@ -5,6 +5,7 @@
 #endif
 
 #include "Base/Camera.hpp"
+#include "Base/DirectionalLight.hpp"
 #include "Base/Material.hpp"
 #include "Base/Mesh.hpp"
 #include "Base/Node.hpp"
@@ -12,6 +13,8 @@
 #include "Base/Texture.hpp"
 #include "NodeLink.hpp"
 #include "SceneObject.hpp"
+#include "SceneView.hpp"
+#include "SceneLight.hpp"
 
 #include <id_generator.hpp>
 
@@ -22,11 +25,6 @@ namespace Renderer {
 namespace Scene {
 
 struct Scene {
-
-    struct SceneView {
-        Base::Node::IdType nodeId = Base::Node::INVALID_ID;
-        Base::Camera::IdType cameraId = Base::Camera::INVALID_ID;
-    };
 
     Scene();
 
@@ -55,15 +53,23 @@ struct Scene {
     const Base::Skin& GetSkin(const Base::Skin::IdType& id) const;
     const std::unordered_map<Base::Skin::IdType, Base::Skin>& GetSkins() const;
 
+    Base::DirectionalLight::IdType AddDirectionalLight(Base::DirectionalLight&& light);
+    Base::DirectionalLight& GetDirectionalLight(const Base::DirectionalLight::IdType id);
+    const Base::DirectionalLight& GetDirectionalLight(const Base::DirectionalLight::IdType id) const;
+    const std::unordered_map<Base::DirectionalLight::IdType, Base::DirectionalLight>& GetDirectionalLights() const;
+
     void AddNodeHierarchy(NodeLink&& nodeLink);
     NodeLink& GetNodeHierarchy();
     const NodeLink& GetNodeHierarchy() const;
 
-    void AddSceneObject(const SceneObject& sceneObject);
+    void AddSceneObject(SceneObject sceneObject);
     const std::vector<SceneObject>& GetSceneObjects() const;
 
-    void AddSceneView(const SceneView& sceneView);
+    void AddSceneView(SceneView sceneView);
     const std::vector<SceneView>& GetSceneViews() const;
+
+    void AddSceneLight(SceneLight sceneLight);
+    const std::vector<SceneLight>& GetSceneLights() const;
 
 private:
     Utils::IdGenerator<Base::Node::IdType> _nodeIdGenerator;
@@ -72,18 +78,21 @@ private:
     Utils::IdGenerator<Base::Material::IdType> _materialIdGenerator;
     Utils::IdGenerator<Base::Camera::IdType> _cameraIdGenerator;
     Utils::IdGenerator<Base::Skin::IdType> _skinIdGenerator;
+    Utils::IdGenerator<Base::DirectionalLight::IdType> _directionalLightIdGenerator;
 
     // Raw data
     std::unordered_map<Base::Node::IdType, Base::Node> _nodes;
     std::unordered_map<Base::Mesh::IdType, Base::Mesh> _meshes;
-    std::unordered_map<Base::Camera::IdType, Base::Camera> _cameras;
-    std::unordered_map<Base::Skin::IdType, Base::Skin> _skins;
     std::unordered_map<Base::Texture::IdType, Base::Texture> _textures;
     std::unordered_map<Base::Material::IdType, Base::Material> _materials;
+    std::unordered_map<Base::Camera::IdType, Base::Camera> _cameras;
+    std::unordered_map<Base::Skin::IdType, Base::Skin> _skins;
+    std::unordered_map<Base::Skin::IdType, Base::DirectionalLight> _directionalLights;
 
     // Data connections
     std::vector<SceneObject> _sceneObjects;
     std::vector<SceneView> _sceneViews;
+    std::vector<SceneLight> _sceneLights;
 
     NodeLink _sceneRoot;
 

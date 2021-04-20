@@ -6,6 +6,7 @@ find_package(glad REQUIRED)
 
 add_library(${PROJECT_NAME}
     src/Camera.cpp
+    src/DirectionalLight.cpp
     src/Mesh.cpp
     src/Node.cpp
     src/NodeLink.cpp

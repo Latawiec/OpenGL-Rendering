@@ -12,6 +12,7 @@
 #include "Scene/Base/Mesh.hpp"
 #include "Scene/Base/Camera.hpp"
 #include "Scene/Base/Texture.hpp"
+#include "Scene/Base/DirectionalLight.hpp"
 #include "Scene/NodeLink.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -19,6 +20,7 @@
 
 #include <unordered_map>
 #include <iostream>
+#include <string_view>
 #include <array>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -31,6 +33,7 @@ namespace Importer {
 namespace /*anonymous*/ {
     static const std::string ProgramType = "ProgramType";
     static const std::string ContourProgramType = "Contour";
+    const static std::string LightsExtensionName = "KHR_lights_punctual";
 
     static const std::string PositionAttribute = "POSITION";
     static const std::string NormalsAttribute = "NORMAL";
@@ -38,8 +41,6 @@ namespace /*anonymous*/ {
     static const std::string EdgeColourAttribute = "COLOR_0";
     static const std::string JointsAttribute = "JOINTS_0";
     static const std::string JointsWeightsAttribute = "WEIGHTS_0";
-
-    static const std::string CameraOrientationNodeName = "Camera_Orientation";
 
     Scene::Base::Mesh processContourMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
         GLuint VAO;
@@ -158,20 +159,28 @@ void Importer::convertNodes(
 
     for (size_t i = 0; i < nodesCount; ++i) {
         const tinygltf::Node& gltfNode = gltfModel.nodes[i]; 
-        // I don't know if every software does it, but Blender gives me a weird "Camera_Orientation" node. So we need to patch it up.
-        const bool isCameraOrientation = (gltfNode.camera != -1) && (gltfNode.name == CameraOrientationNodeName);
-        const glm::mat4 nodeTransform = isCameraOrientation ? glm::mat4{1} : processNodeTransform(gltfNode);
+        glm::mat4 nodeTransform = processNodeTransform(gltfNode);
+        // Blender exports additional node that contains Camera_Orientation, which is changing Y to be Up-axis.
+        // We need to remember it and apply this transform before any other, to the View Transform.
+        if (gltfNode.camera != -1) {
+            nodeConversionData.cameraToOrientationNode[gltfNode.camera] = i;
+            nodeTransform = glm::mat4{1};
+        }
+
+        // Also we need to check for lights orientation nodes...
+        if (gltfNode.extensions.size() != 0 && gltfNode.extensions.contains(LightsExtensionName)) {
+            const static std::string LightProperty_Name = "light";
+            const auto lightId = gltfNode.extensions.at(LightsExtensionName).Get(LightProperty_Name).Get<int>();
+            nodeConversionData.directionalLightToOrientationNode[lightId] = i;
+            nodeTransform = glm::mat4{1};
+        }
+
         Scene::Base::Node convertedNode { nodeTransform };
         #ifndef NDEBUG
         convertedNode.SetName(gltfNode.name);
         #endif
         const SceneId sceneNodeId = scene.AddNode(std::move(convertedNode));
         nodeConversionData.convertedNodes.push_back(sceneNodeId);
-
-        if (isCameraOrientation) {
-            // Also remember it, and we'll put it in Camera object as Orientation matrix.
-            nodeConversionData.cameraToOrientationNode[gltfNode.camera] = i;
-        }
     }
 }
 
@@ -226,6 +235,37 @@ void Importer::convertTextures (
         assert(gltfImage.bits == 8);
         Scene::Base::Texture convertedTexture = processTexture(gltfModel, gltfImage);
         texturesConversionData.convertedTextures.push_back(scene.AddTexture(std::move(convertedTexture)));
+    }
+}
+
+void Importer::convertLights (
+    Scene::Scene& scene,
+    const tinygltf::Model& gltfModel
+    )
+{
+    // Lights are only available in gltf2 through an extension. So we need to fetch them from there.
+    const static std::string LightType_Directional = "directional";
+
+    const int lightsCount = gltfModel.lights.size();
+    for (int i=0; i < lightsCount; ++i) {
+        const auto& light = gltfModel.lights[i];
+
+        const glm::vec3 convertedColor { light.color[0], light.color[1], light.color[2] };
+        const float convertedIntensity = light.intensity;
+
+        if (light.type == LightType_Directional) {
+            // For directional light, we need their direction, which is set under it's Node.
+            const bool lightHasOrientationTransform = nodeConversionData.directionalLightToOrientationNode.contains(i);
+            if (lightHasOrientationTransform) {
+                const tinygltf::Node& gltfNode = gltfModel.nodes[nodeConversionData.directionalLightToOrientationNode[i]];
+                const glm::mat4 orientationTransform = processNodeTransform(gltfNode);
+                
+                Scene::Base::DirectionalLight convertedDirectionalLight{ orientationTransform };
+                convertedDirectionalLight.SetColor(convertedColor);
+                convertedDirectionalLight.SetIntensity(convertedIntensity);
+                lightsConversionData.convertedDirectionalLights.emplace(i, scene.AddDirectionalLight(std::move(convertedDirectionalLight)));
+            }
+        }
     }
 }
 
@@ -347,6 +387,21 @@ Scene::NodeLink Importer::traverseNodes(Scene::Scene& scene, const tinygltf::Mod
         scene.AddSceneView({ nodeId, cameraId });
     }
 
+    // Light
+    if (gltfNode.extensions.contains(LightsExtensionName)){
+        const static std::string LightPropertyName = "light";
+        const auto& lightObject = gltfNode.extensions.at(LightsExtensionName).Get(LightPropertyName);
+        const gltfId lightId = lightObject.Get<int>();
+
+        // Distinguish light type by the container holding it.
+        if (lightsConversionData.convertedDirectionalLights.contains(lightId)) {
+            Scene::SceneLight light;
+            light.nodeId = nodeId;
+            light.directionalLightId = lightsConversionData.convertedDirectionalLights.at(lightId);
+            scene.AddSceneLight(light);
+        } 
+    }
+
     for (const auto& childNodeId : gltfNode.children) {
         nodeLink.AddChild(traverseNodes(scene, gltfModel, childNodeId));
     }
@@ -359,6 +414,8 @@ void Importer::clearCache() {
     meshConversionData = {};
     cameraConversionData = {};
     skinConversionData = {};
+    texturesConversionData = {};
+    materialsConversionData = {};
 }
 
 bool Importer::importGltf(const std::string& filename, Scene::Scene& scene) {
@@ -389,6 +446,7 @@ bool Importer::importGltf(const std::string& filename, Scene::Scene& scene) {
     convertSkins(scene, gltfModel);
     convertTextures(scene, gltfModel);
     convertMaterials(scene, gltfModel);
+    convertLights(scene, gltfModel);
     // Now that all is converted, set scene hierarchy.
     const tinygltf::Scene &gltfScene = gltfModel.scenes[gltfModel.defaultScene];
 

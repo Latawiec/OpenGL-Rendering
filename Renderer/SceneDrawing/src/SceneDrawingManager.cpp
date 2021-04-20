@@ -11,7 +11,7 @@ namespace SceneDrawing {
 SceneDrawingManager::SceneDrawingManager(const Renderer::Scene::Scene& scene, const int windowWidth, const int windowHeight)
 : _scene(scene)
 , _transformProcessor(_scene)
-, _deferredBuffers(windowWidth/2, windowHeight/2)
+, _deferredBuffers(windowWidth, windowHeight)
 , _width(windowWidth)
 , _height(windowHeight) {}
 
@@ -23,8 +23,7 @@ void SceneDrawingManager::Draw() {
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, _width, _height);
-        // _edgeProgram.SetImageSize(_width/2, _height/2);
-        // _edgeProgram.Draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Normals));
+
         _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Albedo));
     }
 }

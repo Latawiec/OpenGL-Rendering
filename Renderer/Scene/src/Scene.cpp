@@ -96,6 +96,24 @@ const std::unordered_map<Base::Skin::IdType, Base::Skin>& Scene::GetSkins() cons
     return _skins;
 }
 
+Base::DirectionalLight::IdType Scene::AddDirectionalLight(Base::DirectionalLight&& light) {
+    const auto id = _directionalLightIdGenerator.GenerateId();
+    _directionalLights.insert({id, std::move(light)});
+    return id;
+}
+
+Base::DirectionalLight& Scene::GetDirectionalLight(const Base::DirectionalLight::IdType id) {
+    return _directionalLights.at(id);
+}
+
+const Base::DirectionalLight& Scene::GetDirectionalLight(const Base::DirectionalLight::IdType id) const {
+    return _directionalLights.at(id);
+}
+
+const std::unordered_map<Base::DirectionalLight::IdType, Base::DirectionalLight>& Scene::GetDirectionalLights() const {
+    return _directionalLights;
+}
+
 void Scene::AddNodeHierarchy(NodeLink&& nodeLink) {
     _sceneRoot.AddChild(std::move(nodeLink));
 }
@@ -108,20 +126,28 @@ const NodeLink& Scene::GetNodeHierarchy() const {
     return _sceneRoot;
 }
 
-void Scene::AddSceneObject(const SceneObject& sceneObject) {
-    _sceneObjects.push_back(sceneObject);
+void Scene::AddSceneObject(SceneObject sceneObject) {
+    _sceneObjects.emplace_back(std::move(sceneObject));
 }
 
 const std::vector<SceneObject>& Scene::GetSceneObjects() const {
     return _sceneObjects;
 }
 
-void Scene::AddSceneView(const Scene::SceneView& sceneView) {
-    _sceneViews.push_back(sceneView);
+void Scene::AddSceneView(SceneView sceneView) {
+    _sceneViews.emplace_back(std::move(sceneView));
 }
 
-const std::vector<Scene::SceneView>& Scene::GetSceneViews() const {
+const std::vector<SceneView>& Scene::GetSceneViews() const {
     return _sceneViews;
+}
+
+void Scene::AddSceneLight(SceneLight sceneLight) {
+    _sceneLights.emplace_back(std::move(sceneLight));
+}
+
+const std::vector<SceneLight>& Scene::GetSceneLights() const {
+    return _sceneLights;
 }
 
 #ifndef NDEBUG
