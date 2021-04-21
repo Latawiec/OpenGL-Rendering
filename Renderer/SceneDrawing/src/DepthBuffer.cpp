@@ -1,5 +1,6 @@
 #include "../SceneDrawing/DepthBuffer.hpp"
 
+#include <utility>
 #include <glad/glad.h>
 
 namespace Renderer {
@@ -24,14 +25,27 @@ unsigned int prepareDepthTexture(unsigned int width, unsigned int height) {
 DepthBuffer::DepthBuffer(unsigned int width, unsigned int height)
 : FramebufferBase(width, height)
 , _depthTexture(prepareDepthTexture(width, height)) {
-    ScopedBinding bind(*this);
+    const auto binding = this->Bind();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depthTexture, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 }
 
 DepthBuffer::~DepthBuffer() {
-    glDeleteTextures(1, &_depthTexture);
+    if (_depthTexture != -1) {
+        glDeleteTextures(1, &_depthTexture);
+    }
+}
+
+DepthBuffer::DepthBuffer(DepthBuffer&& other) : FramebufferBase(std::move(other)) {
+    std::swap(this->_depthTexture, other._depthTexture);
+}
+
+DepthBuffer& DepthBuffer::operator=(DepthBuffer&& other) {
+    FramebufferBase::operator=(std::move(other));
+    std::swap(this->_depthTexture, other._depthTexture);
+
+    return *this;
 }
 
 unsigned int DepthBuffer::getTexture() const {

@@ -6,7 +6,7 @@ namespace SceneDrawing {
 GraphicBuffer::GraphicBuffer(unsigned int width, unsigned int height)
 : FramebufferBase(width, height)
 {
-    ScopedBinding bind(*this);
+    const auto binding = this->Bind();
     glGenTextures(Output::SIZE, outputTextures_);
 
     // Setup all textures

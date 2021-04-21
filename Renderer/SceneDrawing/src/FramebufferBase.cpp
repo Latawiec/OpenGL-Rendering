@@ -1,5 +1,7 @@
 #include "../SceneDrawing/FramebufferBase.hpp"
 
+#include <utility>
+
 namespace Renderer {
 namespace SceneDrawing {
 
@@ -10,7 +12,27 @@ FramebufferBase::FramebufferBase(unsigned int width, unsigned int height)
 }
 
 FramebufferBase::~FramebufferBase() {
-    glDeleteFramebuffers(1, &_framebufferId);
+    if (_framebufferId != -1) {
+        glDeleteFramebuffers(1, &_framebufferId);
+    }
+}
+
+FramebufferBase::ScopedBinding FramebufferBase::Bind() const {
+    return { *this };
+}
+
+FramebufferBase::FramebufferBase(FramebufferBase&& other) {
+    std::swap(this->_width, other._width);
+    std::swap(this->_height, other._height);
+    std::swap(this->_framebufferId, other._framebufferId);
+}
+
+FramebufferBase& FramebufferBase::operator=(FramebufferBase&& other) {
+    std::swap(this->_width, other._width);
+    std::swap(this->_height, other._height);
+    std::swap(this->_framebufferId, other._framebufferId);
+
+    return *this;
 }
 
 FramebufferBase::ScopedBinding::ScopedBinding(const FramebufferBase& framebuffer) {

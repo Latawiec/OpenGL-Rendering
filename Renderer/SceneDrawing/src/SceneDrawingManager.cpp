@@ -17,6 +17,7 @@ SceneDrawingManager::SceneDrawingManager(const Renderer::Scene::Scene& scene, co
 
 void SceneDrawingManager::Draw() {
     _transformProcessor.Update();
+    ShadowMapping();
     BasePass();
 
     {
@@ -28,6 +29,75 @@ void SceneDrawingManager::Draw() {
     }
 }
 
+void SceneDrawingManager::ShadowMapping()
+{
+    static const float TemporaryShadowMapSize = 1024;
+    static const float TemporaryShadowMapFar = 100.f;
+    static const float TemporaryShadowMapNear = 0.1f;
+
+    glEnable(GL_DEPTH_TEST);
+    glCullFace(GL_FRONT);
+
+    for (const auto& sceneLight : _scene.GetSceneLights()) {
+        const auto& nodeId = sceneLight.nodeId;
+        const auto& lightNode = _scene.GetNode(sceneLight.nodeId);
+
+
+        if (sceneLight.directionalLightId != Scene::Base::DirectionalLight::INVALID_ID) {
+            const auto& lightId = sceneLight.directionalLightId;
+            const auto& lightObject = _scene.GetDirectionalLight(lightId);
+
+            if (!_directionalLightShadowMaps.contains(lightId)) {
+                _directionalLightShadowMaps.emplace(lightId, DepthBuffer(TemporaryShadowMapSize, TemporaryShadowMapSize));
+            }
+            const auto& shadowMapBuffer = _directionalLightShadowMaps.at(lightId);
+            const auto framebufferBinding = shadowMapBuffer.Bind();
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            ShadowMappingPass::SceneViewData viewData;
+            viewData.lightViewTransform = glm::inverse(_transformProcessor.GetNodeTransforms().at(nodeId) * lightObject.GetLightOrientation());
+            viewData.lightProjectionTransform = glm::ortho(-3.f, 3.f, -3.f, 3.f, TemporaryShadowMapNear, TemporaryShadowMapFar);
+
+            for (const auto& sceneElement : _scene.GetSceneObjects()) {
+                // Can't draw without geometry.
+                if (sceneElement.meshId == Renderer::Scene::Base::Mesh::INVALID_ID) { continue; }
+                // Can't draw without material for now. Maybe I'll replace it with a dummy material later on.
+                if (sceneElement.materialId == Renderer::Scene::Base::Material::INVALID_ID) { continue; }
+
+                const auto& material = _scene.GetMaterial(sceneElement.materialId);
+                // It doesn't cast shadow... so who cares!
+                if (!material.isCastingShadow()) { continue; }
+
+                ShadowMappingPass::ShadowMappingPipelineManager::PropertiesSet properties = ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::LIGHTTYPE_DIRECTIONAL;
+                {
+                    if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
+                        properties |= ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::SKIN;
+                    }
+                }
+
+                ShadowMappingPass::SceneObjectData objectData;
+                objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
+                if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
+                    prepareSkin(sceneElement.skinId);
+                    objectData.jointsArray = &_jointTransforms[sceneElement.skinId];
+                }
+
+                const auto& pipeline = _shadowMappingPassPipelineManager.GetPipeline(properties);
+                const auto pipelineBinding = pipeline.Bind();
+                pipeline.PrepareView(viewData);
+                pipeline.PrepareElement(objectData);
+
+                const auto& mesh = _scene.GetMesh(sceneElement.meshId);
+                Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { mesh.getVertexData() };
+
+                glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
+            }
+        }
+    }
+
+    glCullFace(GL_BACK);
+}
+
 void SceneDrawingManager::BasePass()
 {
     // Get any camera for now...
@@ -36,7 +106,12 @@ void SceneDrawingManager::BasePass()
     const auto viewTransform = glm::inverse(_transformProcessor.GetNodeTransforms().at(nodeId) * camera.GetCameraOrientation());
     const auto projTransform = camera.GetProjectionTransform();
 
-    Renderer::SceneDrawing::FramebufferBase::ScopedBinding bind(_deferredBuffers);
+    // If I was smart enough I'd also set it up in OpenGL here once. Maybe someday...
+    BasePass::SceneViewData viewData;
+    viewData.cameraProjectionTransform = projTransform;
+    viewData.cameraViewTransform = viewTransform;
+
+    const auto binding = _deferredBuffers.Bind();
     glEnable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -44,12 +119,12 @@ void SceneDrawingManager::BasePass()
 
         if (sceneElement.meshId == Renderer::Scene::Base::Mesh::INVALID_ID) {
             // Can't draw without geometry.
-            return;
+            continue;
         }
 
         if (sceneElement.materialId == Renderer::Scene::Base::Material::INVALID_ID) {
             // Can't draw without material for now. Maybe I'll replace it with a dummy material later on.
-            return;
+            continue;
         }
 
         // We'll for now set up properties for each draw call... Unfortunate!
@@ -69,11 +144,6 @@ void SceneDrawingManager::BasePass()
             }
         }
 
-        const auto& pipeline = _basePassPipelineManager.GetPipeline(properties);
-        BasePass::SceneViewData viewData;
-        viewData.cameraProjectionTransform = projTransform;
-        viewData.cameraViewTransform = viewTransform;
-
         BasePass::SceneObjectData objectData;
         objectData.meshId = sceneElement.nodeId; // Temporary
         objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
@@ -89,6 +159,8 @@ void SceneDrawingManager::BasePass()
         if (material.getTexture<Renderer::Scene::Base::Material::ETexture::Normal>() != Renderer::Scene::Base::Texture::INVALID_ID) {
             objectData.normalMapTexture = &_scene.GetTexture(material.getTexture<Renderer::Scene::Base::Material::ETexture::Normal>());
         }
+
+        const auto& pipeline = _basePassPipelineManager.GetPipeline(properties);
         const auto pipelineBinding = pipeline.Bind();
         pipeline.PrepareView(viewData);
         pipeline.PrepareElement(objectData);

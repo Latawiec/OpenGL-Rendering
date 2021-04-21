@@ -14,10 +14,12 @@ static constexpr std::string_view VersionFlag = "#version 410 core\n";
 static constexpr int MaxJointsCount = 32;
 using JointsArray = std::array<glm::mat4, MaxJointsCount>;
 
+
 struct SceneViewData {
     glm::mat4 cameraProjectionTransform{1};
     glm::mat4 cameraViewTransform{1};
 };
+
 
 struct SceneObjectData {
     int meshId;
@@ -26,6 +28,7 @@ struct SceneObjectData {
     const Renderer::Scene::Base::Texture* normalMapTexture = nullptr;
     const JointsArray* jointsArray = nullptr;
 };
+
 
 class BasePassVertexProgram {
     // Flags
@@ -55,7 +58,6 @@ public:
     void PrepareView(const SceneViewData& sceneView) const;
     void PrepareElement(const SceneObjectData& sceneObject) const;
 };
-
 
 
 class BasePassFragmentProgram {
@@ -89,7 +91,6 @@ public:
 };
 
 
-
 class BasePassPipeline {
 
     struct ScopedBinding {
@@ -99,16 +100,17 @@ class BasePassPipeline {
 
     BasePassPipeline(const BasePassPipeline& other) = delete;
     BasePassPipeline& operator=(const BasePassPipeline& other) = delete;
-    BasePassPipeline& operator=(BasePassPipeline&& other) = delete;
-    const BasePassVertexProgram& _vertexProgram;
-    const BasePassFragmentProgram& _fragmentProgram;
+
+    BasePassVertexProgram& _vertexProgram;
+    BasePassFragmentProgram& _fragmentProgram;
     GLuint _pipeline = -1;
 
 public:
-    BasePassPipeline(const BasePassVertexProgram& vertexProgram, const BasePassFragmentProgram& fragmentProgram);
+    BasePassPipeline(BasePassVertexProgram& vertexProgram, BasePassFragmentProgram& fragmentProgram);
     ~BasePassPipeline();
 
     BasePassPipeline(BasePassPipeline&& other);
+    BasePassPipeline& operator=(BasePassPipeline&& other);
 
     operator unsigned int() const;
 

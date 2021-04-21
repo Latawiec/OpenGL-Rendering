@@ -6,24 +6,28 @@ namespace Renderer {
 namespace SceneDrawing {
 
 class FramebufferBase {
-private:
-    unsigned int _framebufferId;
-    FramebufferBase(const FramebufferBase&) = delete;
-    
-protected:
-    unsigned int _width, _height;
+
+    struct ScopedBinding {
+        ScopedBinding(const FramebufferBase& framebuffer);
+        ~ScopedBinding();
+    };
 
 public:
     FramebufferBase(unsigned int width, unsigned int height);
     ~FramebufferBase();
 
-    /**
-     * Used to bind framebuffer as render target in scope of this object.
-     */
-    struct ScopedBinding {
-        ScopedBinding(const FramebufferBase& framebuffer);
-        ~ScopedBinding();
-    };
+    FramebufferBase(FramebufferBase&& other);
+    FramebufferBase& operator=(FramebufferBase&& other);
+
+    ScopedBinding Bind() const;
+
+protected:
+    unsigned int _width, _height;
+
+private:
+    unsigned int _framebufferId = -1;
+    FramebufferBase(const FramebufferBase&) = delete;
+    FramebufferBase& operator=(const FramebufferBase&) = delete;
 };
 
 } // namespace Renderer

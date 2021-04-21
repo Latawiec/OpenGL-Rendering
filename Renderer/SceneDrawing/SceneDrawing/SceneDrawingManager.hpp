@@ -10,9 +10,10 @@
 #include <EdgeProgram.hpp>
 #include <TextureProgram.hpp>
 #include "GraphicBuffer.hpp"
+#include "DepthBuffer.hpp"
 #include "TransformProcessor.hpp"
 #include "BasePass/BasePassPipelineManager.hpp"
-
+#include "ShadowMappingPass/ShadowMappingPassPipelineManager.hpp"
 
 namespace Renderer {
 namespace SceneDrawing {
@@ -30,6 +31,7 @@ private:
     
     TransformProcessor _transformProcessor;
     BasePass::BasePassPipelineManager _basePassPipelineManager;
+    ShadowMappingPass::ShadowMappingPipelineManager _shadowMappingPassPipelineManager;
 
     void prepareSkin(const Renderer::Scene::Base::Skin::IdType& skinId);
     std::unordered_map<Renderer::Scene::Base::Skin::IdType, std::array<glm::mat4, 32>> _jointTransforms;
@@ -39,7 +41,9 @@ private:
     // Debugging, testing ... seeing if works.
     Renderer::Programs::TextureProgram _textureDrawProgram;
     Renderer::Programs::EdgeProgram _edgeProgram;
+    std::unordered_map<Renderer::Scene::Base::DirectionalLight::IdType, DepthBuffer> _directionalLightShadowMaps;
 
+    void ShadowMapping();
     void BasePass();
 };
 

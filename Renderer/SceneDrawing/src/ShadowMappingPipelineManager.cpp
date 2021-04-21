@@ -1,29 +1,36 @@
-#include "SceneDrawing/BasePass/BasePassPipelineManager.hpp"
+#include "SceneDrawing/ShadowMappingPass/ShadowMappingPassPipelineManager.hpp"
 #include <read_file.hpp>
 
 #include <glm/gtc/type_ptr.hpp>
 
-#ifndef BASEPASS_MATERIAL_VERTEX_SOURCE_PATH
-#define BASEPASS_MATERIAL_VERTEX_SOURCE_PATH "Invalid vertex shader source path."
+#ifndef SHADOWMAPPING_MATERIAL_VERTEX_SOURCE_PATH
+#define SHADOWMAPPING_MATERIAL_VERTEX_SOURCE_PATH "Invalid vertex shader source path."
 #endif 
 
-#ifndef BASEPASS_MATERIAL_FRAGMENT_SOURCE_PATH
-#define BASEPASS_MATERIAL_FRAGMENT_SOURCE_PATH "Invalid fragment shader source path."
+#ifndef SHADOWMAPPING_MATERIAL_FRAGMENT_SOURCE_PATH
+#define SHADOWMAPPING_MATERIAL_FRAGMENT_SOURCE_PATH "Invalid fragment shader source path."
 #endif 
 
 
 namespace Renderer {
 namespace SceneDrawing {
-namespace BasePass {
+namespace ShadowMappingPass {
 
-BasePassVertexProgram::BasePassVertexProgram(bool skinned) : _isSkinned(skinned) {
+ShadowMappingVertexProgram::ShadowMappingVertexProgram(const LightType type, bool skinned)
+: _type(type)
+, _isSkinned(skinned)
+{
     std::vector<const char*> compilerInput { VersionFlag.data() };
 
     if (_isSkinned) {
         compilerInput.emplace_back(SkinFlag.data());
     }
 
-    const std::string shaderSource = Utils::readFile(BASEPASS_MATERIAL_VERTEX_SOURCE_PATH);
+    if (_type == LightType::DIRECTIONAL) {
+        compilerInput.emplace_back(DirectionalLightFlag.data());
+    }
+
+    const std::string shaderSource = Utils::readFile(SHADOWMAPPING_MATERIAL_VERTEX_SOURCE_PATH);
     compilerInput.emplace_back(shaderSource.data());
 
     _program = glCreateProgram();
@@ -64,37 +71,39 @@ BasePassVertexProgram::BasePassVertexProgram(bool skinned) : _isSkinned(skinned)
 
     // Delete shader as we only need program.
     glDetachShader(_program, shader);
-    glDeleteShader(shader);  
+    glDeleteShader(shader); 
 }
 
-BasePassVertexProgram::~BasePassVertexProgram() {
+ShadowMappingVertexProgram::~ShadowMappingVertexProgram() {
     if (_program != -1) {
         glDeleteProgram(_program);
     }
 }
 
-BasePassVertexProgram::BasePassVertexProgram(BasePassVertexProgram&& other) {
+ShadowMappingVertexProgram::ShadowMappingVertexProgram(ShadowMappingVertexProgram&& other) {
     std::swap(other._program, this->_program);
     std::swap(other._isSkinned, this->_isSkinned);
+    std::swap(other._type, this->_type);
 }
 
-BasePassVertexProgram& BasePassVertexProgram::operator=(BasePassVertexProgram&& other) {
+ShadowMappingVertexProgram& ShadowMappingVertexProgram::operator=(ShadowMappingVertexProgram&& other) {
     std::swap(other._program, this->_program);
     std::swap(other._isSkinned, this->_isSkinned);
+    std::swap(other._type, this->_type);
+
     return *this;
 }
 
-BasePassVertexProgram::operator unsigned int() const {
+ShadowMappingVertexProgram::operator unsigned int() const {
     return _program;
 }
 
-void BasePassVertexProgram::PrepareView(const SceneViewData& sceneView) const {
-    glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ViewTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneView.cameraViewTransform));
-    glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ProjectionTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneView.cameraProjectionTransform));
+void ShadowMappingVertexProgram::PrepareView(const SceneViewData& sceneView) const {
+    glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ViewTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneView.lightViewTransform));
+    glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ProjectionTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneView.lightProjectionTransform));
 }
 
-void BasePassVertexProgram::PrepareElement(const SceneObjectData& sceneObject) const {
-    glProgramUniform1i(_program, glGetUniformLocation(_program, MeshIdUniform.data()), sceneObject.meshId);
+void ShadowMappingVertexProgram::PrepareElement(const SceneObjectData& sceneObject) const {
     glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ModelTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneObject.objectModelTransform));
     if (_isSkinned) {
         assert(sceneObject.jointsArray != nullptr);
@@ -104,21 +113,11 @@ void BasePassVertexProgram::PrepareElement(const SceneObjectData& sceneObject) c
 
 
 
-BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool hasNormalMapTexture)
-: _hasBaseColorTexture(hasBaseColorTexture)
-, _hasNormalMapTexture(hasNormalMapTexture)
-{
+ShadowMappingFragmentProgram::ShadowMappingFragmentProgram() {
+
     std::vector<const char*> compilerInput { VersionFlag.data() };
 
-    if (_hasBaseColorTexture) {
-        compilerInput.emplace_back(BaseColorTextureFlag.data());
-    }
-
-    if (_hasNormalMapTexture) {
-        compilerInput.emplace_back(NormalMapTextureFlag.data());
-    }
-
-    const std::string shaderSource = Utils::readFile(BASEPASS_MATERIAL_FRAGMENT_SOURCE_PATH);
+    const std::string shaderSource = Utils::readFile(SHADOWMAPPING_MATERIAL_FRAGMENT_SOURCE_PATH);
     compilerInput.emplace_back(shaderSource.data());
 
     _program = glCreateProgram();
@@ -134,7 +133,7 @@ BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool 
     char infoLog[512];
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
-    if (!success) {
+    if (success != GL_TRUE) {
         glGetShaderInfoLog(shader, 512, NULL, infoLog);
         std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
@@ -157,63 +156,41 @@ BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool 
 }
 #endif
 
-    // Setup textures
-    if (_hasBaseColorTexture) {
-        glProgramUniform1i(_program, glGetUniformLocation(_program, BaseColorSamplerUniform.data()), GL_TEXTURE0 + BaseColorTextureLocation);
-    }
-
-    if (_hasNormalMapTexture) {
-        glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), GL_TEXTURE0 + NormalMapTextureLocation);
-    }
-
     // Delete shader as we only need program.
     glDetachShader(_program, shader);
-    glDeleteShader(shader);  
+    glDeleteShader(shader); 
 }
 
-BasePassFragmentProgram::~BasePassFragmentProgram() {
+ShadowMappingFragmentProgram::~ShadowMappingFragmentProgram() {
     if (_program != -1) {
         glDeleteProgram(_program);
     }
 }
 
-BasePassFragmentProgram::BasePassFragmentProgram(BasePassFragmentProgram&& other) {
+ShadowMappingFragmentProgram::ShadowMappingFragmentProgram(ShadowMappingFragmentProgram&& other) {
     std::swap(other._program, this->_program);
-    std::swap(other._hasBaseColorTexture, this->_hasBaseColorTexture);
-    std::swap(other._hasNormalMapTexture, this->_hasNormalMapTexture);
 }
 
-BasePassFragmentProgram& BasePassFragmentProgram::operator=(BasePassFragmentProgram&& other) {
+ShadowMappingFragmentProgram& ShadowMappingFragmentProgram::operator=(ShadowMappingFragmentProgram&& other) {
     std::swap(other._program, this->_program);
-    std::swap(other._hasBaseColorTexture, this->_hasBaseColorTexture);
-    std::swap(other._hasNormalMapTexture, this->_hasNormalMapTexture);
     return *this;
 }
 
-BasePassFragmentProgram::operator unsigned int() const {
+ShadowMappingFragmentProgram::operator unsigned int() const {
     return _program;
 }
 
-void BasePassFragmentProgram::PrepareView(const SceneViewData& sceneView) const {
-    // Do nothing.
+void ShadowMappingFragmentProgram::PrepareView(const SceneViewData& sceneView) const {
+    // noop
 }
 
-void BasePassFragmentProgram::PrepareElement(const SceneObjectData& sceneObject) const {
-    if (_hasBaseColorTexture) {
-        assert(sceneObject.baseColorTexture != nullptr);
-        glActiveTexture(GL_TEXTURE0 + BaseColorTextureLocation);
-        glBindTexture(GL_TEXTURE_2D, static_cast<unsigned int>(*sceneObject.baseColorTexture));
-    }
-    
-    if (_hasNormalMapTexture) {
-        assert(sceneObject.normalMapTexture != nullptr);
-        glActiveTexture(GL_TEXTURE0 + NormalMapTextureLocation);
-        glBindTexture(GL_TEXTURE_2D, static_cast<unsigned int>(*sceneObject.baseColorTexture));
-    }
+void ShadowMappingFragmentProgram::PrepareElement(const SceneObjectData& sceneObject) const {
+    // noop
 }
 
 
-BasePassPipeline::BasePassPipeline(BasePassVertexProgram& vertexProgram, BasePassFragmentProgram& fragmentProgram)
+
+ShadowMappingPipeline::ShadowMappingPipeline(ShadowMappingVertexProgram& vertexProgram, ShadowMappingFragmentProgram& fragmentProgram)
 : _vertexProgram(vertexProgram)
 , _fragmentProgram(fragmentProgram)
 {
@@ -237,22 +214,20 @@ BasePassPipeline::BasePassPipeline(BasePassVertexProgram& vertexProgram, BasePas
 #endif
 }
 
-BasePassPipeline::~BasePassPipeline()
-{
+ShadowMappingPipeline::~ShadowMappingPipeline() {
     if (_pipeline != -1) {
         glDeleteProgramPipelines(1, &_pipeline);
     }
 }
 
-BasePassPipeline::BasePassPipeline(BasePassPipeline&& other)
+ShadowMappingPipeline::ShadowMappingPipeline(ShadowMappingPipeline&& other)
 : _vertexProgram(other._vertexProgram)
 , _fragmentProgram(other._fragmentProgram)
 {
     std::swap(this->_pipeline, other._pipeline);
 }
 
-BasePassPipeline& BasePassPipeline::operator=(BasePassPipeline&& other)
-{
+ShadowMappingPipeline& ShadowMappingPipeline::operator=(ShadowMappingPipeline&& other) {
     std::swap(this->_vertexProgram, other._vertexProgram);
     std::swap(this->_fragmentProgram, other._fragmentProgram);
     std::swap(this->_pipeline, other._pipeline);
@@ -260,29 +235,29 @@ BasePassPipeline& BasePassPipeline::operator=(BasePassPipeline&& other)
     return *this;
 }
 
-BasePassPipeline::operator unsigned int() const
-{
+ShadowMappingPipeline::operator unsigned int() const {
     return _pipeline;
 }
 
-BasePassPipeline::ScopedBinding BasePassPipeline::Bind() const
-{
-    return { *this };
+ShadowMappingPipeline::ScopedBinding ShadowMappingPipeline::Bind() const {
+    return { * this };
 }
 
-void BasePassPipeline::PrepareView(const SceneViewData& viewData) const 
+void ShadowMappingPipeline::PrepareView(const SceneViewData& viewData) const
 {
     _vertexProgram.PrepareView(viewData);
     _fragmentProgram.PrepareView(viewData);
 }
 
-void BasePassPipeline::PrepareElement(const SceneObjectData& objectData) const
+void ShadowMappingPipeline::PrepareElement(const SceneObjectData& objectData) const
 {
     _vertexProgram.PrepareElement(objectData);
     _fragmentProgram.PrepareElement(objectData);
 }
 
-void BasePassPipelineManager::buildVariant(const PropertiesSet& properties)
+
+
+void ShadowMappingPipelineManager::buildVariant(const PropertiesSet& properties)
 {
     const auto vertexProperties = properties & PropertiesAffectingVertexProgram;
     const auto fragmentProperties = properties & PropertiesAffectingFragmentProgram;
@@ -290,7 +265,8 @@ void BasePassPipelineManager::buildVariant(const PropertiesSet& properties)
     if (!_cachedVertexPrograms.contains(vertexProperties)) {
         _cachedVertexPrograms.emplace(
             vertexProperties,
-            BasePassVertexProgram(
+            ShadowMappingVertexProgram(
+                (vertexProperties & PipelineProperties::LIGHTTYPE_DIRECTIONAL) != 0 ? LightType::DIRECTIONAL : LightType::NONE,
                 (vertexProperties & PipelineProperties::SKIN) != 0
             )
         );
@@ -299,20 +275,17 @@ void BasePassPipelineManager::buildVariant(const PropertiesSet& properties)
     if (!_cachedFragmentPrograms.contains(fragmentProperties)) {
         _cachedFragmentPrograms.emplace(
             fragmentProperties,
-            BasePassFragmentProgram(
-                (fragmentProperties & PipelineProperties::BASE_COLOR_TEXTURE) != 0,
-                (fragmentProperties & PipelineProperties::NORMAL_MAP_TEXTURE) != 0
-            )
+            ShadowMappingFragmentProgram()
         );
     }
 
     auto& vertexProgram = _cachedVertexPrograms.at(vertexProperties);
     auto& fragmentProgram = _cachedFragmentPrograms.at(fragmentProperties);
 
-    _builtPipelines.emplace(properties, BasePassPipeline(vertexProgram, fragmentProgram));
+    _builtPipelines.emplace(properties, ShadowMappingPipeline(vertexProgram, fragmentProgram));
 }
 
-const BasePassPipeline& BasePassPipelineManager::GetPipeline(const PropertiesSet& properties)
+const ShadowMappingPipeline& ShadowMappingPipelineManager::GetPipeline(const PropertiesSet& properties)
 {
     if (!_builtPipelines.contains(properties)) {
         buildVariant(properties);
@@ -320,6 +293,6 @@ const BasePassPipeline& BasePassPipelineManager::GetPipeline(const PropertiesSet
     return _builtPipelines.at(properties);
 }
 
-} // namespace BasePass
+} // namespace ShadowMappingPass
 } // namespace SceneDrawing
 } // namespace Renderer

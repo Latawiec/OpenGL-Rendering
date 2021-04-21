@@ -11,6 +11,7 @@ add_library(${PROJECT_NAME}
     src/FramebufferBase.cpp
     src/GraphicBuffer.cpp
     src/SceneDrawingManager.cpp
+    src/ShadowMappingPipelineManager.cpp
     src/TransformProcessor.cpp
 )
 
@@ -34,8 +35,11 @@ PUBLIC
 
 target_compile_definitions(${PROJECT_NAME}
 PRIVATE
-    BASE_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/Material.frag.glsl"
-    BASE_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/Material.vert.glsl"
+    BASEPASS_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/BasePass.vert.glsl"
+    BASEPASS_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/BasePass.frag.glsl"
+
+    SHADOWMAPPING_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/ShadowMapping.vert.glsl"
+    SHADOWMAPPING_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/ShadowMapping.frag.glsl"
 )
 
 target_include_directories(${PROJECT_NAME}

@@ -53,9 +53,13 @@ struct Material {
     EDithering getDithering() const { return _dithering; }
     void setDithering(EDithering value) { _dithering = value; }
 
+    bool isCastingShadow() const { return _isCastingShadow; }
+    void setCastingShadow(bool isCastingShadow) { _isCastingShadow = isCastingShadow; }
+
 private:
     std::array<Texture::IdType, size_t(ETexture::SIZE)> _textures = {};
     EDithering _dithering = EDithering::NONE;
+    bool _isCastingShadow = true;
 };
 
 } // namespace Base
