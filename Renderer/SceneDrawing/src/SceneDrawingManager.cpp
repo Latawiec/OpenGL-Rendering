@@ -1,4 +1,6 @@
-#include "SceneDrawing/SceneDrawingManager.hpp"
+#include "../SceneDrawing/SceneDrawingManager.hpp"
+
+#include "../SceneDrawing/Frustum.hpp"
 
 #include <glad/glad.h>
 #include <unordered_map>
@@ -7,6 +9,51 @@
 
 namespace Renderer {
 namespace SceneDrawing {
+
+namespace /* anonymous */ {
+
+
+ShadowMappingPass::SceneViewData createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform) {
+
+    const glm::mat4 lightWorldTransform = lightTransform;
+    const glm::vec3 lightDirection = glm::normalize(lightWorldTransform * light.GetLightDirection());
+
+    // We'll build new transform matrix for the light.
+    const glm::vec3 cameraPosition = cameraTransform * glm::vec4(0, 0, 0, 1);
+    // TODO: this is not perfect. If light is parallel to UP, we get messed up matrix. I need to figure something else.
+    const glm::mat4 lightNewTransform = glm::lookAt(cameraPosition, cameraPosition + lightDirection, glm::vec3(0, 1, 0));
+
+    Frustum frustum(camera); // this is frustum created in camera-space.
+    frustum.Transform(cameraTransform * camera.GetCameraOrientation()); // now it's in world-space.
+    frustum.Transform(lightNewTransform);
+    
+    // Now we simply find min's and max'es from the frustum vertices in light space, and we done!
+    const auto& frustumVertices = frustum.GetVertices();
+    glm::vec3 minValues = frustumVertices[0];
+    glm::vec3 maxValues = frustumVertices[0];
+
+    for (int i=1; i<frustumVertices.size(); ++i) {
+        const auto vertex = frustumVertices[i];
+        minValues.x = vertex.x < minValues.x ? vertex.x : minValues.x;
+        minValues.y = vertex.y < minValues.y ? vertex.y : minValues.y;
+        minValues.z = vertex.z < minValues.z ? vertex.z : minValues.z;
+
+        maxValues.x = vertex.x > maxValues.x ? vertex.x : maxValues.x;
+        maxValues.y = vertex.y > maxValues.y ? vertex.y : maxValues.y;
+        maxValues.z = vertex.z > maxValues.z ? vertex.z : maxValues.z;
+    }
+
+    const glm::mat4 lightProjectionTransform = glm::ortho(minValues.x, maxValues.x, minValues.y, maxValues.y, -maxValues.z, -minValues.z);
+    //const glm::mat4 lightProjectionTransform = glm::ortho(-10.f, 10.f, -10.f, 10.f, -1.f, 50.f);
+
+    ShadowMappingPass::SceneViewData viewData;
+    viewData.lightViewTransform = lightNewTransform;
+    viewData.lightProjectionTransform = lightProjectionTransform;
+
+    return viewData;
+}
+
+} // namespace anonymous
 
 SceneDrawingManager::SceneDrawingManager(const Renderer::Scene::Scene& scene, const int windowWidth, const int windowHeight)
 : _scene(scene)
@@ -54,9 +101,12 @@ void SceneDrawingManager::ShadowMapping()
             const auto framebufferBinding = shadowMapBuffer.Bind();
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            ShadowMappingPass::SceneViewData viewData;
-            viewData.lightViewTransform = glm::inverse(_transformProcessor.GetNodeTransforms().at(nodeId) * lightObject.GetLightOrientation());
-            viewData.lightProjectionTransform = glm::ortho(-3.f, 3.f, -3.f, 3.f, TemporaryShadowMapNear, TemporaryShadowMapFar);
+            // TODO: Test... I'll need to either render it for each camera or introduce "Active Camera"...
+            const auto& [cameraNodeId, cameraId] = *_scene.GetSceneViews().begin();
+            const auto& camera = _scene.GetCamera(cameraId);
+            const auto& cameraTransform = _transformProcessor.GetNodeTransforms().at(cameraNodeId);
+
+            ShadowMappingPass::SceneViewData viewData = createFittingShadowmapTransform(lightObject, _transformProcessor.GetNodeTransforms().at(nodeId), camera, cameraTransform);
 
             for (const auto& sceneElement : _scene.GetSceneObjects()) {
                 // Can't draw without geometry.

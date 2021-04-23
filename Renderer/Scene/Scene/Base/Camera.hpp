@@ -16,7 +16,7 @@ struct Camera {
         Ortographic
     };
 
-    Camera(const float fov, const float aspect, const glm::mat4& orientation);
+    Camera(const float near, const float far, const float fov, const float aspect, const glm::mat4& orientation);
     Camera(Camera&&) noexcept = default;
     Camera& operator=(Camera&&) noexcept = default;
 
@@ -25,10 +25,17 @@ struct Camera {
 
     const glm::mat4& GetProjectionTransform() const;
     const glm::mat4& GetCameraOrientation() const;
+    
+    float GetNear() const;
+    float GetFar() const;
+    float GetFov() const;
+    float GetAspectRatio() const;
 
 private:
     glm::mat4 _cameraOrientation;
     glm::mat4 _projection;
+    float _near;
+    float _far;
     float _fov;
     float _aspectRatio;
     const Type _type;
