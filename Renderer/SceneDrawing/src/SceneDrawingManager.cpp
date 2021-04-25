@@ -17,9 +17,9 @@ ShadowMappingPass::SceneViewData SceneDrawingManager::createFittingShadowmapTran
 
     // We'll build new transform matrix for the light.
     const glm::vec3 cameraPosition = cameraTransform * glm::vec4(0, 0, 0, 1);
-    const glm::vec3 cameraWorldRight = cameraTransform * glm::vec4(1, 0, 0, 0) * cameraTransform * camera.GetCameraOrientation();
-    const glm::vec3 cameraWorldUp =    cameraTransform * glm::vec4(0, 1, 0, 0) * cameraTransform * camera.GetCameraOrientation();
-    const glm::vec3 cameraWorldFront = cameraTransform * glm::vec4(0, 0, -1, 0)* cameraTransform * camera.GetCameraOrientation();
+    const glm::vec3 cameraWorldRight = cameraTransform * camera.GetCameraOrientation() * glm::vec4(1, 0, 0, 0);
+    const glm::vec3 cameraWorldUp =    cameraTransform * camera.GetCameraOrientation() * glm::vec4(0, 1, 0, 0);
+    const glm::vec3 cameraWorldFront = cameraTransform * camera.GetCameraOrientation() * glm::vec4(0, 0, -1, 0);
 
     // I want to build perfect transform of shadowmap view - meaning side of shadowmap texture is parallel with the frustum.
     // For building the "perfect" space for shadowmap, we need to figure which 2 vectors we can use. Best is I think: two least parallel with light direction.
@@ -53,7 +53,7 @@ ShadowMappingPass::SceneViewData SceneDrawingManager::createFittingShadowmapTran
         glm::vec3 f = glm::normalize(lightDirection);
         glm::vec3 u = glm::normalize(firstSelected);
         glm::vec3 s = glm::normalize(glm::cross(f, u));
-        u = glm::normalize(glm::cross(s, f));
+        u = glm::cross(s, f);
 
         lightNewTransform[0][0] = s.x;
         lightNewTransform[1][0] = s.y;
@@ -159,7 +159,7 @@ void SceneDrawingManager::Draw() {
         _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Albedo));
 
         // Test Shadowmap
-        glViewport(0, 0, _deferredBuffers.GetWidth()/3.f, _deferredBuffers.GetHeight()/3.f);
+        glViewport(0, 0, _deferredBuffers.GetHeight()/3.f, _deferredBuffers.GetHeight()/3.f);
         const auto& shadowMap = *_directionalLightShadowMaps.begin();
         _textureDrawProgram.draw(shadowMap.second.getTexture());
 
