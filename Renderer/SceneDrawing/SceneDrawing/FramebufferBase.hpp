@@ -21,6 +21,9 @@ public:
 
     ScopedBinding Bind() const;
 
+    unsigned int GetWidth() const;
+    unsigned int GetHeight() const;
+
 protected:
     unsigned int _width, _height;
 

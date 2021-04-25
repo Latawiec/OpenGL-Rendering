@@ -21,6 +21,14 @@ FramebufferBase::ScopedBinding FramebufferBase::Bind() const {
     return { *this };
 }
 
+unsigned int FramebufferBase::GetWidth() const {
+    return _width;
+}
+
+unsigned int FramebufferBase::GetHeight() const {
+    return _height;
+}
+
 FramebufferBase::FramebufferBase(FramebufferBase&& other) {
     std::swap(this->_width, other._width);
     std::swap(this->_height, other._height);

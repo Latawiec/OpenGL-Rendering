@@ -11,8 +11,8 @@
 
 int main() {
 
-    constexpr int windowWidth = 800;
-    constexpr int windowHeight= 600;
+    constexpr int windowWidth = 1600;
+    constexpr int windowHeight= 1200;
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -47,10 +47,17 @@ int main() {
     std::cout << mainScene << std::endl;
     //imported->AddChildNode(std::move(shadowingLight));
 
-    Renderer::SceneDrawing::SceneDrawingManager sceneDrawingManager(mainScene, 800, 600);
+    auto& cameraNode = mainScene.GetNode(mainScene.GetSceneViews().begin()->nodeId);
+    const auto cacheTransform = cameraNode.GetTransform();
+
+    Renderer::SceneDrawing::SceneDrawingManager sceneDrawingManager(mainScene, windowWidth, windowHeight);
     while(!glfwWindowShouldClose(window)) {
         //stolenLight.SetTransform(glm::translate(glm::mat4(1), glm::vec3(5 * glm::sin(glfwGetTime()), 2.5, 1)));
         sceneDrawingManager.Draw();
+
+        const auto transform = cacheTransform * glm::rotate(glm::mat4{1}, glm::radians(90.f), glm::vec3(0, 1, 0));
+        const auto transform2 = glm::rotate(cacheTransform, float(glfwGetTime())/10.f, glm::vec3(0, 1, 0));
+        cameraNode.SetTransform(transform2);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

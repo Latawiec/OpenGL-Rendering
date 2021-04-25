@@ -157,16 +157,17 @@ public:
         glBindVertexArray(_VAO);
 
         GLuint EBO, VBO;
-        glGenBuffers(1, &EBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
 
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         allocateBuffer();
-        layoutSequentialData(data...);
         layoutSequentialAttributes<VertexAttributeDescription...>();
+        layoutSequentialData(data...);
+
+        glGenBuffers(1, &EBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
 
         glBindVertexArray(0);
 
@@ -204,13 +205,13 @@ private:
     template<class LastOfDescriptions>
     inline void layoutSequentialAttributes(const int index = 0, const int offset = 0) {
         glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, LastOfDescriptions::elements_count::value, LastOfDescriptions::glType(), GL_FALSE, LastOfDescriptions::byte_size::value, (void*)offset);
+        glVertexAttribPointer(index, LastOfDescriptions::elements_count::value, LastOfDescriptions::glType(), GL_FALSE, LastOfDescriptions::byte_size::value, (char *)NULL + offset);
     }
 
     template<class HeadOfDescriptions, class NextDescription, class ... RestOfDescriptions>
     inline void layoutSequentialAttributes(const int index = 0, const int offset = 0) {
         glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, HeadOfDescriptions::elements_count::value, HeadOfDescriptions::glType(), GL_FALSE, HeadOfDescriptions::byte_size::value, (void*)offset);
+        glVertexAttribPointer(index, HeadOfDescriptions::elements_count::value, HeadOfDescriptions::glType(), GL_FALSE, HeadOfDescriptions::byte_size::value, (char *)NULL + offset);
         layoutSequentialAttributes<NextDescription, RestOfDescriptions...>(index + 1, offset + HeadOfDescriptions::byte_size::value * _size);
     }
 };

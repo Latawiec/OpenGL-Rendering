@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
 add_subdirectory(Base)
+add_subdirectory(DebugMeshProgram)
 add_subdirectory(TextureProgram)
 add_subdirectory(EdgeProgram)

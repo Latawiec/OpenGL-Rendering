@@ -20,6 +20,7 @@ add_dependencies(${PROJECT_NAME}
     Renderer_Scene
     Renderer_Programs_EdgeProgram
     Renderer_Programs_TextureProgram
+    Renderer_Programs_DebugMeshProgram
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -31,6 +32,7 @@ PRIVATE
 PUBLIC
     Renderer_Programs_EdgeProgram
     Renderer_Programs_TextureProgram
+    Renderer_Programs_DebugMeshProgram
 )
 
 target_compile_definitions(${PROJECT_NAME}

@@ -9,6 +9,7 @@
 #include <Scene/NodeLink.hpp>
 #include <EdgeProgram.hpp>
 #include <TextureProgram.hpp>
+#include <DebugMeshProgram.hpp>
 #include "GraphicBuffer.hpp"
 #include "DepthBuffer.hpp"
 #include "TransformProcessor.hpp"
@@ -33,6 +34,8 @@ private:
     BasePass::BasePassPipelineManager _basePassPipelineManager;
     ShadowMappingPass::ShadowMappingPipelineManager _shadowMappingPassPipelineManager;
 
+    ShadowMappingPass::SceneViewData createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform);
+
     void prepareSkin(const Renderer::Scene::Base::Skin::IdType& skinId);
     std::unordered_map<Renderer::Scene::Base::Skin::IdType, std::array<glm::mat4, 32>> _jointTransforms;
 
@@ -42,6 +45,7 @@ private:
     Renderer::Programs::TextureProgram _textureDrawProgram;
     Renderer::Programs::EdgeProgram _edgeProgram;
     std::unordered_map<Renderer::Scene::Base::DirectionalLight::IdType, DepthBuffer> _directionalLightShadowMaps;
+    Programs::DebugMeshProgram debugMeshProgram;
 
     void ShadowMapping();
     void BasePass();

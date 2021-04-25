@@ -10,20 +10,103 @@
 namespace Renderer {
 namespace SceneDrawing {
 
-namespace /* anonymous */ {
-
-
-ShadowMappingPass::SceneViewData createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform) {
+ShadowMappingPass::SceneViewData SceneDrawingManager::createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform) {
 
     const glm::mat4 lightWorldTransform = lightTransform;
     const glm::vec3 lightDirection = glm::normalize(lightWorldTransform * light.GetLightDirection());
 
     // We'll build new transform matrix for the light.
     const glm::vec3 cameraPosition = cameraTransform * glm::vec4(0, 0, 0, 1);
-    // TODO: this is not perfect. If light is parallel to UP, we get messed up matrix. I need to figure something else.
-    const glm::mat4 lightNewTransform = glm::lookAt(cameraPosition, cameraPosition + lightDirection, glm::vec3(0, 1, 0));
+    const glm::vec3 cameraWorldRight = cameraTransform * glm::vec4(1, 0, 0, 0) * cameraTransform * camera.GetCameraOrientation();
+    const glm::vec3 cameraWorldUp =    cameraTransform * glm::vec4(0, 1, 0, 0) * cameraTransform * camera.GetCameraOrientation();
+    const glm::vec3 cameraWorldFront = cameraTransform * glm::vec4(0, 0, -1, 0)* cameraTransform * camera.GetCameraOrientation();
+
+    // I want to build perfect transform of shadowmap view - meaning side of shadowmap texture is parallel with the frustum.
+    // For building the "perfect" space for shadowmap, we need to figure which 2 vectors we can use. Best is I think: two least parallel with light direction.
+    const float rightDot = glm::abs(glm::dot(cameraWorldRight, lightDirection));
+    const float upDot = glm::abs(glm::dot(cameraWorldRight, lightDirection));
+    const float frontDot = glm::abs(glm::dot(cameraWorldRight, lightDirection));
+
+    glm::vec3 firstSelected;
+    glm::vec3 secondSelected;
+
+    if (rightDot > upDot) {
+        firstSelected = cameraWorldRight;
+        if (upDot > frontDot) {
+            secondSelected = cameraWorldUp;
+        } else {
+            secondSelected = cameraWorldFront;
+        }
+    } else {
+        firstSelected = cameraWorldUp;
+        if (upDot > frontDot) {
+            secondSelected = cameraWorldUp;
+        } else {
+            secondSelected = cameraWorldFront;
+        }
+    }
+
+    // Now we need to build a transform to make our selected vectors X and Y axis of light-view matrix.
+    // I'll use glm::lookAt implementation partially.
+    glm::mat4 lightNewTransform {1};
+    {
+        glm::vec3 f = glm::normalize(lightDirection);
+        glm::vec3 u = glm::normalize(firstSelected);
+        glm::vec3 s = glm::normalize(glm::cross(f, u));
+        u = glm::normalize(glm::cross(s, f));
+
+        lightNewTransform[0][0] = s.x;
+        lightNewTransform[1][0] = s.y;
+        lightNewTransform[2][0] = s.z;
+        lightNewTransform[0][1] = u.x;
+        lightNewTransform[1][1] = u.y;
+        lightNewTransform[2][1] = u.z;
+        lightNewTransform[0][2] =-f.x;
+        lightNewTransform[1][2] =-f.y;
+        lightNewTransform[2][2] =-f.z;
+        lightNewTransform[3][0] =-glm::dot(s, cameraPosition);
+        lightNewTransform[3][1] =-glm::dot(u, cameraPosition);
+        lightNewTransform[3][2] = glm::dot(f, cameraPosition);
+    }
 
     Frustum frustum(camera); // this is frustum created in camera-space.
+
+    // DEBUG
+    if (!debugMeshProgram.HasMesh()) {
+        std::vector<glm::vec3> frustumVertices{};
+        for (int i=0; i<Frustum::Vertex::SIZE; ++i) {
+            frustumVertices.push_back(frustum.GetVertex(static_cast<Frustum::Vertex>(i)));
+        }
+
+        std::vector<unsigned int> indices {
+            // Nearest face
+            Frustum::Vertex::LEFT_BOTTOM_NEAR, Frustum::Vertex::RIGHT_BOTTOM_NEAR, Frustum::Vertex::RIGHT_TOP_NEAR,
+            Frustum::Vertex::RIGHT_TOP_NEAR, Frustum::Vertex::LEFT_TOP_NEAR, Frustum::Vertex::LEFT_BOTTOM_NEAR,
+
+            // Furthest face
+            Frustum::Vertex::LEFT_BOTTOM_FAR, Frustum::Vertex::RIGHT_TOP_FAR, Frustum::Vertex::RIGHT_BOTTOM_FAR,
+            Frustum::Vertex::RIGHT_TOP_FAR, Frustum::Vertex::LEFT_BOTTOM_FAR, Frustum::Vertex::LEFT_TOP_FAR,
+
+            // Left face
+            Frustum::Vertex::LEFT_BOTTOM_NEAR, Frustum::Vertex::LEFT_TOP_NEAR, Frustum::Vertex::LEFT_TOP_FAR,
+            Frustum::Vertex::LEFT_TOP_FAR, Frustum::Vertex::LEFT_BOTTOM_FAR, Frustum::Vertex::LEFT_BOTTOM_NEAR,
+
+            // Right face
+            Frustum::Vertex::RIGHT_TOP_NEAR, Frustum::Vertex::RIGHT_BOTTOM_NEAR, Frustum::Vertex::RIGHT_TOP_FAR,
+            Frustum::Vertex::RIGHT_TOP_FAR, Frustum::Vertex::RIGHT_BOTTOM_NEAR, Frustum::Vertex::RIGHT_BOTTOM_FAR,
+
+            // Top face
+            Frustum::Vertex::RIGHT_TOP_NEAR, Frustum::Vertex::RIGHT_TOP_FAR, Frustum::Vertex::LEFT_TOP_NEAR,
+            Frustum::Vertex::LEFT_TOP_NEAR, Frustum::Vertex::RIGHT_TOP_FAR, Frustum::Vertex::LEFT_TOP_FAR,
+            
+            // Bottom face
+            Frustum::Vertex::LEFT_BOTTOM_NEAR, Frustum::Vertex::LEFT_BOTTOM_FAR, Frustum::Vertex::RIGHT_BOTTOM_FAR,
+            Frustum::Vertex::RIGHT_BOTTOM_FAR, Frustum::Vertex::RIGHT_BOTTOM_NEAR, Frustum::Vertex::LEFT_BOTTOM_NEAR
+        };
+
+        debugMeshProgram.SetMesh(frustumVertices, indices);
+    }
+
     frustum.Transform(cameraTransform * camera.GetCameraOrientation()); // now it's in world-space.
     frustum.Transform(lightNewTransform);
     
@@ -44,16 +127,17 @@ ShadowMappingPass::SceneViewData createFittingShadowmapTransform(const Scene::Ba
     }
 
     const glm::mat4 lightProjectionTransform = glm::ortho(minValues.x, maxValues.x, minValues.y, maxValues.y, -maxValues.z, -minValues.z);
-    //const glm::mat4 lightProjectionTransform = glm::ortho(-10.f, 10.f, -10.f, 10.f, -1.f, 50.f);
-
+    
     ShadowMappingPass::SceneViewData viewData;
     viewData.lightViewTransform = lightNewTransform;
     viewData.lightProjectionTransform = lightProjectionTransform;
 
+    debugMeshProgram.SetView(lightNewTransform);
+    debugMeshProgram.SetProjection(lightProjectionTransform);
+    debugMeshProgram.SetModel(cameraTransform * camera.GetCameraOrientation());
+    
     return viewData;
 }
-
-} // namespace anonymous
 
 SceneDrawingManager::SceneDrawingManager(const Renderer::Scene::Scene& scene, const int windowWidth, const int windowHeight)
 : _scene(scene)
@@ -73,14 +157,18 @@ void SceneDrawingManager::Draw() {
         glViewport(0, 0, _width, _height);
 
         _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Albedo));
+
+        // Test Shadowmap
+        glViewport(0, 0, _deferredBuffers.GetWidth()/3.f, _deferredBuffers.GetHeight()/3.f);
+        const auto& shadowMap = *_directionalLightShadowMaps.begin();
+        _textureDrawProgram.draw(shadowMap.second.getTexture());
+
     }
 }
 
 void SceneDrawingManager::ShadowMapping()
 {
     static const float TemporaryShadowMapSize = 1024;
-    static const float TemporaryShadowMapFar = 100.f;
-    static const float TemporaryShadowMapNear = 0.1f;
 
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_FRONT);
@@ -107,6 +195,8 @@ void SceneDrawingManager::ShadowMapping()
             const auto& cameraTransform = _transformProcessor.GetNodeTransforms().at(cameraNodeId);
 
             ShadowMappingPass::SceneViewData viewData = createFittingShadowmapTransform(lightObject, _transformProcessor.GetNodeTransforms().at(nodeId), camera, cameraTransform);
+            
+            debugMeshProgram.Draw();
 
             for (const auto& sceneElement : _scene.GetSceneObjects()) {
                 // Can't draw without geometry.
@@ -141,7 +231,7 @@ void SceneDrawingManager::ShadowMapping()
                 Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { mesh.getVertexData() };
 
                 glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
-            }
+            }            
         }
     }
 
