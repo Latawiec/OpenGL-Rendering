@@ -31,36 +31,36 @@ uniform mat4 jointTransform[32];
 #endif
 uniform int mesh_id;
 
-vec4 calculateWorldPosition(in mat4 modelTransform, in vec3 fragPos);
+mat4 calculateModelTransform(in mat4 modelTransform);
 vec3 calculateNormal(in mat4 modelTransform, in vec3 fragNormal);
 vec4 calculateSilhouette();
 vec2 calculateTexCoords(in vec2 texCoords);
 
 void main()
 {
-    vec4 worldPosition = calculateWorldPosition(model, aPos);
-    gl_Position = proj * view * worldPosition;
+    mat4 modelTransform = calculateModelTransform(model);
+    vec4 worldPos = modelTransform * vec4(aPos, 1);
+    gl_Position = proj * view * worldPos;
 
-    OUT.Position = worldPosition.xyz;
-    OUT.Normal = calculateNormal(model, aNormal);
+    OUT.Position = worldPos.xyz;
+    OUT.Normal = calculateNormal(modelTransform, aNormal);
     OUT.Silouette = calculateSilhouette();
     OUT.TexCoords = calculateTexCoords(aTexCoords);
 }
 
 #if SKINNED_MESH
-vec4 calculateWorldPosition(in mat4 modelTransform, in vec3 fragPos) {
+mat4 calculateModelTransform(in mat4 modelTransform) {
     mat4 skinMatrix = 
         aJointWeights.x * jointTransform[int(aJoints.x)] + 
         aJointWeights.y * jointTransform[int(aJoints.y)] + 
         aJointWeights.z * jointTransform[int(aJoints.z)] + 
         aJointWeights.w * jointTransform[int(aJoints.w)];
 
-    return modelTransform * skinMatrix * vec4(fragPos, 1.0);
+    return modelTransform * skinMatrix;
 }
 #else 
-vec4 calculateWorldPosition(in mat4 modelTransform, in vec3 fragPos) {
-    // Just transform by model.
-    return vec4(modelTransform * vec4(aPos, 1.0));
+mat4 calculateModelTransform(in mat4 modelTransform) {
+    return modelTransform;
 }
 #endif // SKINNED_MESH
 
