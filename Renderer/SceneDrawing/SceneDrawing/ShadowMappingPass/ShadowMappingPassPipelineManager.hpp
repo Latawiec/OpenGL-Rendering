@@ -14,12 +14,12 @@ static constexpr std::string_view VersionFlag = "#version 410 core\n";
 static constexpr int MaxJointsCount = 32;
 using JointsArray = std::array<glm::mat4, MaxJointsCount>;
 
-struct SceneViewData {
+struct SharedData {
     glm::mat4 lightProjectionTransform {1};
     glm::mat4 lightViewTransform {1};
 };
 
-struct SceneObjectData {
+struct IndividualData {
     glm::mat4 objectModelTransform {1};
     const JointsArray* jointsArray = nullptr;
 };
@@ -56,8 +56,8 @@ public:
 
     operator unsigned int() const;
     
-    void PrepareView(const SceneViewData& sceneView) const;
-    void PrepareElement(const SceneObjectData& sceneObject) const;
+    void prepareShared(const SharedData& sceneView) const;
+    void prepareIndividual(const IndividualData& sceneObject) const;
 };
 
 
@@ -81,8 +81,8 @@ public:
 
     operator unsigned int() const;
     
-    void PrepareView(const SceneViewData& sceneView) const;
-    void PrepareElement(const SceneObjectData& sceneObject) const;
+    void prepareShared(const SharedData& sceneView) const;
+    void prepareIndividual(const IndividualData& sceneObject) const;
 };
 
 
@@ -112,8 +112,8 @@ public:
     [[nodiscard("RAII variable discarded.")]]
     ScopedBinding Bind() const;
 
-    void PrepareView(const SceneViewData& sceneView) const;
-    void PrepareElement(const SceneObjectData& sceneObject) const;
+    void prepareShared(const SharedData& sceneView) const;
+    void prepareIndividual(const IndividualData& sceneObject) const;
 };
 
 struct ShadowMappingPipelineManager {

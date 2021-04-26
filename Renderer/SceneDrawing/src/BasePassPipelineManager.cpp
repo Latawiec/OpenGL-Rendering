@@ -88,12 +88,12 @@ BasePassVertexProgram::operator unsigned int() const {
     return _program;
 }
 
-void BasePassVertexProgram::PrepareView(const SceneViewData& sceneView) const {
+void BasePassVertexProgram::prepareShared(const SharedData& sceneView) const {
     glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ViewTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneView.cameraViewTransform));
     glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ProjectionTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneView.cameraProjectionTransform));
 }
 
-void BasePassVertexProgram::PrepareElement(const SceneObjectData& sceneObject) const {
+void BasePassVertexProgram::prepareIndividual(const IndividualData& sceneObject) const {
     glProgramUniform1i(_program, glGetUniformLocation(_program, MeshIdUniform.data()), sceneObject.meshId);
     glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ModelTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneObject.objectModelTransform));
     if (_isSkinned) {
@@ -194,11 +194,11 @@ BasePassFragmentProgram::operator unsigned int() const {
     return _program;
 }
 
-void BasePassFragmentProgram::PrepareView(const SceneViewData& sceneView) const {
+void BasePassFragmentProgram::prepareShared(const SharedData& sceneView) const {
     // Do nothing.
 }
 
-void BasePassFragmentProgram::PrepareElement(const SceneObjectData& sceneObject) const {
+void BasePassFragmentProgram::prepareIndividual(const IndividualData& sceneObject) const {
     if (_hasBaseColorTexture) {
         assert(sceneObject.baseColorTexture != nullptr);
         glActiveTexture(GL_TEXTURE0 + BaseColorTextureLocation);
@@ -270,16 +270,16 @@ BasePassPipeline::ScopedBinding BasePassPipeline::Bind() const
     return { *this };
 }
 
-void BasePassPipeline::PrepareView(const SceneViewData& viewData) const 
+void BasePassPipeline::prepareShared(const SharedData& viewData) const 
 {
-    _vertexProgram.PrepareView(viewData);
-    _fragmentProgram.PrepareView(viewData);
+    _vertexProgram.prepareShared(viewData);
+    _fragmentProgram.prepareShared(viewData);
 }
 
-void BasePassPipeline::PrepareElement(const SceneObjectData& objectData) const
+void BasePassPipeline::prepareIndividual(const IndividualData& objectData) const
 {
-    _vertexProgram.PrepareElement(objectData);
-    _fragmentProgram.PrepareElement(objectData);
+    _vertexProgram.prepareIndividual(objectData);
+    _fragmentProgram.prepareIndividual(objectData);
 }
 
 void BasePassPipelineManager::buildVariant(const PropertiesSet& properties)

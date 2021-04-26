@@ -35,7 +35,7 @@ int main() {
 
     glViewport(0, 0, windowWidth, windowHeight);
 
-    glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
+    glClearColor(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
 
     //auto shadowingLight = std::make_unique<LightNode>();
     //auto& stolenLight = *shadowingLight;

@@ -10,6 +10,7 @@ add_library(${PROJECT_NAME}
     src/DepthBuffer.cpp
     src/FramebufferBase.cpp
     src/GraphicBuffer.cpp
+    src/LightingPassPipelineManager.cpp
     src/SceneDrawingManager.cpp
     src/ShadowMappingPipelineManager.cpp
     src/TransformProcessor.cpp
@@ -42,6 +43,9 @@ PRIVATE
 
     SHADOWMAPPING_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/ShadowMapping.vert.glsl"
     SHADOWMAPPING_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/ShadowMapping.frag.glsl"
+
+    LIGHTING_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Lighting.vert.glsl"
+    LIGHTING_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Lighting.frag.glsl"
 )
 
 target_include_directories(${PROJECT_NAME}

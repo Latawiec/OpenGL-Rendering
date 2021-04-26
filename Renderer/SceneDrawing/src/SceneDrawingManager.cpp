@@ -10,7 +10,7 @@
 namespace Renderer {
 namespace SceneDrawing {
 
-ShadowMappingPass::SceneViewData SceneDrawingManager::createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform) {
+ShadowMappingPass::SharedData SceneDrawingManager::createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform) {
 
     const glm::mat4 lightWorldTransform = lightTransform;
     const glm::vec3 lightDirection = glm::normalize(lightWorldTransform * light.GetLightDirection());
@@ -69,44 +69,7 @@ ShadowMappingPass::SceneViewData SceneDrawingManager::createFittingShadowmapTran
         lightNewTransform[3][2] = glm::dot(f, cameraPosition);
     }
 
-    Frustum frustum(camera); // this is frustum created in camera-space.
-
-    // DEBUG
-    if (!debugMeshProgram.HasMesh()) {
-        std::vector<glm::vec3> frustumVertices{};
-        for (int i=0; i<Frustum::Vertex::SIZE; ++i) {
-            frustumVertices.push_back(frustum.GetVertex(static_cast<Frustum::Vertex>(i)));
-        }
-
-        std::vector<unsigned int> indices {
-            // Nearest face
-            Frustum::Vertex::LEFT_BOTTOM_NEAR, Frustum::Vertex::RIGHT_BOTTOM_NEAR, Frustum::Vertex::RIGHT_TOP_NEAR,
-            Frustum::Vertex::RIGHT_TOP_NEAR, Frustum::Vertex::LEFT_TOP_NEAR, Frustum::Vertex::LEFT_BOTTOM_NEAR,
-
-            // Furthest face
-            Frustum::Vertex::LEFT_BOTTOM_FAR, Frustum::Vertex::RIGHT_TOP_FAR, Frustum::Vertex::RIGHT_BOTTOM_FAR,
-            Frustum::Vertex::RIGHT_TOP_FAR, Frustum::Vertex::LEFT_BOTTOM_FAR, Frustum::Vertex::LEFT_TOP_FAR,
-
-            // Left face
-            Frustum::Vertex::LEFT_BOTTOM_NEAR, Frustum::Vertex::LEFT_TOP_NEAR, Frustum::Vertex::LEFT_TOP_FAR,
-            Frustum::Vertex::LEFT_TOP_FAR, Frustum::Vertex::LEFT_BOTTOM_FAR, Frustum::Vertex::LEFT_BOTTOM_NEAR,
-
-            // Right face
-            Frustum::Vertex::RIGHT_TOP_NEAR, Frustum::Vertex::RIGHT_BOTTOM_NEAR, Frustum::Vertex::RIGHT_TOP_FAR,
-            Frustum::Vertex::RIGHT_TOP_FAR, Frustum::Vertex::RIGHT_BOTTOM_NEAR, Frustum::Vertex::RIGHT_BOTTOM_FAR,
-
-            // Top face
-            Frustum::Vertex::RIGHT_TOP_NEAR, Frustum::Vertex::RIGHT_TOP_FAR, Frustum::Vertex::LEFT_TOP_NEAR,
-            Frustum::Vertex::LEFT_TOP_NEAR, Frustum::Vertex::RIGHT_TOP_FAR, Frustum::Vertex::LEFT_TOP_FAR,
-            
-            // Bottom face
-            Frustum::Vertex::LEFT_BOTTOM_NEAR, Frustum::Vertex::LEFT_BOTTOM_FAR, Frustum::Vertex::RIGHT_BOTTOM_FAR,
-            Frustum::Vertex::RIGHT_BOTTOM_FAR, Frustum::Vertex::RIGHT_BOTTOM_NEAR, Frustum::Vertex::LEFT_BOTTOM_NEAR
-        };
-
-        debugMeshProgram.SetMesh(frustumVertices, indices);
-    }
-
+    Frustum frustum(camera); // this is frustum created in camera-space
     frustum.Transform(cameraTransform * camera.GetCameraOrientation()); // now it's in world-space.
     frustum.Transform(lightNewTransform);
     
@@ -128,14 +91,10 @@ ShadowMappingPass::SceneViewData SceneDrawingManager::createFittingShadowmapTran
 
     const glm::mat4 lightProjectionTransform = glm::ortho(minValues.x, maxValues.x, minValues.y, maxValues.y, -maxValues.z, -minValues.z);
     
-    ShadowMappingPass::SceneViewData viewData;
+    ShadowMappingPass::SharedData viewData;
     viewData.lightViewTransform = lightNewTransform;
     viewData.lightProjectionTransform = lightProjectionTransform;
 
-    debugMeshProgram.SetView(lightNewTransform);
-    debugMeshProgram.SetProjection(lightProjectionTransform);
-    debugMeshProgram.SetModel(cameraTransform * camera.GetCameraOrientation());
-    
     return viewData;
 }
 
@@ -144,29 +103,73 @@ SceneDrawingManager::SceneDrawingManager(const Renderer::Scene::Scene& scene, co
 , _transformProcessor(_scene)
 , _deferredBuffers(windowWidth, windowHeight)
 , _width(windowWidth)
-, _height(windowHeight) {}
+, _height(windowHeight) {
+    auto indicesVector = std::vector<unsigned int>(indices, indices + 6);
+    _framebufferPlane = Scene::Base::VertexData<Scene::Base::Layout::Sequential, Scene::Base::Vec3>(indicesVector, 4, reinterpret_cast<const float*>(quadCoords));
+}
 
 void SceneDrawingManager::Draw() {
     _transformProcessor.Update();
-    ShadowMapping();
+    ShadowMappingPass();
     BasePass();
+    LightingPass();
 
-    {
-        glDisable(GL_DEPTH_TEST);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, _width, _height);
+    // {
+    //     glDisable(GL_DEPTH_TEST);
+    //     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //     glViewport(0, 0, _width, _height);
 
-        _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Albedo));
+    //     _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Albedo));
 
-        // Test Shadowmap
-        glViewport(0, 0, _deferredBuffers.GetHeight()/3.f, _deferredBuffers.GetHeight()/3.f);
-        const auto& shadowMap = *_directionalLightShadowMaps.begin();
-        _textureDrawProgram.draw(shadowMap.second.getTexture());
+    //     // Test Shadowmap
+    //     glViewport(0, 0, _deferredBuffers.GetHeight()/3.f, _deferredBuffers.GetHeight()/3.f);
+    //     const auto& shadowMap = *_directionalLightShadowMaps.begin();
+    //     _textureDrawProgram.draw(shadowMap.second.getTexture());
 
-    }
+    // }
 }
 
-void SceneDrawingManager::ShadowMapping()
+void SceneDrawingManager::LightingPass() 
+{
+    LightingPass::SharedData data;
+    data.positionTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::Position);
+    data.normalMapTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::Normals);
+
+    LightingPass::LightingPipelineManager::PropertiesSet properties = 0;
+
+    for (const auto& sceneLight : _scene.GetSceneLights()) {
+        const auto& nodeId = sceneLight.nodeId;
+        const auto& lightNode = _scene.GetNode(sceneLight.nodeId);
+
+        if (sceneLight.directionalLightId != Scene::Base::DirectionalLight::INVALID_ID) {
+            const auto& lightId = sceneLight.directionalLightId;
+            const auto& lightObject = _scene.GetDirectionalLight(lightId);
+
+            properties |= LightingPass::LightingPipelineManager::PipelineProperties::LIGHTTYPE_DIRECTIONAL;
+
+            const glm::mat4 lightTransform = _transformProcessor.GetNodeTransforms().at(nodeId);
+            const glm::vec4 lightDirection = lightTransform * lightObject.GetLightDirection();
+            data.directionalLightsTransforms.push_back(_directionalLightTransforms.at(lightId));
+            data.directionalLightsDirections.push_back(lightDirection);
+            data.directionalLightsShadowmapTextureIds.push_back(_directionalLightShadowMaps.at(lightId).getTexture());
+        }
+    }
+
+    const auto& pipeline = _lightingPassPipelineManager.GetPipeline(properties);
+    const auto binding = pipeline.Bind();
+    pipeline.prepareShared(data);
+    pipeline.prepareIndividual();
+
+    // Just print to window for now.
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, _width, _height);
+
+    Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { _framebufferPlane };
+    glDrawElements(GL_TRIANGLES, _framebufferPlane.vertexCount(), GL_UNSIGNED_INT, 0);
+}
+
+void SceneDrawingManager::ShadowMappingPass()
 {
     static const float TemporaryShadowMapSize = 1024;
 
@@ -194,9 +197,9 @@ void SceneDrawingManager::ShadowMapping()
             const auto& camera = _scene.GetCamera(cameraId);
             const auto& cameraTransform = _transformProcessor.GetNodeTransforms().at(cameraNodeId);
 
-            ShadowMappingPass::SceneViewData viewData = createFittingShadowmapTransform(lightObject, _transformProcessor.GetNodeTransforms().at(nodeId), camera, cameraTransform);
-            
-            debugMeshProgram.Draw();
+            ShadowMappingPass::SharedData viewData = createFittingShadowmapTransform(lightObject, _transformProcessor.GetNodeTransforms().at(nodeId), camera, cameraTransform);
+            // Remember it for drawing shadows
+            _directionalLightTransforms[lightId] = viewData.lightProjectionTransform * viewData.lightViewTransform;
 
             for (const auto& sceneElement : _scene.GetSceneObjects()) {
                 // Can't draw without geometry.
@@ -215,7 +218,7 @@ void SceneDrawingManager::ShadowMapping()
                     }
                 }
 
-                ShadowMappingPass::SceneObjectData objectData;
+                ShadowMappingPass::IndividualData objectData;
                 objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
                 if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
                     prepareSkin(sceneElement.skinId);
@@ -224,8 +227,8 @@ void SceneDrawingManager::ShadowMapping()
 
                 const auto& pipeline = _shadowMappingPassPipelineManager.GetPipeline(properties);
                 const auto pipelineBinding = pipeline.Bind();
-                pipeline.PrepareView(viewData);
-                pipeline.PrepareElement(objectData);
+                pipeline.prepareShared(viewData);
+                pipeline.prepareIndividual(objectData);
 
                 const auto& mesh = _scene.GetMesh(sceneElement.meshId);
                 Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { mesh.getVertexData() };
@@ -247,7 +250,7 @@ void SceneDrawingManager::BasePass()
     const auto projTransform = camera.GetProjectionTransform();
 
     // If I was smart enough I'd also set it up in OpenGL here once. Maybe someday...
-    BasePass::SceneViewData viewData;
+    BasePass::SharedData viewData;
     viewData.cameraProjectionTransform = projTransform;
     viewData.cameraViewTransform = viewTransform;
 
@@ -284,7 +287,7 @@ void SceneDrawingManager::BasePass()
             }
         }
 
-        BasePass::SceneObjectData objectData;
+        BasePass::IndividualData objectData;
         objectData.meshId = sceneElement.nodeId; // Temporary
         objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
 
@@ -302,8 +305,8 @@ void SceneDrawingManager::BasePass()
 
         const auto& pipeline = _basePassPipelineManager.GetPipeline(properties);
         const auto pipelineBinding = pipeline.Bind();
-        pipeline.PrepareView(viewData);
-        pipeline.PrepareElement(objectData);
+        pipeline.prepareShared(viewData);
+        pipeline.prepareIndividual(objectData);
 
         const auto& mesh = _scene.GetMesh(sceneElement.meshId);
         Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { mesh.getVertexData() };

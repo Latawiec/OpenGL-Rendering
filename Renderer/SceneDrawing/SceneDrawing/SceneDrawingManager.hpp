@@ -15,6 +15,7 @@
 #include "TransformProcessor.hpp"
 #include "BasePass/BasePassPipelineManager.hpp"
 #include "ShadowMappingPass/ShadowMappingPassPipelineManager.hpp"
+#include "LightingPass/LightingPassPipelineManager.hpp"
 
 namespace Renderer {
 namespace SceneDrawing {
@@ -33,8 +34,10 @@ private:
     TransformProcessor _transformProcessor;
     BasePass::BasePassPipelineManager _basePassPipelineManager;
     ShadowMappingPass::ShadowMappingPipelineManager _shadowMappingPassPipelineManager;
+    LightingPass::LightingPipelineManager _lightingPassPipelineManager;
+    Scene::Base::VertexDataBase _framebufferPlane;
 
-    ShadowMappingPass::SceneViewData createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform);
+    ShadowMappingPass::SharedData createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform);
 
     void prepareSkin(const Renderer::Scene::Base::Skin::IdType& skinId);
     std::unordered_map<Renderer::Scene::Base::Skin::IdType, std::array<glm::mat4, 32>> _jointTransforms;
@@ -45,10 +48,22 @@ private:
     Renderer::Programs::TextureProgram _textureDrawProgram;
     Renderer::Programs::EdgeProgram _edgeProgram;
     std::unordered_map<Renderer::Scene::Base::DirectionalLight::IdType, DepthBuffer> _directionalLightShadowMaps;
-    Programs::DebugMeshProgram debugMeshProgram;
+    std::unordered_map<Renderer::Scene::Base::DirectionalLight::IdType, glm::mat4> _directionalLightTransforms;
 
-    void ShadowMapping();
+    void LightingPass();
+    void ShadowMappingPass();
     void BasePass();
+
+    constexpr static inline glm::vec3 quadCoords[4] = {
+        {-1.f, -1.f, 0.f},
+        {1.f, -1.f, 0.f},
+        {1.f, 1.f, 0.f},
+        {-1.f, 1.f, 0.f}
+    };
+
+    constexpr static inline unsigned int indices[6] = {
+        0, 1, 2, 2, 0, 3
+    };
 };
 
 } // namespace SceneDrawing
