@@ -197,6 +197,7 @@ void LightingFragmentProgram::prepareShared(const SharedData& data) const {
         ss << DirectionalLightTransformsUniform << '[' << i << ']';
         glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, GL_FALSE, glm::value_ptr(data.directionalLightsTransforms[i]));
         ss.clear();
+        ss.str(std::string());
         ss << DirectionalLightDirectionsUniform << '[' << i << ']';
         glProgramUniform4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, glm::value_ptr(data.directionalLightsDirections[i]));
     }
