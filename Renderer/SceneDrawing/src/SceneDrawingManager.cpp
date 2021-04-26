@@ -171,7 +171,7 @@ void SceneDrawingManager::LightingPass()
 
 void SceneDrawingManager::ShadowMappingPass()
 {
-    static const float TemporaryShadowMapSize = 1024;
+    static const float TemporaryShadowMapSize = 2560;
 
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_FRONT);
