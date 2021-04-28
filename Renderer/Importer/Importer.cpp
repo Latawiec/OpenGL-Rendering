@@ -31,8 +31,6 @@ namespace Renderer {
 namespace Importer {
 
 namespace /*anonymous*/ {
-    static const std::string ProgramType = "ProgramType";
-    static const std::string ContourProgramType = "Contour";
     const static std::string LightsExtensionName = "KHR_lights_punctual";
 
     static const std::string PositionAttribute = "POSITION";
@@ -42,96 +40,80 @@ namespace /*anonymous*/ {
     static const std::string JointsAttribute = "JOINTS_0";
     static const std::string JointsWeightsAttribute = "WEIGHTS_0";
 
-    Scene::Base::Mesh processContourMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
-        GLuint VAO;
-        glGenVertexArrays(1, &VAO);
-        glBindVertexArray(VAO);
-
-        // I assume single primitve.
-        const auto primitive = mesh.primitives[0];
-
-        const auto& positionAccessorId = primitive.attributes.at(PositionAttribute);
-        const auto& normalAccessorId = primitive.attributes.at(NormalsAttribute);
-        const auto& uvAccessorId = primitive.attributes.at(UvAttribute);
-
-        std::map<Scene::Base::VertexAttributeLocation, const int&> locationToAccessorMap {
-            { Scene::Base::VertexAttributeLocation::POSITION, positionAccessorId },
-            { Scene::Base::VertexAttributeLocation::NORMAL, normalAccessorId },
-            { Scene::Base::VertexAttributeLocation::UV_MAP, uvAccessorId }
-        };
-
-        if (primitive.attributes.contains(JointsAttribute) && primitive.attributes.contains(JointsWeightsAttribute)) {
-            const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
-            const auto& jointsWeightsAccessorId = primitive.attributes.at(JointsWeightsAttribute);
-            locationToAccessorMap.insert({ Scene::Base::VertexAttributeLocation::JOINT, jointsAccessorId });
-            locationToAccessorMap.insert({ Scene::Base::VertexAttributeLocation::JOINT_WEIGHT, jointsWeightsAccessorId });
-        }
-
-        const auto& indicesAccessorId = primitive.indices;
-    
-
-        for (const auto&[attrLocation, accessorId] : locationToAccessorMap) {
-            const auto& accessor = model.accessors[accessorId]; 
-            const auto& bufferView = model.bufferViews[accessor.bufferView];
-            const auto& buffer = model.buffers[bufferView.buffer];
-            const int attrSize = accessor.type % 32;
-            const int byteStride = accessor.ByteStride(bufferView);
-
-            GLuint glBuffer;
-            glGenBuffers(1, &glBuffer);
-            glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
-            glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, 
-                         &buffer.data.at(0) + bufferView.byteOffset, GL_STATIC_DRAW);
-            glEnableVertexAttribArray(attrLocation);
-            glVertexAttribPointer(attrLocation, attrSize, accessor.componentType,
-                                  accessor.normalized ? GL_TRUE : GL_FALSE,
-                                  byteStride, BUFFER_OFFSET(accessor.byteOffset));
-        }
-
-        // Indices
-        const auto& indicesAccessor = model.accessors[indicesAccessorId];
-        const auto& indicesBufferView = model.bufferViews[indicesAccessor.bufferView];
-        const auto& indicesBuffer = model.buffers[indicesBufferView.buffer];
-        const int indicesSize =  indicesAccessor.type % 32;
-
-        GLuint glBuffer;
-        glGenBuffers(1, &glBuffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBufferView.byteLength,
-                     &indicesBuffer.data.at(0) + indicesBufferView.byteOffset, GL_STATIC_DRAW);
-
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        return Scene::Base::Mesh{ Scene::Base::VertexDataBase(VAO, indicesAccessor.count) };
-    }
 }
 
 Scene::Base::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
 
-    if (mesh.primitives[0].material == -1) {
-        return {};
-    }
-    const auto& material = model.materials[mesh.primitives[0].material];
-    const auto& properties = material.extras;
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
 
-    if (properties.Has(ProgramType) && properties.Get(ProgramType).IsString()) {
-        const auto& materialType = properties.Get(ProgramType).Get<std::string>();
-        if (materialType == ContourProgramType) {
-            return processContourMesh(model, mesh);
-        }
+    // I assume single primitve.
+    const auto primitive = mesh.primitives[0];
+
+    const auto& positionAccessorId = primitive.attributes.at(PositionAttribute);
+    const auto& normalAccessorId = primitive.attributes.at(NormalsAttribute);
+    const auto& uvAccessorId = primitive.attributes.at(UvAttribute);
+
+    std::map<Scene::Base::VertexAttributeLocation, const int&> locationToAccessorMap {
+        { Scene::Base::VertexAttributeLocation::POSITION, positionAccessorId },
+        { Scene::Base::VertexAttributeLocation::NORMAL, normalAccessorId },
+        { Scene::Base::VertexAttributeLocation::UV_MAP, uvAccessorId }
+    };
+
+    if (primitive.attributes.contains(JointsAttribute) && primitive.attributes.contains(JointsWeightsAttribute)) {
+        const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
+        const auto& jointsWeightsAccessorId = primitive.attributes.at(JointsWeightsAttribute);
+        locationToAccessorMap.insert({ Scene::Base::VertexAttributeLocation::JOINT, jointsAccessorId });
+        locationToAccessorMap.insert({ Scene::Base::VertexAttributeLocation::JOINT_WEIGHT, jointsWeightsAccessorId });
     }
 
-    return {};
+    const auto& indicesAccessorId = primitive.indices;
+
+
+    for (const auto&[attrLocation, accessorId] : locationToAccessorMap) {
+        const auto& accessor = model.accessors[accessorId]; 
+        const auto& bufferView = model.bufferViews[accessor.bufferView];
+        const auto& buffer = model.buffers[bufferView.buffer];
+        const int attrSize = accessor.type % 32;
+        const int byteStride = accessor.ByteStride(bufferView);
+
+        GLuint glBuffer;
+        glGenBuffers(1, &glBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
+        glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, 
+                        &buffer.data.at(0) + bufferView.byteOffset, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(attrLocation);
+        glVertexAttribPointer(attrLocation, attrSize, accessor.componentType,
+                                accessor.normalized ? GL_TRUE : GL_FALSE,
+                                byteStride, BUFFER_OFFSET(accessor.byteOffset));
+    }
+
+    // Indices
+    const auto& indicesAccessor = model.accessors[indicesAccessorId];
+    const auto& indicesBufferView = model.bufferViews[indicesAccessor.bufferView];
+    const auto& indicesBuffer = model.buffers[indicesBufferView.buffer];
+    const int indicesSize =  indicesAccessor.type % 32;
+
+    GLuint glBuffer;
+    glGenBuffers(1, &glBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBufferView.byteLength,
+                    &indicesBuffer.data.at(0) + indicesBufferView.byteOffset, GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    return Scene::Base::Mesh{ Scene::Base::VertexDataBase(VAO, indicesAccessor.count) };
 }
 
 Scene::Base::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {
-    return Scene::Base::Camera(0.1f, 20.f, static_cast<float>(camera.perspective.yfov), 800.f/600.f, glm::mat4{1});
+    return Scene::Base::Camera(0.1f, 30.f, static_cast<float>(camera.perspective.yfov), 800.f/600.f, glm::mat4{1});
 }
 
 Scene::Base::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera, const glm::mat4& cameraOrientation) {
-    return Scene::Base::Camera(0.1f, 20.f, static_cast<float>(camera.perspective.yfov), 800.f/600.f, cameraOrientation);
+    return Scene::Base::Camera(0.1f, 30.f, static_cast<float>(camera.perspective.yfov), 800.f/600.f, cameraOrientation);
 }
 
 Scene::Base::Texture processTexture(const tinygltf::Model& model, const tinygltf::Image& image) {
