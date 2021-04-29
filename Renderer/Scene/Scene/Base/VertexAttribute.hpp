@@ -12,9 +12,10 @@ namespace Base {
 enum VertexAttributeLocation : GLuint {
     POSITION = 0,
     NORMAL = 1,
-    UV_MAP = 2,
-    JOINT = 3,
-    JOINT_WEIGHT = 4,
+    TANGENT = 2,
+    UV_MAP = 3,
+    JOINT = 4,
+    JOINT_WEIGHT = 5,
     SIZE
 };
 

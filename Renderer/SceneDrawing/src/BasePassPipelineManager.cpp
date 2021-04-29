@@ -16,11 +16,15 @@ namespace Renderer {
 namespace SceneDrawing {
 namespace BasePass {
 
-BasePassVertexProgram::BasePassVertexProgram(bool skinned) : _isSkinned(skinned) {
+BasePassVertexProgram::BasePassVertexProgram(bool skinned, bool normalMap) : _isSkinned(skinned), _hasNormalMapTexture(normalMap) {
     std::vector<const char*> compilerInput { VersionFlag.data() };
 
     if (_isSkinned) {
         compilerInput.emplace_back(SkinFlag.data());
+    }
+
+    if (_hasNormalMapTexture) {
+        compilerInput.emplace_back(NormalMapTextureFlag.data());
     }
 
     const std::string shaderSource = Utils::readFile(BASEPASS_MATERIAL_VERTEX_SOURCE_PATH);
@@ -159,11 +163,11 @@ BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool 
 
     // Setup textures
     if (_hasBaseColorTexture) {
-        glProgramUniform1i(_program, glGetUniformLocation(_program, BaseColorSamplerUniform.data()), GL_TEXTURE0 + BaseColorTextureLocation);
+        glProgramUniform1i(_program, glGetUniformLocation(_program, BaseColorSamplerUniform.data()), BaseColorTextureLocation);
     }
 
     if (_hasNormalMapTexture) {
-        glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), GL_TEXTURE0 + NormalMapTextureLocation);
+        glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), NormalMapTextureLocation);
     }
 
     // Delete shader as we only need program.
@@ -208,7 +212,7 @@ void BasePassFragmentProgram::prepareIndividual(const IndividualData& sceneObjec
     if (_hasNormalMapTexture) {
         assert(sceneObject.normalMapTexture != nullptr);
         glActiveTexture(GL_TEXTURE0 + NormalMapTextureLocation);
-        glBindTexture(GL_TEXTURE_2D, static_cast<unsigned int>(*sceneObject.baseColorTexture));
+        glBindTexture(GL_TEXTURE_2D, static_cast<unsigned int>(*sceneObject.normalMapTexture));
     }
 }
 
@@ -291,7 +295,9 @@ void BasePassPipelineManager::buildVariant(const PropertiesSet& properties)
         _cachedVertexPrograms.emplace(
             vertexProperties,
             BasePassVertexProgram(
-                (vertexProperties & PipelineProperties::SKIN) != 0
+                (vertexProperties & PipelineProperties::SKIN) != 0,
+                (vertexProperties & PipelineProperties::NORMAL_MAP_TEXTURE) != 0
+
             )
         );
     }

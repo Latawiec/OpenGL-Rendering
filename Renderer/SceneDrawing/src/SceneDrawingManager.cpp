@@ -115,11 +115,11 @@ void SceneDrawingManager::Draw() {
     LightingPass();
 
     // {
-    //     glDisable(GL_DEPTH_TEST);
-    //     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //     glViewport(0, 0, _width, _height);
+        glDisable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, _width, _height);
 
-    //     _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Albedo));
+         _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Normals));
 
     //     // Test Shadowmap
     //     glViewport(0, 0, _deferredBuffers.GetHeight()/3.f, _deferredBuffers.GetHeight()/3.f);

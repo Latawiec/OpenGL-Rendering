@@ -33,6 +33,7 @@ struct IndividualData {
 class BasePassVertexProgram {
     // Flags
     static constexpr std::string_view SkinFlag = "#define SKINNED_MESH 1\n";
+    static constexpr std::string_view NormalMapTextureFlag = "#define NORMAL_MAP_TEXTURE 1\n";
     // Uniform names
     static constexpr std::string_view JointTransformsUniform = "jointTransform";
     static constexpr std::string_view ModelTransformUniform = "model";
@@ -44,10 +45,11 @@ class BasePassVertexProgram {
     BasePassVertexProgram& operator=(const BasePassVertexProgram& other) = delete;
 
     bool _isSkinned = false;
+    bool _hasNormalMapTexture = false;
     GLuint _program = -1;
 
 public:
-    BasePassVertexProgram(bool skinned);
+    BasePassVertexProgram(bool skinned, bool hasNormalMapTexture);
     ~BasePassVertexProgram();
 
     BasePassVertexProgram(BasePassVertexProgram&& other);
@@ -136,7 +138,8 @@ private:
     std::unordered_map<PropertiesSet, BasePassFragmentProgram> _cachedFragmentPrograms;
 
     constexpr static PropertiesSet PropertiesAffectingVertexProgram = 
-        PipelineProperties::SKIN;
+        PipelineProperties::SKIN |
+        PipelineProperties::NORMAL_MAP_TEXTURE;
 
     constexpr static PropertiesSet PropertiesAffectingFragmentProgram =
         PipelineProperties::BASE_COLOR_TEXTURE |

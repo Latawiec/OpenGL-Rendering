@@ -37,7 +37,7 @@ private:
     } cameraConversionData;
 
     struct {
-        std::vector<SceneId> convertedTextures;
+        std::vector<SceneId> convertedImages;
     } texturesConversionData;
 
     struct {

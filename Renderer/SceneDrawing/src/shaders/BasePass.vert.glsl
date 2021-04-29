@@ -4,15 +4,27 @@
 #define SKINNED_MESH 0
 #endif
 
+#ifndef NORMAL_MAP_TEXTURE
+#define NORMAL_MAP_TEXTURE 0
+#endif
+
+
+// I could set it during linking or...
+// REMEMBER IT HAS TO MATCH WITH VertexAttribute.hpp ENUM.
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
-layout (location = 2) in vec2 aTexCoords;
-layout (location = 3) in vec4 aJoints;
-layout (location = 4) in vec4 aJointWeights;
+layout (location = 2) in vec3 aTangent;
+layout (location = 3) in vec2 aTexCoords;
+layout (location = 4) in vec4 aJoints;
+layout (location = 5) in vec4 aJointWeights;
 
 out VS_OUTPUT {
     vec3 Position;
+#if NORMAL_MAP_TEXTURE
+    mat3 NormalTangentSpace;
+#else
     vec3 Normal;
+#endif
     vec4 Silouette;
     vec2 TexCoords;
 } OUT;
@@ -32,7 +44,11 @@ uniform mat4 jointTransform[32];
 uniform int mesh_id;
 
 mat4 calculateModelTransform(in mat4 modelTransform);
-vec3 calculateNormal(in mat4 modelTransform, in vec3 fragNormal);
+#if NORMAL_MAP_TEXTURE
+mat3 calculateNormalWorldTangentSpace(in mat4 modelTransform, in vec3 normal, in vec3 tangent);
+#else
+vec3 calculateWorldNormal(in mat4 modelTransform, in vec3 normal);
+#endif
 vec4 calculateSilhouette();
 vec2 calculateTexCoords(in vec2 texCoords);
 
@@ -43,7 +59,11 @@ void main()
     gl_Position = proj * view * worldPos;
 
     OUT.Position = worldPos.xyz;
-    OUT.Normal = calculateNormal(modelTransform, aNormal);
+#if NORMAL_MAP_TEXTURE
+    OUT.NormalTangentSpace = calculateNormalWorldTangentSpace(modelTransform, aNormal, aTangent);
+#else
+    OUT.Normal = calculateWorldNormal(modelTransform, aNormal);
+#endif
     OUT.Silouette = calculateSilhouette();
     OUT.TexCoords = calculateTexCoords(aTexCoords);
 }
@@ -64,9 +84,24 @@ mat4 calculateModelTransform(in mat4 modelTransform) {
 }
 #endif // SKINNED_MESH
 
-vec3 calculateNormal(in mat4 modelTransform, in vec3 fragNormal) {
-    return normalize(mat3(transpose(inverse(modelTransform))) * fragNormal);
+
+#if NORMAL_MAP_TEXTURE
+mat3 calculateNormalWorldTangentSpace(in mat4 modelTransform, in vec3 normal, in vec3 tangent) {
+    
+    vec3 T = normalize(tangent);
+    vec3 N = normalize(normal);
+    // Gram-Shmidt re-orthogonalize.
+    T = normalize(T - (dot(T, N) * N));
+
+    vec3 B = normalize(cross(T, N));
+
+    return mat3(modelTransform) * transpose(mat3(T, B, N));
 }
+#else
+vec3 calculateWorldNormal(in mat4 modelTransform, in vec3 fragNormal) {
+    return normalize(modelTransform * vec4(fragNormal.xyz, 0)).xyz;
+}
+#endif
 
 vec4 calculateSilhouette() {
     // Disassemble uint16 of mesh_id into values we put in contour map.

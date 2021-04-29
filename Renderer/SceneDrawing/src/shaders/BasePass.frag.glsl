@@ -14,7 +14,11 @@
 
 in VS_OUTPUT {
     vec3 Position;
+#if NORMAL_MAP_TEXTURE
+    mat3 NormalTangentSpace;
+#else
     vec3 Normal;
+#endif
     vec4 Silouette;
     vec2 TexCoords;
 } IN;
@@ -31,7 +35,7 @@ layout (location = 3) out vec4 SilhouetteMap;
 uniform sampler2D baseColor;
 #endif
 
-#ifdef NORMAL_MAP_TEXTURE
+#if NORMAL_MAP_TEXTURE
 uniform sampler2D normalMap;
 #endif
 
@@ -63,10 +67,14 @@ vec4 SampleBaseColor(vec2 coords)
 #endif // BASE_COLOUR_TEXTURE
 
 
-#ifdef NORMAL_MAP_TEXTURE
+#if NORMAL_MAP_TEXTURE
 vec3 SampleNormalMap(vec2 coords)
 {
-    return IN.Normal;
+    vec3 normal = texture(normalMap, coords).rgb;
+    normal = normalize(normal * 2.0 - 1.0);
+    // TODO: Just revert it when importing texture. No need to eat cycles here each frame.
+    normal *= vec3(1, -1, 1);
+    return normalize(IN.NormalTangentSpace * normal);
 }
 #else
 vec3 SampleNormalMap(vec2 coords)

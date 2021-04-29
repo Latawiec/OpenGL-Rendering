@@ -35,6 +35,7 @@ namespace /*anonymous*/ {
 
     static const std::string PositionAttribute = "POSITION";
     static const std::string NormalsAttribute = "NORMAL";
+    static const std::string TangentsAttribute = "TANGENT";
     static const std::string UvAttribute = "TEXCOORD_0";
     static const std::string EdgeColourAttribute = "COLOR_0";
     static const std::string JointsAttribute = "JOINTS_0";
@@ -53,13 +54,19 @@ Scene::Base::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh
 
     const auto& positionAccessorId = primitive.attributes.at(PositionAttribute);
     const auto& normalAccessorId = primitive.attributes.at(NormalsAttribute);
-    const auto& uvAccessorId = primitive.attributes.at(UvAttribute);
 
     std::map<Scene::Base::VertexAttributeLocation, const int&> locationToAccessorMap {
         { Scene::Base::VertexAttributeLocation::POSITION, positionAccessorId },
-        { Scene::Base::VertexAttributeLocation::NORMAL, normalAccessorId },
-        { Scene::Base::VertexAttributeLocation::UV_MAP, uvAccessorId }
+        { Scene::Base::VertexAttributeLocation::NORMAL, normalAccessorId }
     };
+
+    if (primitive.attributes.contains(TangentsAttribute)) {
+        locationToAccessorMap.insert({ Scene::Base::VertexAttributeLocation::TANGENT, primitive.attributes.at(TangentsAttribute) });
+    }
+
+    if (primitive.attributes.contains(UvAttribute)) {
+        locationToAccessorMap.insert({ Scene::Base::VertexAttributeLocation::UV_MAP, primitive.attributes.at(UvAttribute) });
+    }
 
     if (primitive.attributes.contains(JointsAttribute) && primitive.attributes.contains(JointsWeightsAttribute)) {
         const auto& jointsAccessorId = primitive.attributes.at(JointsAttribute);
@@ -209,14 +216,14 @@ void Importer::convertTextures (
     )
 {
     const auto imagesCount = gltfModel.images.size();
-    texturesConversionData.convertedTextures.reserve(imagesCount);
+    texturesConversionData.convertedImages.reserve(imagesCount);
 
     for (gltfId i = 0; i < imagesCount; ++i) {
         const tinygltf::Image& gltfImage = gltfModel.images[i];
         // Lets just assume it for safety now.
         assert(gltfImage.bits == 8);
         Scene::Base::Texture convertedTexture = processTexture(gltfModel, gltfImage);
-        texturesConversionData.convertedTextures.push_back(scene.AddTexture(std::move(convertedTexture)));
+        texturesConversionData.convertedImages.push_back(scene.AddTexture(std::move(convertedTexture)));
     }
 }
 
@@ -264,15 +271,25 @@ void Importer::convertMaterials (
         const gltfId albedoTexture = gltfMaterial.pbrMetallicRoughness.baseColorTexture.index;
         const gltfId metallicRoughnessTexture = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index;
         const gltfId normalTexture = gltfMaterial.normalTexture.index;
-        // todo more...
-        const Scene::Base::Texture::IdType albedoId = albedoTexture != -1 ? texturesConversionData.convertedTextures[albedoTexture] : 0;
-        const Scene::Base::Texture::IdType metallicRoughnessId = metallicRoughnessTexture != -1 ? texturesConversionData.convertedTextures[metallicRoughnessTexture] : 0;
-        const Scene::Base::Texture::IdType normalId = normalTexture != -1 ? texturesConversionData.convertedTextures[normalTexture] : 0;
-
+        
         Scene::Base::Material material;
-        material.setTexture<Scene::Base::Material::ETexture::Albedo>(albedoId);
-        material.setTexture<Scene::Base::Material::ETexture::MetallicRoughness>(metallicRoughnessId);
-        material.setTexture<Scene::Base::Material::ETexture::Normal>(normalId);
+        if (albedoTexture != -1) {
+            const gltfId albedoTextureImage = gltfModel.textures[albedoTexture].source;
+            const Scene::Base::Texture::IdType albedoId = texturesConversionData.convertedImages[albedoTextureImage];
+            material.setTexture<Scene::Base::Material::ETexture::Albedo>(albedoId);
+        }
+
+        if (metallicRoughnessTexture != -1) {
+            const gltfId metallicRoughnessImage = gltfModel.textures[metallicRoughnessTexture].source;
+            const Scene::Base::Texture::IdType metallicRoughnessId = texturesConversionData.convertedImages[metallicRoughnessImage];
+            material.setTexture<Scene::Base::Material::ETexture::MetallicRoughness>(metallicRoughnessId);
+        }
+
+        if (normalTexture != -1) {
+            const gltfId normalImage = gltfModel.textures[normalTexture].source;
+            const Scene::Base::Texture::IdType normalId = texturesConversionData.convertedImages[normalImage];
+            material.setTexture<Scene::Base::Material::ETexture::Normal>(normalId);
+        }
 
         materialsConversionData.convertedMaterials.push_back(std::move(scene.AddMaterial(std::move(material))));
     }
