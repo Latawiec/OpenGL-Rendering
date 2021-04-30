@@ -26,6 +26,7 @@ struct IndividualData {
     glm::mat4 objectModelTransform{1};
     const Renderer::Scene::Base::Texture* baseColorTexture = nullptr;
     const Renderer::Scene::Base::Texture* normalMapTexture = nullptr;
+    const Renderer::Scene::Base::Texture* metallicRoughnessTexture = nullptr;
     const JointsArray* jointsArray = nullptr;
 };
 
@@ -66,21 +67,25 @@ class BasePassFragmentProgram {
     // Flags
     static constexpr std::string_view BaseColorTextureFlag = "#define BASE_COLOUR_TEXTURE 1\n";
     static constexpr std::string_view NormalMapTextureFlag = "#define NORMAL_MAP_TEXTURE 1\n";
+    static constexpr std::string_view MetallicRoughnessTextureFlag = "#define METALLIC_ROUGHNESS_TEXTURE 1\n";
     // Uniform names
     static constexpr std::string_view BaseColorSamplerUniform = "baseColor";
     static constexpr std::string_view NormalMapSamplerUniform = "normalMap";
+    static constexpr std::string_view MetallicRougnessSamplerUniform = "metallicRoughness";
     static constexpr unsigned int BaseColorTextureLocation = 0;
     static constexpr unsigned int NormalMapTextureLocation = 1;
+    static constexpr unsigned int MetallicRoughnessTextureLocation = 2;
 
     BasePassFragmentProgram(const BasePassFragmentProgram& other) = delete;
     BasePassFragmentProgram& operator=(const BasePassFragmentProgram& other) = delete;
 
     bool _hasBaseColorTexture = false;
     bool _hasNormalMapTexture = false;
+    bool _hasMetallicRoughnessTexture = false;
     GLuint _program = -1;
 
 public:
-    BasePassFragmentProgram(bool hasBaseColorTexture, bool hasNormalMapTexture);
+    BasePassFragmentProgram(bool hasBaseColorTexture, bool hasNormalMapTexture, bool hasMetallicRoughnessTexture);
     ~BasePassFragmentProgram();
 
     BasePassFragmentProgram(BasePassFragmentProgram&& other);
@@ -129,7 +134,8 @@ struct BasePassPipelineManager {
     enum PipelineProperties : PropertiesSet {
         SKIN = 1 << 0,
         BASE_COLOR_TEXTURE = 1 << 1,
-        NORMAL_MAP_TEXTURE = 1 << 2
+        NORMAL_MAP_TEXTURE = 1 << 2,
+        METALLIC_ROUGHNESS_TEXTURE = 1 << 3
     };  
 
 private:
@@ -143,7 +149,8 @@ private:
 
     constexpr static PropertiesSet PropertiesAffectingFragmentProgram =
         PipelineProperties::BASE_COLOR_TEXTURE |
-        PipelineProperties::NORMAL_MAP_TEXTURE;
+        PipelineProperties::NORMAL_MAP_TEXTURE |
+        PipelineProperties::METALLIC_ROUGHNESS_TEXTURE;
 
     void buildVariant(const PropertiesSet& properties);
 

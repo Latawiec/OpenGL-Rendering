@@ -50,7 +50,7 @@ struct Frustum {
     Frustum(Frustum& other) = default;
     Frustum& operator=(Frustum& other) = default;
 
-    const glm::vec4 GetVertex(Vertex vertex) const {
+    const glm::vec4& GetVertex(Vertex vertex) const {
         return _vertices[vertex];
     }
 

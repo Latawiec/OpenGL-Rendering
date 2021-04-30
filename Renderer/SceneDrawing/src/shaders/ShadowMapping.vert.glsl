@@ -9,8 +9,8 @@
 
 layout (location = 0) in vec3 aPos;
 #if SKINNED_MESH
-layout (location = 3) in vec4 aJoints;
-layout (location = 4) in vec4 aJointWeights;
+layout (location = 4) in vec4 aJoints;
+layout (location = 5) in vec4 aJointWeights;
 #endif
 
 out gl_PerVertex

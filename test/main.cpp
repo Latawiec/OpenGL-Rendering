@@ -37,27 +37,26 @@ int main() {
 
     glClearColor(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
 
-    //auto shadowingLight = std::make_unique<LightNode>();
-    //auto& stolenLight = *shadowingLight;
-    //shadowingLight->SetTransform(glm::translate(glm::mat4(1), glm::vec3(5, 2.5, 1)));
     Renderer::Scene::Scene mainScene;
     Renderer::Importer::Importer gltfImporter;
     auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test.gltf", mainScene);
     std::cout << "SCENE!\n" << std::endl;
     std::cout << mainScene << std::endl;
-    //imported->AddChildNode(std::move(shadowingLight));
 
     auto& cameraNode = mainScene.GetNode(mainScene.GetSceneViews().begin()->nodeId);
     const auto cacheTransform = cameraNode.GetTransform();
+
+    auto& lightNode = mainScene.GetNode(mainScene.GetSceneLights().begin()->nodeId);
+    const auto cacheLightTransform = lightNode.GetTransform();
 
     Renderer::SceneDrawing::SceneDrawingManager sceneDrawingManager(mainScene, windowWidth, windowHeight);
     while(!glfwWindowShouldClose(window)) {
         //stolenLight.SetTransform(glm::translate(glm::mat4(1), glm::vec3(5 * glm::sin(glfwGetTime()), 2.5, 1)));
         sceneDrawingManager.Draw();
 
-        const auto transform = cacheTransform * glm::rotate(glm::mat4{1}, glm::radians(90.f), glm::vec3(0, 1, 0));
-        const auto transform2 = glm::rotate(cacheTransform, float(glfwGetTime())/10.f, glm::vec3(0, 1, 0));
-        cameraNode.SetTransform(transform2);
+        const auto transform = cacheLightTransform * glm::rotate(glm::mat4{1}, glm::radians(90.f), glm::vec3(0, 1, 0));
+        const auto transform2 = glm::rotate(cacheTransform, float(glfwGetTime())/10.f, glm::vec3(0, 0, 1));
+        lightNode.SetTransform(transform2);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

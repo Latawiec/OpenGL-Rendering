@@ -16,8 +16,9 @@ public:
         Position = 0,
         Albedo,
         Normals,
-        Depth,
+        RoughnessMetallic,
         EdgeInfo,
+        Depth,
         SIZE
     };
 
@@ -42,6 +43,9 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::Albedo>();
 
 template<>
 void GraphicBuffer::setupTexture<GraphicBuffer::Output::Normals>();
+
+template<>
+void GraphicBuffer::setupTexture<GraphicBuffer::Output::RoughnessMetallic>();
 
 template<>
 void GraphicBuffer::setupTexture<GraphicBuffer::Output::Depth>();
