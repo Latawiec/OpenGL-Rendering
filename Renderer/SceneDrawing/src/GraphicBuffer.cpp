@@ -73,8 +73,8 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::MetallicRoughness>() {
 }
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::EdgeInfo>() {
-    const auto outputTexture = outputTextures_[Output::EdgeInfo];
+void GraphicBuffer::setupTexture<GraphicBuffer::Output::SilhouetteMap>() {
+    const auto outputTexture = outputTextures_[Output::SilhouetteMap];
     glBindTexture(GL_TEXTURE_2D, outputTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

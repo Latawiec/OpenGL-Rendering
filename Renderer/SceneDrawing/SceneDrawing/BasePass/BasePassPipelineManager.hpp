@@ -40,7 +40,7 @@ class BasePassVertexProgram {
     static constexpr std::string_view ModelTransformUniform = "model";
     static constexpr std::string_view ViewTransformUniform = "view";
     static constexpr std::string_view ProjectionTransformUniform = "proj";
-    static constexpr std::string_view MeshIdUniform = "mesh_id";
+    static constexpr std::string_view MeshIdUniform = "meshId";
 
     BasePassVertexProgram(const BasePassVertexProgram& other) = delete;
     BasePassVertexProgram& operator=(const BasePassVertexProgram& other) = delete;

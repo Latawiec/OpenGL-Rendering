@@ -132,6 +132,7 @@ void SceneDrawingManager::Draw() {
 void SceneDrawingManager::LightingPass() 
 {
     LightingPass::SharedData data;
+    data.albedoTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::Albedo);
     data.positionTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::Position);
     data.normalMapTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::Normals);
     data.metallicRoughnessTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::MetallicRoughness);

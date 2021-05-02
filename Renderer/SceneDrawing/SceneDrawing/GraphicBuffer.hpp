@@ -17,7 +17,7 @@ public:
         Albedo,
         Normals,
         MetallicRoughness,
-        EdgeInfo,
+        SilhouetteMap,
         Depth,
         SIZE
     };
@@ -51,7 +51,7 @@ template<>
 void GraphicBuffer::setupTexture<GraphicBuffer::Output::Depth>();
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::EdgeInfo>();
+void GraphicBuffer::setupTexture<GraphicBuffer::Output::SilhouetteMap>();
 
 } // namespace SceneDrawing
 } // namespace Renderer

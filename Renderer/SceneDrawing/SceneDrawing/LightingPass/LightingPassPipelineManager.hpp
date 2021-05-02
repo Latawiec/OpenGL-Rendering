@@ -13,6 +13,7 @@ static constexpr unsigned int MaxDirectionalLightsPerExecute = 4; // HAS TO MATC
 static constexpr std::string_view VersionFlag = "#version 410 core\n";
 
 struct SharedData {
+    GLuint albedoTexture;
     GLuint positionTexture;
     GLuint normalMapTexture;
     GLuint metallicRoughnessTexture;
@@ -61,12 +62,14 @@ class LightingFragmentProgram {
     static constexpr std::string_view DirectionalLightFlag = "#define DIRECTIONAL_LIGHTS 1\n";
 
     // Uniform names
+    static constexpr std::string_view AlbedoSamplerUniform = "albedoTexture";
+    static constexpr unsigned int AlbedoTextureLocation = 0;
     static constexpr std::string_view PositionSamplerUniform = "positionTexture";
-    static constexpr unsigned int PositionTextureLocation = 0;
+    static constexpr unsigned int PositionTextureLocation = 1;
     static constexpr std::string_view NormalMapSamplerUniform = "normalMapTexture";
-    static constexpr unsigned int NormalMapTextureLocation = 1;
+    static constexpr unsigned int NormalMapTextureLocation = 2;
     static constexpr std::string_view MetallicRoughnessSamplerUniform = "metallicRoughnessTexture";
-    static constexpr unsigned int MetallicRoughnessTextureLocation = 2;
+    static constexpr unsigned int MetallicRoughnessTextureLocation = 3;
 
     static constexpr std::string_view CameraPositionUniform = "cameraPosition";
 
@@ -75,7 +78,7 @@ class LightingFragmentProgram {
     static constexpr std::string_view DirectionalLightDirectionsUniform = "directionalLightDirections";
     static constexpr std::string_view DirectionalLightColor = "directionalLightColor";
     static constexpr std::string_view DirectionalLightShadowmapSamplersUniform = "directionalLightShadowmapSamplers";
-    static constexpr unsigned int DirectionalLightShadowmapTexturesLocationBegin = 3;
+    static constexpr unsigned int DirectionalLightShadowmapTexturesLocationBegin = 4;
     static constexpr unsigned int DirectionalLightShadowmapTexturesLocationEnd = DirectionalLightShadowmapTexturesLocationBegin + MaxDirectionalLightsPerExecute;
 
     LightingFragmentProgram(const LightingFragmentProgram& other) = delete;

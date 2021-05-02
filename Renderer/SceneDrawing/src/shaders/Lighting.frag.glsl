@@ -7,6 +7,7 @@ in vec2 TextureCoord;
 
 out vec4 FragColor;
 
+uniform sampler2D albedoTexture;
 uniform sampler2D positionTexture;
 uniform sampler2D normalMapTexture;
 uniform sampler2D metallicRoughnessTexture;
@@ -63,7 +64,7 @@ vec3 CalculateSpecular_DirectionalLight(in vec2 coord, in uint lightIndex) {
 
     // Mapping roughness/metallic from PBR to specular/glossiness... 
     float howShinyXD = mix(1.0, 9.0, 1.0 - metallicRoughness.y);
-    float specularPower = mix(0.0, 1.0, 1.0 - metallicRoughness.y);
+    float specularPower = sqrt(mix(0.0, 1.0, 1.0 - metallicRoughness.y));
 
     float specular = specularPower * pow(max(dot(viewDirection, reflectDirection), 0.0), pow(2, howShinyXD));
     return vec3(specular);
@@ -76,9 +77,11 @@ void main() {
         vec3 diffuse = CalculateDiffuse_DirectionalLight(TextureCoord, i);
         vec3 specular = CalculateSpecular_DirectionalLight(TextureCoord, i);
 
-        vec3 color = directionalLightColor[i].rgb;
-
-        vec3 lighting = (1.0 - shadow) * (diffuse + specular) * color;
-        FragColor = vec4(lighting, 1);
+        vec3 lightColor = directionalLightColor[i].rgb;
+        
+        vec3 lighting = (1.0 - shadow) * diffuse * lightColor;
+        vec3 spec =  (1.0 - shadow) * specular * lightColor;
     // }
+    vec4 albedo = texture(albedoTexture, TextureCoord);
+    FragColor = vec4(lighting, 1) * albedo + vec4(spec, 0);
 }

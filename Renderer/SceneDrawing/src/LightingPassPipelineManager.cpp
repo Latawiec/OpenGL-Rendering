@@ -144,6 +144,7 @@ LightingFragmentProgram::LightingFragmentProgram(const LightType type)
 #endif
 
     // Setup textures
+    glProgramUniform1i(_program, glGetUniformLocation(_program, AlbedoSamplerUniform.data()), AlbedoTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, PositionSamplerUniform.data()), PositionTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), NormalMapTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, MetallicRoughnessSamplerUniform.data()), MetallicRoughnessTextureLocation);
@@ -182,6 +183,9 @@ LightingFragmentProgram::operator unsigned int() const {
 }
 
 void LightingFragmentProgram::prepareShared(const SharedData& data) const {
+    glActiveTexture(GL_TEXTURE0 + AlbedoTextureLocation);
+    glBindTexture(GL_TEXTURE_2D, data.albedoTexture);
+
     glActiveTexture(GL_TEXTURE0 + PositionTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.positionTexture);
 
@@ -205,7 +209,7 @@ void LightingFragmentProgram::prepareShared(const SharedData& data) const {
         glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, GL_FALSE, glm::value_ptr(data.directionalLightsTransforms[i]));
         ss.clear();
         ss.str(std::string());
-        
+
         ss << DirectionalLightDirectionsUniform << '[' << i << ']';
         glProgramUniform4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, glm::value_ptr(data.directionalLightsDirections[i]));
         ss.clear();

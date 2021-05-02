@@ -41,7 +41,7 @@ uniform mat4 proj;
 #if SKINNED_MESH
 uniform mat4 jointTransform[32];
 #endif
-uniform int mesh_id;
+uniform int meshId;
 
 mat4 calculateModelTransform(in mat4 modelTransform);
 #if NORMAL_MAP_TEXTURE
@@ -105,8 +105,8 @@ vec3 calculateWorldNormal(in mat4 modelTransform, in vec3 fragNormal) {
 
 vec4 calculateSilhouette() {
     // Disassemble uint16 of mesh_id into values we put in contour map.
-    float mesh_id_high = ((mesh_id >> 8) & 0xff)/255.f;
-    float mesh_id_low = (mesh_id  & 0xff)/255.f;
+    float mesh_id_high = ((meshId >> 8) & 0xff)/255.f;
+    float mesh_id_low = (meshId  & 0xff)/255.f;
     vec2 mesh_id_component = vec2(mesh_id_high, mesh_id_low);
 
     return vec4(0, 0, mesh_id_component);
