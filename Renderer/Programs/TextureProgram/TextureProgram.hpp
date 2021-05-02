@@ -27,7 +27,7 @@ private:
     };
 
     constexpr static inline unsigned int indices[6] = {
-        0, 1, 2, 2, 0, 3
+        0, 1, 2, 2, 3, 0
     };
 };
 

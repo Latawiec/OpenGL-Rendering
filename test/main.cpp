@@ -55,7 +55,7 @@ int main() {
         sceneDrawingManager.Draw();
 
         const auto transform = cacheLightTransform * glm::rotate(glm::mat4{1}, glm::radians(90.f), glm::vec3(0, 1, 0));
-        const auto transform2 = glm::rotate(cacheTransform, float(glfwGetTime())/10.f, glm::vec3(0, 0, 1));
+        const auto transform2 = glm::rotate(cacheTransform, float(glfwGetTime())/1.f, glm::vec3(0, 1, 0));
         lightNode.SetTransform(transform2);
 
         glfwSwapBuffers(window);

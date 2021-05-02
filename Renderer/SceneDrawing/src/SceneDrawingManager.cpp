@@ -134,6 +134,11 @@ void SceneDrawingManager::LightingPass()
     LightingPass::SharedData data;
     data.positionTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::Position);
     data.normalMapTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::Normals);
+    data.metallicRoughnessTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::MetallicRoughness);
+
+    // Again im getting first view coz I still have no "Active Camera" thing... ehh
+    const auto& cameraNode = _scene.GetSceneViews().begin()->nodeId;
+    data.cameraPosition = _transformProcessor.GetNodeTransforms().at(cameraNode) * glm::vec4(0, 0, 0, 1);
 
     LightingPass::LightingPipelineManager::PropertiesSet properties = 0;
 
@@ -149,8 +154,10 @@ void SceneDrawingManager::LightingPass()
 
             const glm::mat4 lightTransform = _transformProcessor.GetNodeTransforms().at(nodeId);
             const glm::vec4 lightDirection = lightTransform * lightObject.GetLightDirection();
+            const glm::vec4 lightColor = glm::vec4(lightObject.GetColor(), lightObject.GetIntensity());
             data.directionalLightsTransforms.push_back(_directionalLightTransforms.at(lightId));
             data.directionalLightsDirections.push_back(lightDirection);
+            data.directionalLightsColors.push_back(lightColor);
             data.directionalLightsShadowmapTextureIds.push_back(_directionalLightShadowMaps.at(lightId).getTexture());
         }
     }

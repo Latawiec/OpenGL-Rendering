@@ -15,9 +15,13 @@ static constexpr std::string_view VersionFlag = "#version 410 core\n";
 struct SharedData {
     GLuint positionTexture;
     GLuint normalMapTexture;
+    GLuint metallicRoughnessTexture;
+
+    glm::vec4 cameraPosition;
 
     std::vector<glm::mat4> directionalLightsTransforms;
     std::vector<glm::vec4> directionalLightsDirections;
+    std::vector<glm::vec4> directionalLightsColors;
     std::vector<GLuint> directionalLightsShadowmapTextureIds;
 };
 
@@ -61,12 +65,17 @@ class LightingFragmentProgram {
     static constexpr unsigned int PositionTextureLocation = 0;
     static constexpr std::string_view NormalMapSamplerUniform = "normalMapTexture";
     static constexpr unsigned int NormalMapTextureLocation = 1;
+    static constexpr std::string_view MetallicRoughnessSamplerUniform = "metallicRoughnessTexture";
+    static constexpr unsigned int MetallicRoughnessTextureLocation = 2;
+
+    static constexpr std::string_view CameraPositionUniform = "cameraPosition";
 
     static constexpr std::string_view DirectionalLightsCountUniform = "directionalLightsCount";
     static constexpr std::string_view DirectionalLightTransformsUniform = "directionalLightTransforms";
     static constexpr std::string_view DirectionalLightDirectionsUniform = "directionalLightDirections";
+    static constexpr std::string_view DirectionalLightColor = "directionalLightColor";
     static constexpr std::string_view DirectionalLightShadowmapSamplersUniform = "directionalLightShadowmapSamplers";
-    static constexpr unsigned int DirectionalLightShadowmapTexturesLocationBegin = 2;
+    static constexpr unsigned int DirectionalLightShadowmapTexturesLocationBegin = 3;
     static constexpr unsigned int DirectionalLightShadowmapTexturesLocationEnd = DirectionalLightShadowmapTexturesLocationBegin + MaxDirectionalLightsPerExecute;
 
     LightingFragmentProgram(const LightingFragmentProgram& other) = delete;

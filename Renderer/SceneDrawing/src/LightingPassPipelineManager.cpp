@@ -146,6 +146,8 @@ LightingFragmentProgram::LightingFragmentProgram(const LightType type)
     // Setup textures
     glProgramUniform1i(_program, glGetUniformLocation(_program, PositionSamplerUniform.data()), PositionTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), NormalMapTextureLocation);
+    glProgramUniform1i(_program, glGetUniformLocation(_program, MetallicRoughnessSamplerUniform.data()), MetallicRoughnessTextureLocation);
+
     std::stringstream ss;
     for (int i=0; i<MaxDirectionalLightsPerExecute; ++i) {
         ss << DirectionalLightShadowmapSamplersUniform << '[' << i << ']';
@@ -186,6 +188,11 @@ void LightingFragmentProgram::prepareShared(const SharedData& data) const {
     glActiveTexture(GL_TEXTURE0 + NormalMapTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.normalMapTexture);
 
+    glActiveTexture(GL_TEXTURE0 + MetallicRoughnessTextureLocation);
+    glBindTexture(GL_TEXTURE_2D, data.metallicRoughnessTexture);
+
+    glProgramUniform4fv(_program, glGetUniformLocation(_program, CameraPositionUniform.data()), 1, glm::value_ptr(data.cameraPosition));
+
     const unsigned int directionalLightsCount = glm::min(static_cast<unsigned int>(data.directionalLightsTransforms.size()), MaxDirectionalLightsPerExecute);
     glProgramUniform1ui(_program, glGetUniformLocation(_program, DirectionalLightsCountUniform.data()), directionalLightsCount);
 
@@ -198,8 +205,16 @@ void LightingFragmentProgram::prepareShared(const SharedData& data) const {
         glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, GL_FALSE, glm::value_ptr(data.directionalLightsTransforms[i]));
         ss.clear();
         ss.str(std::string());
+        
         ss << DirectionalLightDirectionsUniform << '[' << i << ']';
         glProgramUniform4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, glm::value_ptr(data.directionalLightsDirections[i]));
+        ss.clear();
+        ss.str(std::string());
+
+        ss << DirectionalLightColor << '[' << i << ']';
+        glProgramUniform4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, glm::value_ptr(data.directionalLightsColors[i]));
+        ss.clear();
+        ss.str(std::string());
     }
 }
 

@@ -61,8 +61,8 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::Normals>() {
 }
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::RoughnessMetallic>() {
-    const auto outputTexture = outputTextures_[Output::RoughnessMetallic];
+void GraphicBuffer::setupTexture<GraphicBuffer::Output::MetallicRoughness>() {
+    const auto outputTexture = outputTextures_[Output::MetallicRoughness];
     glBindTexture(GL_TEXTURE_2D, outputTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

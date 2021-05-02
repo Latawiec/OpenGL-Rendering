@@ -9,12 +9,16 @@ out vec4 FragColor;
 
 uniform sampler2D positionTexture;
 uniform sampler2D normalMapTexture;
+uniform sampler2D metallicRoughnessTexture;
+
+uniform vec4 cameraPosition;
 
 #if DIRECTIONAL_LIGHTS
 const uint MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE = 4;
 uniform uint directionalLightCount = 0;
 uniform mat4 directionalLightTransforms[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
 uniform vec4 directionalLightDirections[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
+uniform vec4 directionalLightColor[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
 uniform sampler2D directionalLightShadowmapSamplers[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
 #endif
 
@@ -40,20 +44,41 @@ float CalculateShadow_DirectionalLight(in vec2 coord, in uint lightIndex) {
     return shadow;
 }
 
-float CalculateDiffuse_DirectionalLight(in vec2 coord, in uint lightIndex) {
+vec3 CalculateDiffuse_DirectionalLight(in vec2 coord, in uint lightIndex) {
     vec3 lightDirection = normalize(-directionalLightDirections[lightIndex].xyz);
     vec3 normal = normalize(texture(normalMapTexture, coord).xyz);
 
-    return max(dot(lightDirection.xyz, normal), 0.0);
+    return vec3(max(dot(lightDirection.xyz, normal), 0.0));
+}
+
+vec3 CalculateSpecular_DirectionalLight(in vec2 coord, in uint lightIndex) {
+    vec3 lightDirection = normalize(-directionalLightDirections[lightIndex].xyz);
+    vec4 fragmentPosition = vec4(texture(positionTexture, coord).xyz, 1.0);
+    vec3 viewDirection = normalize((fragmentPosition - cameraPosition).xyz);
+    vec3 normal = normalize(texture(normalMapTexture, coord).xyz);
+
+    vec3 reflectDirection = reflect(lightDirection, normal);
+
+    vec2 metallicRoughness = texture(metallicRoughnessTexture, coord).xy;
+
+    // Mapping roughness/metallic from PBR to specular/glossiness... 
+    float howShinyXD = mix(1.0, 9.0, 1.0 - metallicRoughness.y);
+    float specularPower = mix(0.0, 1.0, 1.0 - metallicRoughness.y);
+
+    float specular = specularPower * pow(max(dot(viewDirection, reflectDirection), 0.0), pow(2, howShinyXD));
+    return vec3(specular);
 }
 
 void main() {
     // for (int i=0; i<directionalLightCount; i++) {
         int i = 0;
         float shadow = CalculateShadow_DirectionalLight(TextureCoord, i);
-        float diffuse = CalculateDiffuse_DirectionalLight(TextureCoord, i);
+        vec3 diffuse = CalculateDiffuse_DirectionalLight(TextureCoord, i);
+        vec3 specular = CalculateSpecular_DirectionalLight(TextureCoord, i);
 
-        vec3 color = vec3((1.0 - shadow) * diffuse);
-        FragColor = vec4(color, 1);
+        vec3 color = directionalLightColor[i].rgb;
+
+        vec3 lighting = (1.0 - shadow) * (diffuse + specular) * color;
+        FragColor = vec4(lighting, 1);
     // }
 }
