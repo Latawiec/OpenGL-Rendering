@@ -4,12 +4,11 @@
 
 #include <cstddef>
 #include <utility>
-#include "always_fail.hpp"
 
 namespace Renderer {
 namespace SceneDrawing {
 
-class GraphicBuffer : public Renderer::SceneDrawing::FramebufferBase {
+class BasePassBuffer : public Renderer::SceneDrawing::FramebufferBase {
 public:
 
     enum Output {
@@ -22,7 +21,7 @@ public:
         SIZE
     };
 
-    GraphicBuffer(unsigned int width, unsigned int height);
+    BasePassBuffer(unsigned int width, unsigned int height);
 
     unsigned int getTexture(const Output texture);
 
@@ -36,22 +35,22 @@ private:
 };
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::Position>();
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::Position>();
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::Albedo>();
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::Albedo>();
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::Normals>();
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::Normals>();
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::MetallicRoughness>();
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::MetallicRoughness>();
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::Depth>();
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::SilhouetteMap>();
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::SilhouetteMap>();
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::Depth>();
 
 } // namespace SceneDrawing
 } // namespace Renderer

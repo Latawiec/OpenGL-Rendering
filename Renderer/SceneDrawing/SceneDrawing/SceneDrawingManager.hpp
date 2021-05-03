@@ -10,12 +10,14 @@
 #include <EdgeProgram.hpp>
 #include <TextureProgram.hpp>
 #include <DebugMeshProgram.hpp>
-#include "GraphicBuffer.hpp"
+#include "BasePassBuffer.hpp"
+#include "LightingPassBuffer.hpp"
 #include "DepthBuffer.hpp"
 #include "TransformProcessor.hpp"
 #include "BasePass/BasePassPipelineManager.hpp"
 #include "ShadowMappingPass/ShadowMappingPassPipelineManager.hpp"
 #include "LightingPass/LightingPassPipelineManager.hpp"
+#include "CombinePass/CombinePassPipelineManager.hpp"
 
 namespace Renderer {
 namespace SceneDrawing {
@@ -29,12 +31,14 @@ void Draw();
 private:
     const Renderer::Scene::Scene& _scene;
 
-    GraphicBuffer _deferredBuffers;
+    BasePassBuffer _basePassBuffer;
+    LightingPassBuffer _lightingPassBuffer;
     
     TransformProcessor _transformProcessor;
     BasePass::BasePassPipelineManager _basePassPipelineManager;
     ShadowMappingPass::ShadowMappingPipelineManager _shadowMappingPassPipelineManager;
     LightingPass::LightingPipelineManager _lightingPassPipelineManager;
+    CombinePass::CombinePipelineManager _combinePassPipelineManager;
     Scene::Base::VertexDataBase _framebufferPlane;
 
     ShadowMappingPass::SharedData createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform);
@@ -50,6 +54,7 @@ private:
     std::unordered_map<Renderer::Scene::Base::DirectionalLight::IdType, DepthBuffer> _directionalLightShadowMaps;
     std::unordered_map<Renderer::Scene::Base::DirectionalLight::IdType, glm::mat4> _directionalLightTransforms;
 
+    void CombinePass();
     void LightingPass();
     void ShadowMappingPass();
     void BasePass();

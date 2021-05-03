@@ -1,27 +1,27 @@
-#include "SceneDrawing/LightingPass/LightingPassPipelineManager.hpp"
+#include "SceneDrawing/CombinePass/CombinePassPipelineManager.hpp"
 #include <read_file.hpp>
 
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
 
-#ifndef LIGHTING_MATERIAL_VERTEX_SOURCE_PATH
-#define LIGHTING_MATERIAL_VERTEX_SOURCE_PATH "Invalid vertex shader source path."
+#ifndef COMBINE_MATERIAL_VERTEX_SOURCE_PATH
+#define COMBINE_MATERIAL_VERTEX_SOURCE_PATH "Invalid vertex shader source path."
 #endif 
 
-#ifndef LIGHTING_MATERIAL_FRAGMENT_SOURCE_PATH
-#define LIGHTING_MATERIAL_FRAGMENT_SOURCE_PATH "Invalid fragment shader source path."
+#ifndef COMBINE_MATERIAL_FRAGMENT_SOURCE_PATH
+#define COMBINE_MATERIAL_FRAGMENT_SOURCE_PATH "Invalid fragment shader source path."
 #endif 
 
 
 namespace Renderer {
 namespace SceneDrawing {
-namespace LightingPass {
+namespace CombinePass {
 
-LightingVertexProgram::LightingVertexProgram()
+CombineVertexProgram::CombineVertexProgram()
 {
     std::vector<const char*> compilerInput { VersionFlag.data() };
 
-    const std::string shaderSource = Utils::readFile(LIGHTING_MATERIAL_VERTEX_SOURCE_PATH);
+    const std::string shaderSource = Utils::readFile(COMBINE_MATERIAL_VERTEX_SOURCE_PATH);
     compilerInput.emplace_back(shaderSource.data());
 
     _program = glCreateProgram();
@@ -65,46 +65,40 @@ LightingVertexProgram::LightingVertexProgram()
     glDeleteShader(shader); 
 }
 
-LightingVertexProgram::~LightingVertexProgram() {
+CombineVertexProgram::~CombineVertexProgram() {
     if (_program != -1) {
         glDeleteProgram(_program);
     }
 }
 
-LightingVertexProgram::LightingVertexProgram(LightingVertexProgram&& other) {
+CombineVertexProgram::CombineVertexProgram(CombineVertexProgram&& other) {
     std::swap(other._program, this->_program);
 }
 
-LightingVertexProgram& LightingVertexProgram::operator=(LightingVertexProgram&& other) {
+CombineVertexProgram& CombineVertexProgram::operator=(CombineVertexProgram&& other) {
     std::swap(other._program, this->_program);
 
     return *this;
 }
 
-LightingVertexProgram::operator unsigned int() const {
+CombineVertexProgram::operator unsigned int() const {
     return _program;
 }
 
-void LightingVertexProgram::prepareShared(const SharedData& data) const {
+void CombineVertexProgram::prepareShared(const SharedData& data) const {
     
 }
 
-void LightingVertexProgram::prepareIndividual() const {
+void CombineVertexProgram::prepareIndividual() const {
     
 }
 
 
-
-LightingFragmentProgram::LightingFragmentProgram(const LightType type)
-: _type(type)
+CombineFragmentProgram::CombineFragmentProgram()
 {
     std::vector<const char*> compilerInput { VersionFlag.data() };
 
-    if (_type == LightType::DIRECTIONAL) {
-        compilerInput.emplace_back(DirectionalLightFlag.data());
-    }
-
-    const std::string shaderSource = Utils::readFile(LIGHTING_MATERIAL_FRAGMENT_SOURCE_PATH);
+    const std::string shaderSource = Utils::readFile(COMBINE_MATERIAL_FRAGMENT_SOURCE_PATH);
     compilerInput.emplace_back(shaderSource.data());
 
     _program = glCreateProgram();
@@ -145,91 +139,51 @@ LightingFragmentProgram::LightingFragmentProgram(const LightType type)
 
     // Setup textures
     glProgramUniform1i(_program, glGetUniformLocation(_program, AlbedoSamplerUniform.data()), AlbedoTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, PositionSamplerUniform.data()), PositionTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), NormalMapTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, MetallicRoughnessSamplerUniform.data()), MetallicRoughnessTextureLocation);
-
-    std::stringstream ss;
-    for (int i=0; i<MaxDirectionalLightsPerExecute; ++i) {
-        ss << DirectionalLightShadowmapSamplersUniform << '[' << i << ']';
-        glProgramUniform1i(_program, glGetUniformLocation(_program, ss.str().data()), DirectionalLightShadowmapTexturesLocationBegin + i);
-        ss.clear();
-        ss.str(std::string());
-    }
+    glProgramUniform1i(_program, glGetUniformLocation(_program, DiffuseSamplerUniform.data()), DiffuseTextureLocation);
+    glProgramUniform1i(_program, glGetUniformLocation(_program, SpecularSamplerUniform.data()), SpecularTextureLocation);
 
     // Delete shader as we only need program.
     glDetachShader(_program, shader);
     glDeleteShader(shader); 
 }
 
-LightingFragmentProgram::~LightingFragmentProgram() {
+CombineFragmentProgram::~CombineFragmentProgram() {
     if (_program != -1) {
         glDeleteProgram(_program);
     }
 }
 
-LightingFragmentProgram::LightingFragmentProgram(LightingFragmentProgram&& other) {
+CombineFragmentProgram::CombineFragmentProgram(CombineFragmentProgram&& other) {
     std::swap(other._program, this->_program);
-    std::swap(other._type, this->_type);
 }
 
-LightingFragmentProgram& LightingFragmentProgram::operator=(LightingFragmentProgram&& other) {
+CombineFragmentProgram& CombineFragmentProgram::operator=(CombineFragmentProgram&& other) {
     std::swap(other._program, this->_program);
-    std::swap(other._type, this->_type);
     return *this;
 }
 
-LightingFragmentProgram::operator unsigned int() const {
+CombineFragmentProgram::operator unsigned int() const {
     return _program;
 }
 
-void LightingFragmentProgram::prepareShared(const SharedData& data) const {
+void CombineFragmentProgram::prepareShared(const SharedData& data) const {
     glActiveTexture(GL_TEXTURE0 + AlbedoTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.albedoTexture);
 
-    glActiveTexture(GL_TEXTURE0 + PositionTextureLocation);
-    glBindTexture(GL_TEXTURE_2D, data.positionTexture);
+    glActiveTexture(GL_TEXTURE0 + DiffuseTextureLocation);
+    glBindTexture(GL_TEXTURE_2D, data.diffuseTexture);
 
-    glActiveTexture(GL_TEXTURE0 + NormalMapTextureLocation);
-    glBindTexture(GL_TEXTURE_2D, data.normalMapTexture);
-
-    glActiveTexture(GL_TEXTURE0 + MetallicRoughnessTextureLocation);
-    glBindTexture(GL_TEXTURE_2D, data.metallicRoughnessTexture);
-
-    glProgramUniform4fv(_program, glGetUniformLocation(_program, CameraPositionUniform.data()), 1, glm::value_ptr(data.cameraPosition));
-
-    const unsigned int directionalLightsCount = glm::min(static_cast<unsigned int>(data.directionalLightsTransforms.size()), MaxDirectionalLightsPerExecute);
-    glProgramUniform1ui(_program, glGetUniformLocation(_program, DirectionalLightsCountUniform.data()), directionalLightsCount);
-
-    for (int i=0; i<directionalLightsCount; ++i) {
-        glActiveTexture(GL_TEXTURE0 + DirectionalLightShadowmapTexturesLocationBegin + i);
-        glBindTexture(GL_TEXTURE_2D, data.directionalLightsShadowmapTextureIds[i]);
-
-        std::stringstream ss;
-        ss << DirectionalLightTransformsUniform << '[' << i << ']';
-        glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, GL_FALSE, glm::value_ptr(data.directionalLightsTransforms[i]));
-        ss.clear();
-        ss.str(std::string());
-
-        ss << DirectionalLightDirectionsUniform << '[' << i << ']';
-        glProgramUniform4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, glm::value_ptr(data.directionalLightsDirections[i]));
-        ss.clear();
-        ss.str(std::string());
-
-        ss << DirectionalLightColor << '[' << i << ']';
-        glProgramUniform4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, glm::value_ptr(data.directionalLightsColors[i]));
-        ss.clear();
-        ss.str(std::string());
-    }
+    glActiveTexture(GL_TEXTURE0 + SpecularTextureLocation);
+    glBindTexture(GL_TEXTURE_2D, data.specularTexture);
 }
 
-void LightingFragmentProgram::prepareIndividual() const {
+void CombineFragmentProgram::prepareIndividual() const {
     // noop
 }
 
 
 
-LightingPipeline::LightingPipeline(LightingVertexProgram& vertexProgram, LightingFragmentProgram& fragmentProgram)
+CombinePipeline::CombinePipeline(CombineVertexProgram& vertexProgram, CombineFragmentProgram& fragmentProgram)
 : _vertexProgram(vertexProgram)
 , _fragmentProgram(fragmentProgram)
 {
@@ -253,20 +207,20 @@ LightingPipeline::LightingPipeline(LightingVertexProgram& vertexProgram, Lightin
 #endif
 }
 
-LightingPipeline::~LightingPipeline() {
+CombinePipeline::~CombinePipeline() {
     if (_pipeline != -1) {
         glDeleteProgramPipelines(1, &_pipeline);
     }
 }
 
-LightingPipeline::LightingPipeline(LightingPipeline&& other)
+CombinePipeline::CombinePipeline(CombinePipeline&& other)
 : _vertexProgram(other._vertexProgram)
 , _fragmentProgram(other._fragmentProgram)
 {
     std::swap(this->_pipeline, other._pipeline);
 }
 
-LightingPipeline& LightingPipeline::operator=(LightingPipeline&& other) {
+CombinePipeline& CombinePipeline::operator=(CombinePipeline&& other) {
     std::swap(this->_vertexProgram, other._vertexProgram);
     std::swap(this->_fragmentProgram, other._fragmentProgram);
     std::swap(this->_pipeline, other._pipeline);
@@ -274,29 +228,28 @@ LightingPipeline& LightingPipeline::operator=(LightingPipeline&& other) {
     return *this;
 }
 
-LightingPipeline::operator unsigned int() const {
+CombinePipeline::operator unsigned int() const {
     return _pipeline;
 }
 
-LightingPipeline::ScopedBinding LightingPipeline::Bind() const {
+CombinePipeline::ScopedBinding CombinePipeline::Bind() const {
     return { * this };
 }
 
-void LightingPipeline::prepareShared(const SharedData& data) const
+void CombinePipeline::prepareShared(const SharedData& data) const
 {
     _vertexProgram.prepareShared(data);
     _fragmentProgram.prepareShared(data);
 }
 
-void LightingPipeline::prepareIndividual() const
+void CombinePipeline::prepareIndividual() const
 {
     _vertexProgram.prepareIndividual();
     _fragmentProgram.prepareIndividual();
 }
 
 
-
-void LightingPipelineManager::buildVariant(const PropertiesSet& properties)
+void CombinePipelineManager::buildVariant(const PropertiesSet& properties)
 {
     const auto vertexProperties = properties & PropertiesAffectingVertexProgram;
     const auto fragmentProperties = properties & PropertiesAffectingFragmentProgram;
@@ -304,26 +257,24 @@ void LightingPipelineManager::buildVariant(const PropertiesSet& properties)
     if (!_cachedVertexPrograms.contains(vertexProperties)) {
         _cachedVertexPrograms.emplace(
             vertexProperties,
-            LightingVertexProgram()
+            CombineVertexProgram()
         );
     }
 
     if (!_cachedFragmentPrograms.contains(fragmentProperties)) {
         _cachedFragmentPrograms.emplace(
             fragmentProperties,
-            LightingFragmentProgram{
-                (fragmentProperties & PipelineProperties::LIGHTTYPE_DIRECTIONAL) != 0 ? LightType::DIRECTIONAL : LightType::NONE,
-            }
+            CombineFragmentProgram()
         );
     }
 
     auto& vertexProgram = _cachedVertexPrograms.at(vertexProperties);
     auto& fragmentProgram = _cachedFragmentPrograms.at(fragmentProperties);
 
-    _builtPipelines.emplace(properties, LightingPipeline(vertexProgram, fragmentProgram));
+    _builtPipelines.emplace(properties, CombinePipeline(vertexProgram, fragmentProgram));
 }
 
-const LightingPipeline& LightingPipelineManager::GetPipeline(const PropertiesSet& properties)
+const CombinePipeline& CombinePipelineManager::GetPipeline(const PropertiesSet& properties)
 {
     if (!_builtPipelines.contains(properties)) {
         buildVariant(properties);

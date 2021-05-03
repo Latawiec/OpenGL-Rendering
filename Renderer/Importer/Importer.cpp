@@ -77,6 +77,7 @@ Scene::Base::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh
 
     const auto& indicesAccessorId = primitive.indices;
 
+    std::vector<GLuint> buffers = {};
 
     for (const auto&[attrLocation, accessorId] : locationToAccessorMap) {
         const auto& accessor = model.accessors[accessorId]; 
@@ -94,6 +95,7 @@ Scene::Base::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh
         glVertexAttribPointer(attrLocation, attrSize, accessor.componentType,
                                 accessor.normalized ? GL_TRUE : GL_FALSE,
                                 byteStride, BUFFER_OFFSET(accessor.byteOffset));
+        buffers.push_back(glBuffer);
     }
 
     // Indices
@@ -107,12 +109,11 @@ Scene::Base::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBufferView.byteLength,
                     &indicesBuffer.data.at(0) + indicesBufferView.byteOffset, GL_STATIC_DRAW);
+    buffers.push_back(glBuffer);
 
     glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    return Scene::Base::Mesh{ Scene::Base::VertexDataBase(VAO, indicesAccessor.count) };
+    return Scene::Base::Mesh{ Scene::Base::VertexDataBase(VAO, indicesAccessor.count, std::move(buffers)) };
 }
 
 Scene::Base::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {

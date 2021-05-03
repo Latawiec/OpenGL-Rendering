@@ -1,9 +1,9 @@
-#include "../SceneDrawing/GraphicBuffer.hpp"
+#include "../SceneDrawing/BasePassBuffer.hpp"
 
 namespace Renderer {
 namespace SceneDrawing {
 
-GraphicBuffer::GraphicBuffer(unsigned int width, unsigned int height)
+BasePassBuffer::BasePassBuffer(unsigned int width, unsigned int height)
 : FramebufferBase(width, height)
 {
     const auto binding = this->Bind();
@@ -15,17 +15,17 @@ GraphicBuffer::GraphicBuffer(unsigned int width, unsigned int height)
     }(std::make_index_sequence<Output::SIZE>{});
 
     // Set attachments for all but Depth. I'll do it manually for now...
-    const GLenum bufs[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+    const GLenum bufs[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6 };
     glDrawBuffers(sizeof(bufs)/sizeof(decltype(bufs[0])), bufs);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-unsigned int GraphicBuffer::getTexture(const GraphicBuffer::Output texture) {
+unsigned int BasePassBuffer::getTexture(const BasePassBuffer::Output texture) {
     return outputTextures_[texture];
 }
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::Position>() {
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::Position>() {
     const auto outputTexture = outputTextures_[Output::Position];
     glBindTexture(GL_TEXTURE_2D, outputTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, _width, _height, 0, GL_RGB, GL_UNSIGNED_SHORT, nullptr);
@@ -37,7 +37,7 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::Position>() {
 }
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::Albedo>() {
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::Albedo>() {
     const auto outputTexture = outputTextures_[Output::Albedo];
     glBindTexture(GL_TEXTURE_2D, outputTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
@@ -49,7 +49,7 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::Albedo>() {
 }
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::Normals>() {
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::Normals>() {
     const auto outputTexture = outputTextures_[Output::Normals];
     glBindTexture(GL_TEXTURE_2D, outputTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16_SNORM, _width, _height, 0, GL_RGB, GL_UNSIGNED_SHORT, nullptr);
@@ -61,7 +61,7 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::Normals>() {
 }
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::MetallicRoughness>() {
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::MetallicRoughness>() {
     const auto outputTexture = outputTextures_[Output::MetallicRoughness];
     glBindTexture(GL_TEXTURE_2D, outputTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
@@ -73,7 +73,7 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::MetallicRoughness>() {
 }
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::SilhouetteMap>() {
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::SilhouetteMap>() {
     const auto outputTexture = outputTextures_[Output::SilhouetteMap];
     glBindTexture(GL_TEXTURE_2D, outputTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -83,7 +83,7 @@ void GraphicBuffer::setupTexture<GraphicBuffer::Output::SilhouetteMap>() {
 }
 
 template<>
-void GraphicBuffer::setupTexture<GraphicBuffer::Output::Depth>() {
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::Depth>() {
     const auto outputTexture = outputTextures_[Output::Depth];
     glBindTexture(GL_TEXTURE_2D, outputTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, _width, _height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);

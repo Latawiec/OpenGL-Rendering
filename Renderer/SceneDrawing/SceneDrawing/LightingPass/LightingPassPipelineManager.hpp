@@ -73,7 +73,7 @@ class LightingFragmentProgram {
 
     static constexpr std::string_view CameraPositionUniform = "cameraPosition";
 
-    static constexpr std::string_view DirectionalLightsCountUniform = "directionalLightsCount";
+    static constexpr std::string_view DirectionalLightsCountUniform = "directionalLightCount";
     static constexpr std::string_view DirectionalLightTransformsUniform = "directionalLightTransforms";
     static constexpr std::string_view DirectionalLightDirectionsUniform = "directionalLightDirections";
     static constexpr std::string_view DirectionalLightColor = "directionalLightColor";

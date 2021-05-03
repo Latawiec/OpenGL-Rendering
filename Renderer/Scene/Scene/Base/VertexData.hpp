@@ -37,38 +37,45 @@ using Float = VertexAttribute<1, float>;
 class VertexDataBase {   
 protected:
     unsigned int _VAO = -1;
-    size_t _elementsCount{};
+    // I should be able to only keep VAO and OpenGL would keep all VBOs and EBOs bound to it automagically... but it doesnt. So I keep them.
+    std::vector<GLuint> _buffers = {};
+    size_t _elementsCount = 0;
 
     VertexDataBase& operator=(const VertexDataBase&) = delete;
     VertexDataBase(const VertexDataBase&) = delete;
 public:
-    constexpr VertexDataBase() {}
+    VertexDataBase() {}
 
     VertexDataBase(const std::vector<unsigned int>& indices) :
     _elementsCount(indices.size()) {}
 
-    VertexDataBase(const GLuint VAO, const size_t elementsCount) :
+    VertexDataBase(const GLuint VAO, const size_t elementsCount, std::vector<GLuint> buffers = {}) :
     _VAO(VAO),
+    _buffers(std::move(buffers)),
     _elementsCount(elementsCount) {}
 
     VertexDataBase(VertexDataBase&& other) noexcept {
-        this->_VAO = other._VAO;
-        this->_elementsCount = other._elementsCount;
-        other._VAO = -1;
-        other._elementsCount = 0;
+        std::swap(this->_VAO, other._VAO);
+        std::swap(this->_buffers, other._buffers);
+        std::swap(this->_elementsCount, other._elementsCount);
     }
 
     VertexDataBase& operator=(VertexDataBase&& other) noexcept {
-        this->_VAO = other._VAO;
-        this->_elementsCount = other._elementsCount;
+        std::swap(this->_VAO, other._VAO);
+        std::swap(this->_buffers, other._buffers);
+        std::swap(this->_elementsCount, other._elementsCount);
 
-        other._VAO = -1;
-        other._elementsCount = 0;
         return *this;
     }
 
     ~VertexDataBase() {
-        glDeleteVertexArrays(1, &_VAO);
+        if (_VAO != -1) {
+            glDeleteVertexArrays(1, &_VAO);
+        }
+
+        if (_buffers.size() > 0) {
+            glDeleteBuffers(_buffers.size(), _buffers.data());
+        }
     }
 
     constexpr int vertexCount() const {
@@ -112,12 +119,9 @@ public:
         layoutInterleavingData(data);
         layoutInterleavingAttributes<VertexAttributeDescription...>();
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        _buffers = { EBO, VBO };
 
         glBindVertexArray(0);
-
-        glDeleteBuffers(1, &EBO);
-        glDeleteBuffers(1, &VBO);
     }
 
 private:
@@ -157,6 +161,9 @@ public:
         glBindVertexArray(_VAO);
 
         GLuint EBO, VBO;
+        glGenBuffers(1, &EBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
 
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -165,14 +172,9 @@ public:
         layoutSequentialAttributes<VertexAttributeDescription...>();
         layoutSequentialData(data...);
 
-        glGenBuffers(1, &EBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
+        _buffers = { EBO, VBO };
 
         glBindVertexArray(0);
-
-        glDeleteBuffers(1, &EBO);
-        glDeleteBuffers(1, &VBO);
     }
 
     template<int Index>
@@ -195,7 +197,7 @@ private:
 
     inline void allocateBuffer() {
         const int bufferByteSize = _size * (VertexAttributeDescription::byte_size::value + ...);
-        glBufferData(GL_ARRAY_BUFFER, bufferByteSize, 0, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, bufferByteSize, NULL, GL_STATIC_DRAW);
     }
 
     inline void layoutSequentialData(const typename VertexAttributeDescription::value_type* ... data) {

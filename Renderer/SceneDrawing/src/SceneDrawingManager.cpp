@@ -101,7 +101,8 @@ ShadowMappingPass::SharedData SceneDrawingManager::createFittingShadowmapTransfo
 SceneDrawingManager::SceneDrawingManager(const Renderer::Scene::Scene& scene, const int windowWidth, const int windowHeight)
 : _scene(scene)
 , _transformProcessor(_scene)
-, _deferredBuffers(windowWidth, windowHeight)
+, _basePassBuffer(windowWidth, windowHeight)
+, _lightingPassBuffer(windowWidth, windowHeight)
 , _width(windowWidth)
 , _height(windowHeight) {
     auto indicesVector = std::vector<unsigned int>(indices, indices + 6);
@@ -113,29 +114,55 @@ void SceneDrawingManager::Draw() {
     ShadowMappingPass();
     BasePass();
     LightingPass();
+    CombinePass();
 
     // {
         // glDisable(GL_DEPTH_TEST);
         // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // glViewport(0, 0, _width, _height);
 
-        //  _textureDrawProgram.draw(_deferredBuffers.getTexture(GraphicBuffer::Output::Normals));
+        //  _textureDrawProgram.draw(_lightingPassBuffer.getTexture(LightingPassBuffer::Output::Diffuse));
 
     //     // Test Shadowmap
-    //     glViewport(0, 0, _deferredBuffers.GetHeight()/3.f, _deferredBuffers.GetHeight()/3.f);
+    //     glViewport(0, 0, _basePassBuffer.GetHeight()/3.f, _basePassBuffer.GetHeight()/3.f);
     //     const auto& shadowMap = *_directionalLightShadowMaps.begin();
     //     _textureDrawProgram.draw(shadowMap.second.getTexture());
 
     // }
 }
 
+void SceneDrawingManager::CombinePass()
+{
+    CombinePass::CombinePipelineManager::PropertiesSet properties = 0;
+    const auto& pipeline = _combinePassPipelineManager.GetPipeline(properties);
+
+    CombinePass::SharedData data;
+    data.albedoTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Albedo);
+    data.diffuseTexture = _lightingPassBuffer.getTexture(LightingPassBuffer::Output::Diffuse);
+    data.specularTexture = _lightingPassBuffer.getTexture(LightingPassBuffer::Output::Specular);
+
+    const auto binding = pipeline.Bind();
+    pipeline.prepareShared(data);
+    pipeline.prepareIndividual();
+
+    // Draw to screen
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, _width, _height);
+
+    Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { _framebufferPlane };
+    glDrawElements(GL_TRIANGLES, _framebufferPlane.vertexCount(), GL_UNSIGNED_INT, 0);
+}
+
 void SceneDrawingManager::LightingPass() 
 {
+    const auto gbufferBinding = _lightingPassBuffer.Bind();
+
     LightingPass::SharedData data;
-    data.albedoTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::Albedo);
-    data.positionTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::Position);
-    data.normalMapTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::Normals);
-    data.metallicRoughnessTexture = _deferredBuffers.getTexture(GraphicBuffer::Output::MetallicRoughness);
+    data.albedoTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Albedo);
+    data.positionTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Position);
+    data.normalMapTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Normals);
+    data.metallicRoughnessTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::MetallicRoughness);
 
     // Again im getting first view coz I still have no "Active Camera" thing... ehh
     const auto& cameraNode = _scene.GetSceneViews().begin()->nodeId;
@@ -167,11 +194,6 @@ void SceneDrawingManager::LightingPass()
     const auto binding = pipeline.Bind();
     pipeline.prepareShared(data);
     pipeline.prepareIndividual();
-
-    // Just print to window for now.
-    glDisable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glViewport(0, 0, _width, _height);
 
     Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { _framebufferPlane };
     glDrawElements(GL_TRIANGLES, _framebufferPlane.vertexCount(), GL_UNSIGNED_INT, 0);
@@ -262,7 +284,7 @@ void SceneDrawingManager::BasePass()
     viewData.cameraProjectionTransform = projTransform;
     viewData.cameraViewTransform = viewTransform;
 
-    const auto binding = _deferredBuffers.Bind();
+    const auto binding = _basePassBuffer.Bind();
     glEnable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

@@ -7,9 +7,11 @@ find_package(glm CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME}
     src/BasePassPipelineManager.cpp
+    src/BasePassBuffer.cpp
+    src/CombinePassPipelineManager.cpp
     src/DepthBuffer.cpp
     src/FramebufferBase.cpp
-    src/GraphicBuffer.cpp
+    src/LightingPassBuffer.cpp
     src/LightingPassPipelineManager.cpp
     src/SceneDrawingManager.cpp
     src/ShadowMappingPipelineManager.cpp
@@ -46,6 +48,9 @@ PRIVATE
 
     LIGHTING_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Lighting.vert.glsl"
     LIGHTING_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Lighting.frag.glsl"
+
+    COMBINE_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Combine.vert.glsl"
+    COMBINE_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Combine.frag.glsl"
 )
 
 target_include_directories(${PROJECT_NAME}

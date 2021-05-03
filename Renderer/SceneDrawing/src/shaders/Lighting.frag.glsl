@@ -5,7 +5,8 @@
 
 in vec2 TextureCoord;
 
-out vec4 FragColor;
+layout (location = 0) out vec3 DiffuseTexture;
+layout (location = 1) out vec3 SpecularTexture;
 
 uniform sampler2D albedoTexture;
 uniform sampler2D positionTexture;
@@ -71,17 +72,21 @@ vec3 CalculateSpecular_DirectionalLight(in vec2 coord, in uint lightIndex) {
 }
 
 void main() {
-    // for (int i=0; i<directionalLightCount; i++) {
-        int i = 0;
-        float shadow = CalculateShadow_DirectionalLight(TextureCoord, i);
-        vec3 diffuse = CalculateDiffuse_DirectionalLight(TextureCoord, i);
-        vec3 specular = CalculateSpecular_DirectionalLight(TextureCoord, i);
+    vec3 diffuse = vec3(0);
+    vec3 specular = vec3(0);
+    
+    for (int i=0; i<directionalLightCount; i++) {
+
+        float shadowFactor = CalculateShadow_DirectionalLight(TextureCoord, i);
+        vec3 diffuseFactor = CalculateDiffuse_DirectionalLight(TextureCoord, i);
+        vec3 specularFactor = CalculateSpecular_DirectionalLight(TextureCoord, i);
 
         vec3 lightColor = directionalLightColor[i].rgb;
         
-        vec3 lighting = (1.0 - shadow) * diffuse * lightColor;
-        vec3 spec =  (1.0 - shadow) * specular * lightColor;
-    // }
-    vec4 albedo = texture(albedoTexture, TextureCoord);
-    FragColor = vec4(lighting, 1) * albedo + vec4(spec, 0);
+        diffuse += (1.0 - shadowFactor) * diffuseFactor * lightColor;
+        specular += (1.0 - shadowFactor) * specularFactor * lightColor;
+    }
+
+    DiffuseTexture = diffuse;
+    SpecularTexture = specular;
 }
