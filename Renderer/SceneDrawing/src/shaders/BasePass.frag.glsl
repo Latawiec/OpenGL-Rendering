@@ -101,7 +101,7 @@ vec2 SampleRoughnessMetallic(in vec2 coords)
     vec2 metallicRoughness = texture(metallicRoughness, coords).bg;
     return metallicRoughness;
 #else
-    return vec2(0);
+    return vec2(0, 1);
 #endif
 }
 

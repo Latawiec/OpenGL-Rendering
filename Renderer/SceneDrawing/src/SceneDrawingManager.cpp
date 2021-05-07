@@ -152,6 +152,7 @@ void SceneDrawingManager::CombinePass()
     data.albedoTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Albedo);
     data.diffuseTexture = _lightingPassBuffer.getTexture(LightingPassBuffer::Output::Diffuse);
     data.specularTexture = _lightingPassBuffer.getTexture(LightingPassBuffer::Output::Specular);
+    data.ditherTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Dither);
 
     const auto binding = pipeline.Bind();
     pipeline.prepareShared(data);

@@ -141,6 +141,7 @@ CombineFragmentProgram::CombineFragmentProgram()
     glProgramUniform1i(_program, glGetUniformLocation(_program, AlbedoSamplerUniform.data()), AlbedoTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, DiffuseSamplerUniform.data()), DiffuseTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, SpecularSamplerUniform.data()), SpecularTextureLocation);
+    glProgramUniform1i(_program, glGetUniformLocation(_program, DitheringSamplerUniform.data()), DitherTextureLocation);
 
     // Delete shader as we only need program.
     glDetachShader(_program, shader);
@@ -175,6 +176,9 @@ void CombineFragmentProgram::prepareShared(const SharedData& data) const {
 
     glActiveTexture(GL_TEXTURE0 + SpecularTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.specularTexture);
+
+    glActiveTexture(GL_TEXTURE0 + DitherTextureLocation);
+    glBindTexture(GL_TEXTURE_2D, data.ditherTexture);
 }
 
 void CombineFragmentProgram::prepareIndividual() const {

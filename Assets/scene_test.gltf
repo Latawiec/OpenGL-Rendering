@@ -1050,7 +1050,8 @@
         {
             "doubleSided" : true,
             "extras" : {
-                "ProgramType" : "Contour"
+                "ProgramType" : "Contour",
+                "Dithering" : "BlueNoise"
             },
             "name" : "Material.004",
             "normalTexture" : {
@@ -1096,7 +1097,7 @@
             "doubleSided" : true,
             "extras" : {
                 "ProgramType" : "Contour",
-                "Dithering" : "BlueNoise"
+                "Dithering" : "Bayer8x8"
             },
             "name" : "Material.002",
             "pbrMetallicRoughness" : {
@@ -1109,6 +1110,9 @@
         },
         {
             "doubleSided" : true,
+            "extras" : {
+                "Dithering" : "Bayer8x8"
+            },
             "name" : "Material",
             "pbrMetallicRoughness" : {
                 "baseColorTexture" : {
@@ -1122,6 +1126,9 @@
         },
         {
             "doubleSided" : true,
+            "extras" : {
+                "Dithering" : "Bayer8x8"
+            },
             "name" : "Material.005",
             "pbrMetallicRoughness" : {
                 "baseColorTexture" : {
@@ -1135,6 +1142,9 @@
         },
         {
             "doubleSided" : true,
+            "extras" : {
+                "Dithering" : "Bayer8x8"
+            },
             "name" : "Material.006",
             "pbrMetallicRoughness" : {
                 "baseColorTexture" : {
