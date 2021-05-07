@@ -33,10 +33,6 @@ int main() {
 		return -1;
 	}
 
-    glViewport(0, 0, windowWidth, windowHeight);
-
-    glClearColor(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
-
     Renderer::Scene::Scene mainScene;
     Renderer::Importer::Importer gltfImporter;
     auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test.gltf", mainScene);
@@ -50,6 +46,22 @@ int main() {
     const auto cacheLightTransform = lightNode.GetTransform();
 
     Renderer::SceneDrawing::SceneDrawingManager sceneDrawingManager(mainScene, windowWidth, windowHeight);
+
+    // Just stick it in there...
+    struct WindowData {
+        Renderer::SceneDrawing::SceneDrawingManager* drawingManager;
+    } windowData { &sceneDrawingManager };
+
+    glfwSetWindowUserPointer(window, &windowData);    
+    glfwSetWindowSizeCallback(window, [](GLFWwindow* window, int width, int height) {
+        WindowData* userData = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+        assert(userData != nullptr);
+
+        userData->drawingManager->SetWindowSize(width, height);
+    });
+
+    sceneDrawingManager.SetResolution(windowWidth / 2, windowHeight / 2);
+
     while(!glfwWindowShouldClose(window)) {
         //stolenLight.SetTransform(glm::translate(glm::mat4(1), glm::vec3(5 * glm::sin(glfwGetTime()), 2.5, 1)));
         sceneDrawingManager.Draw();

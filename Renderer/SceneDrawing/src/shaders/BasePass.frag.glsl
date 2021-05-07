@@ -16,6 +16,10 @@
 #define METALLIC_ROUGHNESS_TEXTURE 0
 #endif
 
+#ifndef DITHERING
+#define DITHERING 0
+#endif
+
 in VS_OUTPUT {
     vec3 Position;
 #if NORMAL_MAP_TEXTURE
@@ -32,6 +36,7 @@ layout (location = 1) out vec4 ColorMap;
 layout (location = 2) out vec3 NormalMap;
 layout (location = 3) out vec2 RoughnessMetallic;
 layout (location = 4) out vec4 SilhouetteMap;
+layout (location = 5) out float Dither;
 
 #ifdef BASE_COLOUR_TEXTURE
 uniform sampler2D baseColor;
@@ -45,10 +50,15 @@ uniform sampler2D normalMap;
 uniform sampler2D metallicRoughness;
 #endif
 
+#if DITHERING
+uniform sampler2D ditherTexture;
+#endif
+
 vec4 SampleBaseColor(in vec2 coords);
 vec3 SampleNormalMap(in vec2 coords);
 vec4 SampleSilhouette(in vec2 coords);
 vec2 SampleRoughnessMetallic(in vec2 coords);
+float SampleDither(in vec2 fragPos);
 
 void main()
 {
@@ -57,50 +67,52 @@ void main()
     NormalMap = SampleNormalMap(IN.TexCoords);
     RoughnessMetallic = SampleRoughnessMetallic(IN.TexCoords);
     SilhouetteMap = IN.Silouette;
-
-    //ColorMap = (1.4f - ShadowCalculation(IN.FragPosLightSpace)) * vec4(1);
+    Dither = SampleDither(gl_FragCoord.xy);
 }
 
 
+vec4 SampleBaseColor(vec2 coords) 
+{
 #ifdef BASE_COLOUR_TEXTURE
-vec4 SampleBaseColor(vec2 coords) 
-{
     return texture(baseColor, coords.xy);
-}
 #else
-vec4 SampleBaseColor(vec2 coords) 
-{
     return vec4(1);
+#endif
 }
-#endif // BASE_COLOUR_TEXTURE
 
 
-#if NORMAL_MAP_TEXTURE
 vec3 SampleNormalMap(vec2 coords)
 {
+#if NORMAL_MAP_TEXTURE
     vec3 normal = texture(normalMap, coords).rgb;
     normal = normalize(normal * 2.0 - 1.0);
     // TODO: Just revert it when importing texture. No need to eat cycles here each frame.
     normal *= vec3(1, -1, 1);
     return normalize(IN.NormalTangentSpace * normal);
-}
 #else
-vec3 SampleNormalMap(vec2 coords)
-{
     return IN.Normal;
+#endif
 }
-#endif // NORMAL_MAP_TEXTURE
 
-#if METALLIC_ROUGHNESS_TEXTURE
+
 vec2 SampleRoughnessMetallic(in vec2 coords) 
 {
+#if METALLIC_ROUGHNESS_TEXTURE
     vec2 metallicRoughness = texture(metallicRoughness, coords).bg;
     return metallicRoughness;
-}
 #else
-vec2 SampleRoughnessMetallic(in vec2 coords) 
-{
     return vec2(0);
-}
 #endif
+}
 
+
+float SampleDither(in vec2 fragPos)
+{
+#if DITHERING
+    vec2 dim = textureSize(ditherTexture, 0);
+    // We assume that Dither texture is repeating.
+    return texture(ditherTexture, fragPos/dim).r;
+#else
+    return 0.5;
+#endif
+}

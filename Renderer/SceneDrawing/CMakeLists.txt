@@ -11,6 +11,7 @@ add_library(${PROJECT_NAME}
     src/CombinePassPipelineManager.cpp
     src/DepthBuffer.cpp
     src/FramebufferBase.cpp
+    src/GlobalTexturesBuffer.cpp
     src/LightingPassBuffer.cpp
     src/LightingPassPipelineManager.cpp
     src/SceneDrawingManager.cpp
@@ -24,6 +25,7 @@ add_dependencies(${PROJECT_NAME}
     Renderer_Programs_EdgeProgram
     Renderer_Programs_TextureProgram
     Renderer_Programs_DebugMeshProgram
+    Assets
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -32,6 +34,7 @@ PRIVATE
     glad::glad
     Renderer_Utils
     Renderer_Scene
+    Assets
 PUBLIC
     Renderer_Programs_EdgeProgram
     Renderer_Programs_TextureProgram

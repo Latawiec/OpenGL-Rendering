@@ -108,10 +108,11 @@ void BasePassVertexProgram::prepareIndividual(const IndividualData& sceneObject)
 
 
 
-BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool hasNormalMapTexture, bool hasMetallicRoughnessTexture)
+BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool hasNormalMapTexture, bool hasMetallicRoughnessTexture, bool dithering)
 : _hasBaseColorTexture(hasBaseColorTexture)
 , _hasNormalMapTexture(hasNormalMapTexture)
 , _hasMetallicRoughnessTexture(hasMetallicRoughnessTexture)
+, _dithering(dithering)
 {
     std::vector<const char*> compilerInput { VersionFlag.data() };
 
@@ -125,6 +126,10 @@ BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool 
 
     if (_hasMetallicRoughnessTexture) {
         compilerInput.emplace_back(MetallicRoughnessTextureFlag.data());
+    }
+
+    if (_dithering) {
+        compilerInput.emplace_back(DitheringFlag.data());
     }
 
     const std::string shaderSource = Utils::readFile(BASEPASS_MATERIAL_FRAGMENT_SOURCE_PATH);
@@ -179,6 +184,10 @@ BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool 
         glProgramUniform1i(_program, glGetUniformLocation(_program, MetallicRougnessSamplerUniform.data()), MetallicRoughnessTextureLocation);
     }
 
+    if (_dithering) {
+        glProgramUniform1i(_program, glGetUniformLocation(_program, DitheringSamplerUniform.data()), DitherTextureLocation);
+    }
+
     // Delete shader as we only need program.
     glDetachShader(_program, shader);
     glDeleteShader(shader);  
@@ -195,6 +204,7 @@ BasePassFragmentProgram::BasePassFragmentProgram(BasePassFragmentProgram&& other
     std::swap(other._hasBaseColorTexture, this->_hasBaseColorTexture);
     std::swap(other._hasNormalMapTexture, this->_hasNormalMapTexture);
     std::swap(other._hasMetallicRoughnessTexture, this->_hasMetallicRoughnessTexture);
+    std::swap(other._dithering, this->_dithering);
 }
 
 BasePassFragmentProgram& BasePassFragmentProgram::operator=(BasePassFragmentProgram&& other) {
@@ -202,6 +212,7 @@ BasePassFragmentProgram& BasePassFragmentProgram::operator=(BasePassFragmentProg
     std::swap(other._hasBaseColorTexture, this->_hasBaseColorTexture);
     std::swap(other._hasNormalMapTexture, this->_hasNormalMapTexture);
     std::swap(other._hasMetallicRoughnessTexture, this->_hasMetallicRoughnessTexture);
+    std::swap(other._dithering, this->_dithering);
     return *this;
 }
 
@@ -230,6 +241,12 @@ void BasePassFragmentProgram::prepareIndividual(const IndividualData& sceneObjec
         assert(sceneObject.metallicRoughnessTexture != nullptr);
         glActiveTexture(GL_TEXTURE0 + MetallicRoughnessTextureLocation);
         glBindTexture(GL_TEXTURE_2D, static_cast<unsigned int>(*sceneObject.metallicRoughnessTexture));
+    }
+
+    if (_dithering) {
+        assert(sceneObject.ditherTexture != nullptr);
+        glActiveTexture(GL_TEXTURE0 + DitherTextureLocation);
+        glBindTexture(GL_TEXTURE_2D, static_cast<unsigned int>(*sceneObject.ditherTexture));
     }
 }
 
@@ -314,7 +331,6 @@ void BasePassPipelineManager::buildVariant(const PropertiesSet& properties)
             BasePassVertexProgram(
                 (vertexProperties & PipelineProperties::SKIN) != 0,
                 (vertexProperties & PipelineProperties::NORMAL_MAP_TEXTURE) != 0
-
             )
         );
     }
@@ -325,7 +341,8 @@ void BasePassPipelineManager::buildVariant(const PropertiesSet& properties)
             BasePassFragmentProgram(
                 (fragmentProperties & PipelineProperties::BASE_COLOR_TEXTURE) != 0,
                 (fragmentProperties & PipelineProperties::NORMAL_MAP_TEXTURE) != 0,
-                (fragmentProperties & PipelineProperties::METALLIC_ROUGHNESS_TEXTURE) != 0
+                (fragmentProperties & PipelineProperties::METALLIC_ROUGHNESS_TEXTURE) != 0,
+                (fragmentProperties & PipelineProperties::DITHERING) != 0
             )
         );
     }

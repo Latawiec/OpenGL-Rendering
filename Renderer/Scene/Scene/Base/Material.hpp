@@ -18,9 +18,6 @@ struct Material {
         NONE = 0,
         Bayer4x4,
         Bayer8x8,
-        Bayer16x16,
-        Bayer32x32,
-        Bayer64x64,
         WhiteNoise,
         BlueNoise
     };

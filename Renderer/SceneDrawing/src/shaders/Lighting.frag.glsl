@@ -64,8 +64,8 @@ vec3 CalculateSpecular_DirectionalLight(in vec2 coord, in uint lightIndex) {
     vec2 metallicRoughness = texture(metallicRoughnessTexture, coord).xy;
 
     // Mapping roughness/metallic from PBR to specular/glossiness... 
-    float howShinyXD = mix(1.0, 9.0, 1.0 - metallicRoughness.y);
-    float specularPower = sqrt(mix(0.0, 1.0, 1.0 - metallicRoughness.y));
+    float howShinyXD = mix(0.0, 9.0, 1.0 - metallicRoughness.y);
+    float specularPower = mix(0.0, 1.0, 1.0 - metallicRoughness.y);
 
     float specular = specularPower * pow(max(dot(viewDirection, reflectDirection), 0.0), pow(2, howShinyXD));
     return vec3(specular);

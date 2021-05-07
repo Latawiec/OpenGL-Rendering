@@ -14,9 +14,9 @@
             "lights" : [
                 {
                     "color" : [
+                        0.009201250970363617,
                         1,
-                        0.00900487694889307,
-                        0.01097417064011097
+                        0
                     ],
                     "intensity" : 1,
                     "type" : "directional",
@@ -31,6 +31,16 @@
                     "intensity" : 1,
                     "type" : "directional",
                     "name" : "Sun.001"
+                },
+                {
+                    "color" : [
+                        1,
+                        0.8431769609451294,
+                        0.023905998095870018
+                    ],
+                    "intensity" : 1,
+                    "type" : "directional",
+                    "name" : "Sun.002"
                 }
             ]
         }
@@ -75,7 +85,8 @@
                 49,
                 50,
                 51,
-                53
+                53,
+                55
             ]
         }
     ],
@@ -990,6 +1001,37 @@
                 7.146411895751953,
                 0.056074149906635284
             ]
+        },
+        {
+            "extensions" : {
+                "KHR_lights_punctual" : {
+                    "light" : 2
+                }
+            },
+            "name" : "Sun.002_Orientation",
+            "rotation" : [
+                -0.7071067690849304,
+                0,
+                0,
+                0.7071067690849304
+            ]
+        },
+        {
+            "children" : [
+                54
+            ],
+            "name" : "Sun.002",
+            "rotation" : [
+                0.3952856659889221,
+                -0.40115779638290405,
+                -0.3117733299732208,
+                0.7652574777603149
+            ],
+            "translation" : [
+                1.4262628555297852,
+                8.820169448852539,
+                8.52063274383545
+            ]
         }
     ],
     "cameras" : [
@@ -1053,7 +1095,8 @@
         {
             "doubleSided" : true,
             "extras" : {
-                "ProgramType" : "Contour"
+                "ProgramType" : "Contour",
+                "Dithering" : "BlueNoise"
             },
             "name" : "Material.002",
             "pbrMetallicRoughness" : {

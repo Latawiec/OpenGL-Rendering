@@ -12,6 +12,7 @@
 #include <DebugMeshProgram.hpp>
 #include "BasePassBuffer.hpp"
 #include "LightingPassBuffer.hpp"
+#include "GlobalTexturesBuffer.hpp"
 #include "DepthBuffer.hpp"
 #include "TransformProcessor.hpp"
 #include "BasePass/BasePassPipelineManager.hpp"
@@ -28,11 +29,15 @@ SceneDrawingManager(const Renderer::Scene::Scene& scene, const int windowWidth, 
 
 void Draw();
 
+void SetWindowSize(const int windowWidth, const int windowHeight);
+void SetResolution(const int pixelWidth, const int pixelHeight);
+
 private:
     const Renderer::Scene::Scene& _scene;
 
     BasePassBuffer _basePassBuffer;
     LightingPassBuffer _lightingPassBuffer;
+    GlobalTexturesBuffer _globalTexturesBuffer;
     
     TransformProcessor _transformProcessor;
     BasePass::BasePassPipelineManager _basePassPipelineManager;

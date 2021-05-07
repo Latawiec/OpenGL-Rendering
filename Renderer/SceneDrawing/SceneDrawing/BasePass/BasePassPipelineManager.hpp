@@ -27,6 +27,7 @@ struct IndividualData {
     const Renderer::Scene::Base::Texture* baseColorTexture = nullptr;
     const Renderer::Scene::Base::Texture* normalMapTexture = nullptr;
     const Renderer::Scene::Base::Texture* metallicRoughnessTexture = nullptr;
+    const Renderer::Scene::Base::Texture* ditherTexture = nullptr;
     const JointsArray* jointsArray = nullptr;
 };
 
@@ -68,13 +69,16 @@ class BasePassFragmentProgram {
     static constexpr std::string_view BaseColorTextureFlag = "#define BASE_COLOUR_TEXTURE 1\n";
     static constexpr std::string_view NormalMapTextureFlag = "#define NORMAL_MAP_TEXTURE 1\n";
     static constexpr std::string_view MetallicRoughnessTextureFlag = "#define METALLIC_ROUGHNESS_TEXTURE 1\n";
+    static constexpr std::string_view DitheringFlag = "#define DITHERING 1\n";
     // Uniform names
     static constexpr std::string_view BaseColorSamplerUniform = "baseColor";
     static constexpr std::string_view NormalMapSamplerUniform = "normalMap";
     static constexpr std::string_view MetallicRougnessSamplerUniform = "metallicRoughness";
+    static constexpr std::string_view DitheringSamplerUniform = "ditherTexture";
     static constexpr unsigned int BaseColorTextureLocation = 0;
     static constexpr unsigned int NormalMapTextureLocation = 1;
     static constexpr unsigned int MetallicRoughnessTextureLocation = 2;
+    static constexpr unsigned int DitherTextureLocation = 3;
 
     BasePassFragmentProgram(const BasePassFragmentProgram& other) = delete;
     BasePassFragmentProgram& operator=(const BasePassFragmentProgram& other) = delete;
@@ -82,10 +86,11 @@ class BasePassFragmentProgram {
     bool _hasBaseColorTexture = false;
     bool _hasNormalMapTexture = false;
     bool _hasMetallicRoughnessTexture = false;
+    bool _dithering = false;
     GLuint _program = -1;
 
 public:
-    BasePassFragmentProgram(bool hasBaseColorTexture, bool hasNormalMapTexture, bool hasMetallicRoughnessTexture);
+    BasePassFragmentProgram(bool hasBaseColorTexture, bool hasNormalMapTexture, bool hasMetallicRoughnessTexture, bool dithering);
     ~BasePassFragmentProgram();
 
     BasePassFragmentProgram(BasePassFragmentProgram&& other);
@@ -135,7 +140,8 @@ struct BasePassPipelineManager {
         SKIN = 1 << 0,
         BASE_COLOR_TEXTURE = 1 << 1,
         NORMAL_MAP_TEXTURE = 1 << 2,
-        METALLIC_ROUGHNESS_TEXTURE = 1 << 3
+        METALLIC_ROUGHNESS_TEXTURE = 1 << 3,
+        DITHERING = 1 << 4
     };  
 
 private:
@@ -150,7 +156,8 @@ private:
     constexpr static PropertiesSet PropertiesAffectingFragmentProgram =
         PipelineProperties::BASE_COLOR_TEXTURE |
         PipelineProperties::NORMAL_MAP_TEXTURE |
-        PipelineProperties::METALLIC_ROUGHNESS_TEXTURE;
+        PipelineProperties::METALLIC_ROUGHNESS_TEXTURE | 
+        PipelineProperties::DITHERING;
 
     void buildVariant(const PropertiesSet& properties);
 

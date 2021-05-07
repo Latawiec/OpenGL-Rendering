@@ -15,7 +15,7 @@ BasePassBuffer::BasePassBuffer(unsigned int width, unsigned int height)
     }(std::make_index_sequence<Output::SIZE>{});
 
     // Set attachments for all but Depth. I'll do it manually for now...
-    const GLenum bufs[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6 };
+    const GLenum bufs[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5 };
     glDrawBuffers(sizeof(bufs)/sizeof(decltype(bufs[0])), bufs);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -80,6 +80,16 @@ void BasePassBuffer::setupTexture<BasePassBuffer::Output::SilhouetteMap>() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, outputTexture, 0);
+}
+
+template<>
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::Dither>() {
+    const auto outputTexture = outputTextures_[Output::Dither];
+    glBindTexture(GL_TEXTURE_2D, outputTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, _width, _height, 0, GL_RED, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, outputTexture, 0);
 }
 
 template<>

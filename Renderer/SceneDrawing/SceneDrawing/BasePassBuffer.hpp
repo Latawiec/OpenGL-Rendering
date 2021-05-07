@@ -17,6 +17,7 @@ public:
         Normals,
         MetallicRoughness,
         SilhouetteMap,
+        Dither,
         Depth,
         SIZE
     };
@@ -48,6 +49,9 @@ void BasePassBuffer::setupTexture<BasePassBuffer::Output::MetallicRoughness>();
 
 template<>
 void BasePassBuffer::setupTexture<BasePassBuffer::Output::SilhouetteMap>();
+
+template<>
+void BasePassBuffer::setupTexture<BasePassBuffer::Output::Dither>();
 
 template<>
 void BasePassBuffer::setupTexture<BasePassBuffer::Output::Depth>();

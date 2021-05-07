@@ -131,6 +131,18 @@ void SceneDrawingManager::Draw() {
     // }
 }
 
+void SceneDrawingManager::SetWindowSize(const int windowWidth, const int windowHeight)
+{
+    _width = windowWidth;
+    _height = windowHeight;
+}
+
+void SceneDrawingManager::SetResolution(const int pixelWidth, const int pixelHeight)
+{
+    _basePassBuffer = BasePassBuffer(pixelWidth, pixelHeight);
+    _lightingPassBuffer = LightingPassBuffer(pixelWidth, pixelHeight);
+}
+
 void SceneDrawingManager::CombinePass()
 {
     CombinePass::CombinePipelineManager::PropertiesSet properties = 0;
@@ -319,6 +331,10 @@ void SceneDrawingManager::BasePass()
             if (material.getTexture<Renderer::Scene::Base::Material::ETexture::MetallicRoughness>() != Renderer::Scene::Base::Texture::INVALID_ID) {
                 properties |= BasePass::BasePassPipelineManager::PipelineProperties::METALLIC_ROUGHNESS_TEXTURE;
             }
+
+            if (material.getDithering() != Renderer::Scene::Base::Material::EDithering::NONE) {
+                properties |= BasePass::BasePassPipelineManager::PipelineProperties::DITHERING;
+            }
         }
 
         BasePass::IndividualData objectData;
@@ -338,6 +354,24 @@ void SceneDrawingManager::BasePass()
         }
         if (material.getTexture<Renderer::Scene::Base::Material::ETexture::MetallicRoughness>() != Renderer::Scene::Base::Texture::INVALID_ID) {
             objectData.metallicRoughnessTexture = &_scene.GetTexture(material.getTexture<Renderer::Scene::Base::Material::ETexture::MetallicRoughness>());
+        }
+        if (material.getDithering() != Renderer::Scene::Base::Material::EDithering::NONE) {
+            GlobalTexturesBuffer::TextureName textureName;
+            switch (material.getDithering()) {
+                case Renderer::Scene::Base::Material::EDithering::Bayer4x4:
+                    textureName = GlobalTexturesBuffer::Bayer4x4;
+                    break;
+                case Renderer::Scene::Base::Material::EDithering::Bayer8x8:
+                    textureName = GlobalTexturesBuffer::Bayer8x8;
+                    break;
+                case Renderer::Scene::Base::Material::EDithering::BlueNoise:
+                    textureName = GlobalTexturesBuffer::BlueNoise;
+                    break;
+                case Renderer::Scene::Base::Material::EDithering::WhiteNoise:
+                    textureName = GlobalTexturesBuffer::WhiteNoise;
+                    break;
+            }
+            objectData.ditherTexture = &_globalTexturesBuffer.getTexture(textureName);
         }
 
         const auto& pipeline = _basePassPipelineManager.GetPipeline(properties);

@@ -125,7 +125,31 @@ Scene::Base::Camera processCamera(const tinygltf::Model& model, const tinygltf::
 }
 
 Scene::Base::Texture processTexture(const tinygltf::Model& model, const tinygltf::Image& image) {
-    return Scene::Base::Texture(image.width, image.height, image.component, image.image.data());
+    Scene::Base::Texture::Params parameters;
+    parameters.width = image.width;
+    parameters.height = image.height;
+    if (image.component == 1) {
+        parameters.internalFormat = Scene::Base::Texture::InternalFormat::R;
+        parameters.format = Scene::Base::Texture::Format::R;
+    } else 
+    if (image.component == 2) {
+        parameters.internalFormat = Scene::Base::Texture::InternalFormat::RG;
+        parameters.format = Scene::Base::Texture::Format::RG;
+    } else  
+    if (image.component == 3) {
+        parameters.internalFormat = Scene::Base::Texture::InternalFormat::RGB;
+        parameters.format = Scene::Base::Texture::Format::RGB;
+    } else 
+    if (image.component == 4) {
+        parameters.internalFormat = Scene::Base::Texture::InternalFormat::RGBA;
+        parameters.format = Scene::Base::Texture::Format::RGBA;
+    } else {
+        throw 1;
+    }
+
+    parameters.type = Scene::Base::Texture::Type::UnsignedByte;
+    
+    return Scene::Base::Texture(image.image.data(), parameters);
 }
 
 glm::mat4 processNodeTransform(const tinygltf::Node& node) {
@@ -264,6 +288,12 @@ void Importer::convertMaterials (
     const tinygltf::Model& gltfModel
     )
 {
+    const static std::string Property_Dithering = "Dithering";
+    const static std::string Dithering_Bayer4x4 = "Bayer4x4";
+    const static std::string Dithering_Bayer8x8 = "Bayer8x8";
+    const static std::string Dithering_BlueNoise = "BlueNoise";
+    const static std::string Dithering_WhiteNoise = "WhiteNoise";
+
     const auto materialsCount = gltfModel.materials.size();
     materialsConversionData.convertedMaterials.reserve(materialsCount);
 
@@ -290,6 +320,25 @@ void Importer::convertMaterials (
             const gltfId normalImage = gltfModel.textures[normalTexture].source;
             const Scene::Base::Texture::IdType normalId = texturesConversionData.convertedImages[normalImage];
             material.setTexture<Scene::Base::Material::ETexture::Normal>(normalId);
+        }
+
+        if (gltfMaterial.extras.Has(Property_Dithering)) {
+            const auto& ditheringType = gltfMaterial.extras.Get(Property_Dithering).Get<std::string>();
+            if (ditheringType == Dithering_Bayer4x4) {
+                material.setDithering(Scene::Base::Material::EDithering::Bayer4x4);
+            }
+            else
+            if (ditheringType == Dithering_Bayer8x8) {
+                material.setDithering(Scene::Base::Material::EDithering::Bayer8x8);
+            }
+            else
+            if (ditheringType == Dithering_BlueNoise) {
+                material.setDithering(Scene::Base::Material::EDithering::BlueNoise);
+            }
+            else 
+            if (ditheringType == Dithering_WhiteNoise) {
+                material.setDithering(Scene::Base::Material::EDithering::WhiteNoise);
+            }
         }
 
         materialsConversionData.convertedMaterials.push_back(std::move(scene.AddMaterial(std::move(material))));
