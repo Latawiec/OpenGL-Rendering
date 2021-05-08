@@ -102,6 +102,7 @@ SceneDrawingManager::SceneDrawingManager(const Renderer::Scene::Scene& scene, co
 : _scene(scene)
 , _transformProcessor(_scene)
 , _basePassBuffer(windowWidth, windowHeight)
+, _contourPassBuffer(windowWidth, windowHeight)
 , _lightingPassBuffer(windowWidth, windowHeight)
 , _shadowMappingPassBuffer(_shadowMapWidth, _shadowMapHeight)
 , _width(windowWidth)
@@ -114,6 +115,7 @@ void SceneDrawingManager::Draw() {
     _transformProcessor.Update();
     ShadowMappingPass();
     BasePass();
+    ContourPass();
     LightingPass();
     CombinePass();
 
@@ -141,6 +143,7 @@ void SceneDrawingManager::SetWindowSize(const int windowWidth, const int windowH
 void SceneDrawingManager::SetResolution(const int pixelWidth, const int pixelHeight)
 {
     _basePassBuffer = BasePass::BasePassBuffer(pixelWidth, pixelHeight);
+    _contourPassBuffer = ContourPass::ContourPassBuffer(pixelWidth, pixelHeight);
     _lightingPassBuffer = LightingPass::LightingPassBuffer(pixelWidth, pixelHeight);
 }
 
@@ -154,6 +157,7 @@ void SceneDrawingManager::CombinePass()
     data.diffuseTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Diffuse);
     data.specularTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Specular);
     data.ditherTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Dither);
+    data.contourTexture = _contourPassBuffer.getTexture(ContourPass::ContourPassBuffer::Output::ContourMap);
 
     const auto binding = pipeline.Bind();
     pipeline.prepareShared(data);
@@ -163,6 +167,24 @@ void SceneDrawingManager::CombinePass()
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glViewport(0, 0, _width, _height);
+
+    Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { _framebufferPlane };
+    glDrawElements(GL_TRIANGLES, _framebufferPlane.vertexCount(), GL_UNSIGNED_INT, 0);
+}
+
+void SceneDrawingManager::ContourPass()
+{
+    ContourPass::ContourPipelineManager::PropertiesSet properties = 0;
+    const auto& pipeline = _contourPassPipelineManager.GetPipeline(properties);
+
+    ContourPass::SharedData data;
+    data.silhouetteTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::SilhouetteMap);
+
+    const auto binding = pipeline.Bind();
+    pipeline.prepareShared(data);
+    pipeline.prepareIndividual();
+
+    const auto gbufferBinding = _contourPassBuffer.Bind();
 
     Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { _framebufferPlane };
     glDrawElements(GL_TRIANGLES, _framebufferPlane.vertexCount(), GL_UNSIGNED_INT, 0);

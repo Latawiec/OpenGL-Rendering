@@ -7,6 +7,7 @@ uniform sampler2D albedoTexture;
 uniform sampler2D diffuseTexture;
 uniform sampler2D specularTexture;
 uniform sampler2D ditherTexture;
+uniform sampler2D contourTexture;
 
 void main() {
     
@@ -18,5 +19,6 @@ void main() {
     float diffuseAvg = (diffuse.r + diffuse.g + diffuse.b) / 3.0;
     float specularAvg = (specular.r + specular.g + specular.b) / 3.0;
     float diffuseMax = max(max(diffuse.r, diffuse.g), diffuse.b);
-    FragColor = vec4(vec3(round(diffuseAvg - dither) + round(specularAvg - dither)), 1);
+    vec3 contour = texture(contourTexture, TextureCoord).rgb;
+    FragColor = vec4(max(vec3(0), vec3(round(diffuseAvg - dither) + round(specularAvg - dither))) + contour, 1);
 }

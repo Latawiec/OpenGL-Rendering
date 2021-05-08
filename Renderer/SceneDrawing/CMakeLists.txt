@@ -9,6 +9,8 @@ add_library(${PROJECT_NAME}
     src/BasePassPipelineManager.cpp
     src/BasePassBuffer.cpp
     src/CombinePassPipelineManager.cpp
+    src/ContourPassBuffer.cpp
+    src/ContourPassPipelineManager.cpp
     src/DepthBuffer.cpp
     src/FramebufferBase.cpp
     src/GlobalTexturesBuffer.cpp
@@ -55,6 +57,9 @@ PRIVATE
 
     COMBINE_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Combine.vert.glsl"
     COMBINE_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Combine.frag.glsl"
+
+    CONTOUR_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Contour.vert.glsl"
+    CONTOUR_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Contour.frag.glsl"
 )
 
 target_include_directories(${PROJECT_NAME}

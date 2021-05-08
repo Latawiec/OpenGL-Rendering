@@ -11,15 +11,17 @@
 #include <TextureProgram.hpp>
 #include <DebugMeshProgram.hpp>
 #include "BasePass/BasePassBuffer.hpp"
+#include "BasePass/BasePassPipelineManager.hpp"
+#include "CombinePass/CombinePassPipelineManager.hpp"
+#include "ContourPass/ContourPassBuffer.hpp"
+#include "ContourPass/ContourPassPipelineManager.hpp"
 #include "LightingPass/LightingPassBuffer.hpp"
+#include "LightingPass/LightingPassPipelineManager.hpp"
 #include "ShadowMappingPass/ShadowMappingPassBuffer.hpp"
+#include "ShadowMappingPass/ShadowMappingPassPipelineManager.hpp"
 #include "GlobalTexturesBuffer.hpp"
 #include "DepthBuffer.hpp"
 #include "TransformProcessor.hpp"
-#include "BasePass/BasePassPipelineManager.hpp"
-#include "ShadowMappingPass/ShadowMappingPassPipelineManager.hpp"
-#include "LightingPass/LightingPassPipelineManager.hpp"
-#include "CombinePass/CombinePassPipelineManager.hpp"
 
 namespace Renderer {
 namespace SceneDrawing {
@@ -40,16 +42,19 @@ private:
     unsigned int _shadowMapWidth = 2056, _shadowMapHeight = 2056;
 
     BasePass::BasePassBuffer _basePassBuffer;
+    ContourPass::ContourPassBuffer _contourPassBuffer;
     LightingPass::LightingPassBuffer _lightingPassBuffer;
     ShadowMappingPass::ShadowMappingPassBuffer _shadowMappingPassBuffer;
     GlobalTexturesBuffer _globalTexturesBuffer;
     
-    TransformProcessor _transformProcessor;
     BasePass::BasePassPipelineManager _basePassPipelineManager;
-    ShadowMappingPass::ShadowMappingPipelineManager _shadowMappingPassPipelineManager;
+    ContourPass::ContourPipelineManager _contourPassPipelineManager;
     LightingPass::LightingPipelineManager _lightingPassPipelineManager;
+    ShadowMappingPass::ShadowMappingPipelineManager _shadowMappingPassPipelineManager;
     CombinePass::CombinePipelineManager _combinePassPipelineManager;
+
     Scene::Base::VertexDataBase _framebufferPlane;
+    TransformProcessor _transformProcessor;
 
     ShadowMappingPass::SharedData createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform);
 
@@ -61,6 +66,7 @@ private:
     Renderer::Programs::EdgeProgram _edgeProgram;
 
     void CombinePass();
+    void ContourPass();
     void LightingPass();
     void ShadowMappingPass();
     void BasePass();
