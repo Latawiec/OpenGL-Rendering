@@ -7,6 +7,7 @@
 
 namespace Renderer {
 namespace SceneDrawing {
+namespace BasePass {
 
 class BasePassBuffer : public Renderer::SceneDrawing::FramebufferBase {
 public:
@@ -56,5 +57,6 @@ void BasePassBuffer::setupTexture<BasePassBuffer::Output::Dither>();
 template<>
 void BasePassBuffer::setupTexture<BasePassBuffer::Output::Depth>();
 
+} // namespace BasePass
 } // namespace SceneDrawing
 } // namespace Renderer

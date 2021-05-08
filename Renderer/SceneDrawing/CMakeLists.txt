@@ -16,6 +16,7 @@ add_library(${PROJECT_NAME}
     src/LightingPassPipelineManager.cpp
     src/SceneDrawingManager.cpp
     src/ShadowMappingPipelineManager.cpp
+    src/ShadowMappingPassBuffer.cpp
     src/TransformProcessor.cpp
 )
 

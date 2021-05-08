@@ -7,6 +7,7 @@
 
 namespace Renderer {
 namespace SceneDrawing {
+namespace LightingPass {
 
 class LightingPassBuffer : public Renderer::SceneDrawing::FramebufferBase {
 public:
@@ -36,5 +37,6 @@ void LightingPassBuffer::setupTexture<LightingPassBuffer::Output::Diffuse>();
 template<>
 void LightingPassBuffer::setupTexture<LightingPassBuffer::Output::Specular>();
 
+} // namespace LightingPass
 } // namespace SceneDrawing
 } // namespace Renderer

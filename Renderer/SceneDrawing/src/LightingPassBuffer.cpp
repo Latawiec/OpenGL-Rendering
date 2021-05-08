@@ -1,7 +1,8 @@
-#include "../SceneDrawing/LightingPassBuffer.hpp"
+#include "../SceneDrawing/LightingPass/LightingPassBuffer.hpp"
 
 namespace Renderer {
 namespace SceneDrawing {
+namespace LightingPass {
 
 LightingPassBuffer::LightingPassBuffer(unsigned int width, unsigned int height)
 : FramebufferBase(width, height)
@@ -43,5 +44,6 @@ void LightingPassBuffer::setupTexture<LightingPassBuffer::Output::Specular>() {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, outputTexture, 0);
 }
 
+} // namespace LightingPass
 } // namespace SceneDrawing
 } // namespace Renderer

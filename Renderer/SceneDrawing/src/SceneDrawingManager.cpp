@@ -103,6 +103,7 @@ SceneDrawingManager::SceneDrawingManager(const Renderer::Scene::Scene& scene, co
 , _transformProcessor(_scene)
 , _basePassBuffer(windowWidth, windowHeight)
 , _lightingPassBuffer(windowWidth, windowHeight)
+, _shadowMappingPassBuffer(_shadowMapWidth, _shadowMapHeight)
 , _width(windowWidth)
 , _height(windowHeight) {
     auto indicesVector = std::vector<unsigned int>(indices, indices + 6);
@@ -139,8 +140,8 @@ void SceneDrawingManager::SetWindowSize(const int windowWidth, const int windowH
 
 void SceneDrawingManager::SetResolution(const int pixelWidth, const int pixelHeight)
 {
-    _basePassBuffer = BasePassBuffer(pixelWidth, pixelHeight);
-    _lightingPassBuffer = LightingPassBuffer(pixelWidth, pixelHeight);
+    _basePassBuffer = BasePass::BasePassBuffer(pixelWidth, pixelHeight);
+    _lightingPassBuffer = LightingPass::LightingPassBuffer(pixelWidth, pixelHeight);
 }
 
 void SceneDrawingManager::CombinePass()
@@ -149,10 +150,10 @@ void SceneDrawingManager::CombinePass()
     const auto& pipeline = _combinePassPipelineManager.GetPipeline(properties);
 
     CombinePass::SharedData data;
-    data.albedoTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Albedo);
-    data.diffuseTexture = _lightingPassBuffer.getTexture(LightingPassBuffer::Output::Diffuse);
-    data.specularTexture = _lightingPassBuffer.getTexture(LightingPassBuffer::Output::Specular);
-    data.ditherTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Dither);
+    data.albedoTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Albedo);
+    data.diffuseTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Diffuse);
+    data.specularTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Specular);
+    data.ditherTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Dither);
 
     const auto binding = pipeline.Bind();
     pipeline.prepareShared(data);
@@ -172,10 +173,10 @@ void SceneDrawingManager::LightingPass()
     const auto gbufferBinding = _lightingPassBuffer.Bind();
 
     LightingPass::SharedData data;
-    data.albedoTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Albedo);
-    data.positionTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Position);
-    data.normalMapTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::Normals);
-    data.metallicRoughnessTexture = _basePassBuffer.getTexture(BasePassBuffer::Output::MetallicRoughness);
+    data.albedoTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Albedo);
+    data.positionTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Position);
+    data.normalMapTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Normals);
+    data.metallicRoughnessTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::MetallicRoughness);
 
     // Again im getting first view coz I still have no "Active Camera" thing... ehh
     const auto& cameraNode = _scene.GetSceneViews().begin()->nodeId;
@@ -196,10 +197,10 @@ void SceneDrawingManager::LightingPass()
             const glm::mat4 lightTransform = _transformProcessor.GetNodeTransforms().at(nodeId);
             const glm::vec4 lightDirection = lightTransform * lightObject.GetLightDirection();
             const glm::vec4 lightColor = glm::vec4(lightObject.GetColor(), lightObject.GetIntensity());
-            data.directionalLightsTransforms.push_back(_directionalLightTransforms.at(lightId));
+            data.directionalLightsTransforms.push_back(_shadowMappingPassBuffer.GetDirectionalLightTransform(lightId));
             data.directionalLightsDirections.push_back(lightDirection);
             data.directionalLightsColors.push_back(lightColor);
-            data.directionalLightsShadowmapTextureIds.push_back(_directionalLightShadowMaps.at(lightId).getTexture());
+            data.directionalLightsShadowmapTextureIds.push_back(_shadowMappingPassBuffer.GetDirectionalLightShadowTexture(lightId));
         }
     }
 
@@ -214,8 +215,6 @@ void SceneDrawingManager::LightingPass()
 
 void SceneDrawingManager::ShadowMappingPass()
 {
-    static const float TemporaryShadowMapSize = 2560;
-
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_FRONT);
 
@@ -228,10 +227,7 @@ void SceneDrawingManager::ShadowMappingPass()
             const auto& lightId = sceneLight.directionalLightId;
             const auto& lightObject = _scene.GetDirectionalLight(lightId);
 
-            if (!_directionalLightShadowMaps.contains(lightId)) {
-                _directionalLightShadowMaps.emplace(lightId, DepthBuffer(TemporaryShadowMapSize, TemporaryShadowMapSize));
-            }
-            const auto& shadowMapBuffer = _directionalLightShadowMaps.at(lightId);
+            const auto& shadowMapBuffer = _shadowMappingPassBuffer.GetDirectionalLightShadowRenderTarget(lightId);
             const auto framebufferBinding = shadowMapBuffer.Bind();
             glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -242,7 +238,7 @@ void SceneDrawingManager::ShadowMappingPass()
 
             ShadowMappingPass::SharedData viewData = createFittingShadowmapTransform(lightObject, _transformProcessor.GetNodeTransforms().at(nodeId), camera, cameraTransform);
             // Remember it for drawing shadows
-            _directionalLightTransforms[lightId] = viewData.lightProjectionTransform * viewData.lightViewTransform;
+            _shadowMappingPassBuffer.SetDirectionalLightTransform(lightId, viewData.lightProjectionTransform * viewData.lightViewTransform);
 
             for (const auto& sceneElement : _scene.GetSceneObjects()) {
                 // Can't draw without geometry.

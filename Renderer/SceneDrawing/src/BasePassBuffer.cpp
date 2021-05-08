@@ -1,7 +1,8 @@
-#include "../SceneDrawing/BasePassBuffer.hpp"
+#include "../SceneDrawing/BasePass/BasePassBuffer.hpp"
 
 namespace Renderer {
 namespace SceneDrawing {
+namespace BasePass {
 
 BasePassBuffer::BasePassBuffer(unsigned int width, unsigned int height)
 : FramebufferBase(width, height)
@@ -102,5 +103,6 @@ void BasePassBuffer::setupTexture<BasePassBuffer::Output::Depth>() {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, outputTexture, 0);
 }
 
+} // namespace BasePass
 } // namespace SceneDrawing
 } // namespace Renderer

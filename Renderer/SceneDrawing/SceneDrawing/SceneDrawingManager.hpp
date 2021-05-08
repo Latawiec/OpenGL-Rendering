@@ -10,8 +10,9 @@
 #include <EdgeProgram.hpp>
 #include <TextureProgram.hpp>
 #include <DebugMeshProgram.hpp>
-#include "BasePassBuffer.hpp"
-#include "LightingPassBuffer.hpp"
+#include "BasePass/BasePassBuffer.hpp"
+#include "LightingPass/LightingPassBuffer.hpp"
+#include "ShadowMappingPass/ShadowMappingPassBuffer.hpp"
 #include "GlobalTexturesBuffer.hpp"
 #include "DepthBuffer.hpp"
 #include "TransformProcessor.hpp"
@@ -35,8 +36,12 @@ void SetResolution(const int pixelWidth, const int pixelHeight);
 private:
     const Renderer::Scene::Scene& _scene;
 
-    BasePassBuffer _basePassBuffer;
-    LightingPassBuffer _lightingPassBuffer;
+    unsigned int _width, _height;
+    unsigned int _shadowMapWidth = 2056, _shadowMapHeight = 2056;
+
+    BasePass::BasePassBuffer _basePassBuffer;
+    LightingPass::LightingPassBuffer _lightingPassBuffer;
+    ShadowMappingPass::ShadowMappingPassBuffer _shadowMappingPassBuffer;
     GlobalTexturesBuffer _globalTexturesBuffer;
     
     TransformProcessor _transformProcessor;
@@ -51,13 +56,9 @@ private:
     void prepareSkin(const Renderer::Scene::Base::Skin::IdType& skinId);
     std::unordered_map<Renderer::Scene::Base::Skin::IdType, std::array<glm::mat4, 32>> _jointTransforms;
 
-    int _width, _height;
-
     // Debugging, testing ... seeing if works.
     Renderer::Programs::TextureProgram _textureDrawProgram;
     Renderer::Programs::EdgeProgram _edgeProgram;
-    std::unordered_map<Renderer::Scene::Base::DirectionalLight::IdType, DepthBuffer> _directionalLightShadowMaps;
-    std::unordered_map<Renderer::Scene::Base::DirectionalLight::IdType, glm::mat4> _directionalLightTransforms;
 
     void CombinePass();
     void LightingPass();
