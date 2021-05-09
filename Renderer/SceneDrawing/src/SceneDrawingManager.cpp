@@ -238,6 +238,7 @@ void SceneDrawingManager::LightingPass()
 void SceneDrawingManager::ShadowMappingPass()
 {
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
 
     for (const auto& sceneLight : _scene.GetSceneLights()) {
@@ -317,6 +318,8 @@ void SceneDrawingManager::BasePass()
 
     const auto binding = _basePassBuffer.Bind();
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (const auto& sceneElement : _scene.GetSceneObjects()) {

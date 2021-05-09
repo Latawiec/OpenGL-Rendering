@@ -289,6 +289,8 @@ void Importer::convertMaterials (
     )
 {
     const static std::string Property_Dithering = "Dithering";
+    const static std::string Property_CastShadow = "CastShadow";
+
     const static std::string Dithering_Bayer4x4 = "Bayer4x4";
     const static std::string Dithering_Bayer8x8 = "Bayer8x8";
     const static std::string Dithering_BlueNoise = "BlueNoise";
@@ -339,6 +341,13 @@ void Importer::convertMaterials (
             if (ditheringType == Dithering_WhiteNoise) {
                 material.setDithering(Scene::Base::Material::EDithering::WhiteNoise);
             }
+        }
+
+        if (gltfMaterial.extras.Has(Property_CastShadow)) {
+            const auto& castShadow = gltfMaterial.extras.Get(Property_CastShadow).Get<bool>();
+            material.setCastingShadow(castShadow);
+        } else {
+            material.setCastingShadow(true);
         }
 
         materialsConversionData.convertedMaterials.push_back(std::move(scene.AddMaterial(std::move(material))));
