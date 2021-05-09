@@ -13,6 +13,8 @@ static constexpr std::string_view VersionFlag = "#version 410 core\n";
 
 struct SharedData {
     GLuint silhouetteTexture;
+    GLuint normalMapTexture;
+    GLuint depthTexture;
 };
 
 
@@ -48,6 +50,10 @@ class ContourFragmentProgram {
     // Uniform names
     static constexpr std::string_view SilhouetteSamplerUniform = "silhouetteTexture";
     static constexpr unsigned int SilhouetteTextureLocation = 0;
+    static constexpr std::string_view NormalMapSamplerUniform = "normalMapTexture";
+    static constexpr unsigned int NormalMapTextureLocation = 1;
+    static constexpr std::string_view DepthSamplerUniform = "depthTexture";
+    static constexpr unsigned int DepthTextureLocation = 2;
 
     ContourFragmentProgram(const ContourFragmentProgram& other) = delete;
     ContourFragmentProgram& operator=(const ContourFragmentProgram& other) = delete;

@@ -179,6 +179,8 @@ void SceneDrawingManager::ContourPass()
 
     ContourPass::SharedData data;
     data.silhouetteTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::SilhouetteMap);
+    data.normalMapTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Normals);
+    data.depthTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Depth);
 
     const auto binding = pipeline.Bind();
     pipeline.prepareShared(data);

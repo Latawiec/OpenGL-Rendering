@@ -139,6 +139,8 @@ ContourFragmentProgram::ContourFragmentProgram()
 
     // Setup textures
     glProgramUniform1i(_program, glGetUniformLocation(_program, SilhouetteSamplerUniform.data()), SilhouetteTextureLocation);
+    glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), NormalMapTextureLocation);
+    glProgramUniform1i(_program, glGetUniformLocation(_program, DepthSamplerUniform.data()), DepthTextureLocation);
 
     // Delete shader as we only need program.
     glDetachShader(_program, shader);
@@ -167,6 +169,12 @@ ContourFragmentProgram::operator unsigned int() const {
 void ContourFragmentProgram::prepareShared(const SharedData& data) const {
     glActiveTexture(GL_TEXTURE0 + SilhouetteTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.silhouetteTexture);
+
+    glActiveTexture(GL_TEXTURE0 + NormalMapTextureLocation);
+    glBindTexture(GL_TEXTURE_2D, data.normalMapTexture);
+
+    glActiveTexture(GL_TEXTURE0 + DepthTextureLocation);
+    glBindTexture(GL_TEXTURE_2D, data.depthTexture);
 }
 
 void ContourFragmentProgram::prepareIndividual() const {
