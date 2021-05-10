@@ -15,69 +15,57 @@ void main() {
     vec2 textureDim = textureSize(silhouetteTexture, 0);
     vec2 pixelPos = vec2(TextureCoord.x * textureDim.x, TextureCoord.y * textureDim.y);
 
-    vec2 leftPixelPos = pixelPos - vec2(-1, 0);
-    vec2 rightPixelPos = pixelPos - vec2(1, 0);
-    vec2 topPixelPos = pixelPos - vec2(0, 1);
-    vec2 botPixelPos = pixelPos - vec2(0, -1);
+    //Directions:                             left         right       top         bot
+    const vec2 sampleDirections[] = vec2[4](vec2(-1, 0), vec2(1, 0), vec2(0, 1), vec2(0, -1));
 
-    vec2 leftUVPos = vec2(leftPixelPos.x / textureDim.x, leftPixelPos.y / textureDim.y);
-    vec2 rightUVPos = vec2(rightPixelPos.x / textureDim.x, rightPixelPos.y / textureDim.y);
-    vec2 topUVPos = vec2(topPixelPos.x / textureDim.x, topPixelPos.y / textureDim.y);
-    vec2 botUVPos = vec2(botPixelPos.x / textureDim.x, botPixelPos.y / textureDim.y);
+    vec4 centerSilhouette = texture(silhouetteTexture, TextureCoord);
+    vec3 centerNormal = normalize(texture(normalMapTexture, TextureCoord).rgb);
+    float centerDepth = texture(depthTexture, TextureCoord).r;
+
+    // It has to reach at least 1.0 or we don't draw the edge for this fragment.
+    // Even if some test doesn't result in an "is edge" result, it only contributes to the overall contourWeight.
+    float contourWeight = 0.0;
+
+    for (int i=0; i<4; ++i) {
+        vec2 dir = sampleDirections[i];
+        vec2 pixelPos = pixelPos - dir;
+        vec2 uvPos = pixelPos / textureDim;
+
+        float sampleDepth = texture(depthTexture, uvPos).r;
+
+        // Test 0
+        // I only draw edge outside from objects closer to the camera. So I draw on elements further away from camera.
+        // I wanted to multiply by depth-fuse, but actually just abort mission if depth test failed. Less texture sampling.
+        float depthFuse = centerDepth < sampleDepth ? 1.0 : 0.0;
+        if (depthFuse == 0.0) continue;
+
+        // Test 1 - silhouette test. If silhouette texture is any different, it is an edge 100%.
+        vec4 sampleSilhouette = texture(silhouetteTexture, uvPos);
+        vec4 silhouetteDiff = centerSilhouette - sampleSilhouette;
+        float silhouetteWeight = silhouetteDiff.x + silhouetteDiff.y + silhouetteDiff.z + silhouetteDiff.w != 0 ? 1.0 : 0.0;
+
+        // Test 2 - depth test. Anything below treshold is not edge, anything above is an edge. Linearly (for now).
+        const float depthEdgeTreshold = 0.0001;
+        float depthDiff = sampleDepth - centerDepth; // we know by now that it is positive number after Test 0.
+        float depthWeight = depthDiff / (depthEdgeTreshold);
+
+        // Test 3 - normal test. Treshold again, using dot product.
+        const float normalEdgeTreshold = 0.4;
+        vec3 sampleNormal = normalize(texture(normalMapTexture, uvPos).rgb);
+        float dotProduct = dot(centerNormal, sampleNormal);
+        // For x == 1, f(x) == 0;
+        // For x == t, f(x) == 1;
+        // ax + b and we get this...
+        float normalWeight = max((1.0 / (normalEdgeTreshold - 1.0)) * (dotProduct - 1.0), 0.0);
+
+        contourWeight += depthFuse * (
+            silhouetteWeight +
+            depthWeight +
+            normalWeight +
+            0.0
+        );
+    }
 
 
-
-    FragColor = 
-        //isDepthEdge(TextureCoord, leftUVPos, rightUVPos, topUVPos, botUVPos) ||
-        isNormalMapEdge(TextureCoord, leftUVPos, rightUVPos, topUVPos, botUVPos) ||
-        isSilhouetteEdge(TextureCoord, leftUVPos, rightUVPos, topUVPos, botUVPos)
-     ? vec3(1, 1, 1) : vec3(0, 0, 0);
-}
-
-
-bool isSilhouetteEdge(in vec2 centerUV, in vec2 leftUV, in vec2 rightUV, in vec2 topUV, in vec2 botUV) {
-    vec4 centerSample = texture(silhouetteTexture, centerUV);
-    vec4 leftSample = texture(silhouetteTexture, leftUV);
-    vec4 rightSample = texture(silhouetteTexture, rightUV);
-    vec4 topSample = texture(silhouetteTexture, topUV);
-    vec4 botSample = texture(silhouetteTexture, botUV);
-
-    vec2 verticalDiff = (centerSample.zw - topSample.zw) + (centerSample.zw - botSample.zw);
-    vec2 horizontalDiff = (centerSample.zw - leftSample.zw) + (centerSample.zw - rightSample.zw);
-
-    return (verticalDiff.x + verticalDiff.y + horizontalDiff.x + horizontalDiff.y) > 0.0;
-}
-
-bool isDepthEdge(in vec2 centerUV, in vec2 leftUV, in vec2 rightUV, in vec2 topUV, in vec2 botUV)
-{
-    const float depthEdgeTreshold = 0.0001;
-
-    // I'll invert it so that closer to view it is, higher the value.
-    float centerSample = 1.0 - texture(depthTexture, centerUV).r;
-    float leftSample = 1.0 - texture(depthTexture, leftUV).r;
-    float rightSample = 1.0 - texture(depthTexture, rightUV).r;
-    float topSample = 1.0 - texture(depthTexture, topUV).r;
-    float botSample = 1.0 - texture(depthTexture, botUV).r;
-
-    return (4 * centerSample - leftSample - rightSample - topSample - botSample) > depthEdgeTreshold;
-}
-
-bool isNormalMapEdge(in vec2 centerUV, in vec2 leftUV, in vec2 rightUV, in vec2 topUV, in vec2 botUV)
-{
-    const float normalEdgeTreshold = 0.85;
-    vec3 centerSample = normalize(texture(normalMapTexture, centerUV).xyz);
-    vec3 leftSample = normalize(texture(normalMapTexture, leftUV).xyz);
-    vec3 rightSample = normalize(texture(normalMapTexture, rightUV).xyz);
-    vec3 topSample = normalize(texture(normalMapTexture, topUV).xyz);
-    vec3 botSample = normalize(texture(normalMapTexture, botUV).xyz);
-
-    bool leftEdge = abs(dot(centerSample, leftSample)) < normalEdgeTreshold;
-    bool rightEdge = abs(dot(centerSample, rightSample)) < normalEdgeTreshold;
-    bool topEdge = abs(dot(centerSample, topSample)) < normalEdgeTreshold;
-    bool botEdge = abs(dot(centerSample, botSample)) < normalEdgeTreshold;
-
-    return leftEdge ||
-        rightEdge ||
-        topEdge ||
-        botEdge;
+    FragColor = contourWeight >= 1.0 ? vec3(1, 1, 1) : vec3(0, 0, 0);
 }
