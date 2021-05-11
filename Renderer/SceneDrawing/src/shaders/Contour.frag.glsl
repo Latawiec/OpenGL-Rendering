@@ -7,6 +7,8 @@ uniform sampler2D silhouetteTexture;
 uniform sampler2D normalMapTexture;
 uniform sampler2D depthTexture;
 
+uniform vec2 cameraNearFar;
+
 bool isSilhouetteEdge(in vec2 centerUV, in vec2 leftUV, in vec2 rightUV, in vec2 topUV, in vec2 botUV);
 bool isDepthEdge(in vec2 centerUV, in vec2 leftUV, in vec2 rightUV, in vec2 topUV, in vec2 botUV);
 bool isNormalMapEdge(in vec2 centerUV, in vec2 leftUV, in vec2 rightUV, in vec2 topUV, in vec2 botUV);
@@ -44,9 +46,15 @@ void main() {
         vec4 silhouetteDiff = centerSilhouette - sampleSilhouette;
         float silhouetteWeight = silhouetteDiff.x + silhouetteDiff.y + silhouetteDiff.z + silhouetteDiff.w != 0 ? 1.0 : 0.0;
 
-        // Test 2 - depth test. Anything below treshold is not edge, anything above is an edge. Linearly (for now).
-        const float depthEdgeTreshold = 0.0001;
-        float depthDiff = sampleDepth - centerDepth; // we know by now that it is positive number after Test 0.
+        // Test 2 - depth test. Anything below treshold is not edge, anything above is an edge. We'll linearize depth for it.
+        const float depthEdgeTreshold = 0.005;
+        const float depthExponent = 0.1; // bump lower values so when we're close, we see edge sooner.
+        float near = cameraNearFar.x;
+        float far = cameraNearFar.y;
+        float centerDepthLin =  2.0 * near / (far + near - (2.0 * centerDepth - 1.0) * (far - near));
+        float sampleDepthLin =  2.0 * near / (far + near - (2.0 * sampleDepth - 1.0) * (far - near));
+
+        float depthDiff = abs(pow(sampleDepthLin, depthExponent) - pow(centerDepthLin, depthExponent));
         float depthWeight = depthDiff / (depthEdgeTreshold);
 
         // Test 3 - normal test. Treshold again, using dot product.
@@ -65,7 +73,6 @@ void main() {
             0.0
         );
     }
-
 
     FragColor = contourWeight >= 1.0 ? vec3(1, 1, 1) : vec3(0, 0, 0);
 }

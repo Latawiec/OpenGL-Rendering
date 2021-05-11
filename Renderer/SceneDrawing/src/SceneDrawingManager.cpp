@@ -98,6 +98,10 @@ ShadowMappingPass::SharedData SceneDrawingManager::createFittingShadowmapTransfo
     return viewData;
 }
 
+const Scene::SceneView& SceneDrawingManager::getActiveSceneView() const {
+    return _scene.GetSceneViews()[_activeSceneViewIndex];
+}
+
 SceneDrawingManager::SceneDrawingManager(const Renderer::Scene::Scene& scene, const int windowWidth, const int windowHeight)
 : _scene(scene)
 , _transformProcessor(_scene)
@@ -147,6 +151,11 @@ void SceneDrawingManager::SetResolution(const int pixelWidth, const int pixelHei
     _lightingPassBuffer = LightingPass::LightingPassBuffer(pixelWidth, pixelHeight);
 }
 
+const glm::mat4& SceneDrawingManager::GetNodeWorldTransform(const Scene::Base::Node::IdType& id) const
+{
+    return _transformProcessor.GetNodeTransforms().at(id);
+}
+
 void SceneDrawingManager::CombinePass()
 {
     CombinePass::CombinePipelineManager::PropertiesSet properties = 0;
@@ -177,10 +186,14 @@ void SceneDrawingManager::ContourPass()
     ContourPass::ContourPipelineManager::PropertiesSet properties = 0;
     const auto& pipeline = _contourPassPipelineManager.GetPipeline(properties);
 
+    const auto& activeView = getActiveSceneView();
+    const auto& activeCamera = _scene.GetCamera(activeView.cameraId);
+
     ContourPass::SharedData data;
     data.silhouetteTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::SilhouetteMap);
     data.normalMapTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Normals);
     data.depthTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Depth);
+    data.cameraNearFar = glm::vec2(activeCamera.GetNear(), activeCamera.GetFar());
 
     const auto binding = pipeline.Bind();
     pipeline.prepareShared(data);
@@ -202,8 +215,7 @@ void SceneDrawingManager::LightingPass()
     data.normalMapTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Normals);
     data.metallicRoughnessTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::MetallicRoughness);
 
-    // Again im getting first view coz I still have no "Active Camera" thing... ehh
-    const auto& cameraNode = _scene.GetSceneViews().begin()->nodeId;
+    const auto& cameraNode = getActiveSceneView().nodeId;
     data.cameraPosition = _transformProcessor.GetNodeTransforms().at(cameraNode) * glm::vec4(0, 0, 0, 1);
 
     LightingPass::LightingPipelineManager::PropertiesSet properties = 0;
@@ -256,8 +268,7 @@ void SceneDrawingManager::ShadowMappingPass()
             const auto framebufferBinding = shadowMapBuffer.Bind();
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            // TODO: Test... I'll need to either render it for each camera or introduce "Active Camera"...
-            const auto& [cameraNodeId, cameraId] = *_scene.GetSceneViews().begin();
+            const auto& [cameraNodeId, cameraId] = getActiveSceneView();
             const auto& camera = _scene.GetCamera(cameraId);
             const auto& cameraTransform = _transformProcessor.GetNodeTransforms().at(cameraNodeId);
 
@@ -307,8 +318,7 @@ void SceneDrawingManager::ShadowMappingPass()
 
 void SceneDrawingManager::BasePass()
 {
-    // Get any camera for now...
-    const auto& [nodeId, cameraId] = *_scene.GetSceneViews().begin();
+    const auto& [nodeId, cameraId] = getActiveSceneView();
     const auto& camera = _scene.GetCamera(cameraId);
     const auto viewTransform = glm::inverse(_transformProcessor.GetNodeTransforms().at(nodeId) * camera.GetCameraOrientation());
     const auto projTransform = camera.GetProjectionTransform();

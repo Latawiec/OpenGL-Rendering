@@ -7,7 +7,6 @@
 #include <id_generator.hpp>
 #include <Scene/Scene.hpp>
 #include <Scene/NodeLink.hpp>
-#include <EdgeProgram.hpp>
 #include <TextureProgram.hpp>
 #include <DebugMeshProgram.hpp>
 #include "BasePass/BasePassBuffer.hpp"
@@ -34,6 +33,8 @@ void Draw();
 
 void SetWindowSize(const int windowWidth, const int windowHeight);
 void SetResolution(const int pixelWidth, const int pixelHeight);
+void SetActiveSceneView(unsigned int sceneViewIndex);
+const glm::mat4& GetNodeWorldTransform(const Scene::Base::Node::IdType& id) const;
 
 private:
     const Renderer::Scene::Scene& _scene;
@@ -55,15 +56,15 @@ private:
 
     Scene::Base::VertexDataBase _framebufferPlane;
     TransformProcessor _transformProcessor;
-
-    ShadowMappingPass::SharedData createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform);
-
-    void prepareSkin(const Renderer::Scene::Base::Skin::IdType& skinId);
     std::unordered_map<Renderer::Scene::Base::Skin::IdType, std::array<glm::mat4, 32>> _jointTransforms;
+    uint64_t _activeSceneViewIndex = 0;
+
+    const Scene::SceneView& getActiveSceneView() const;
+    ShadowMappingPass::SharedData createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform);
+    void prepareSkin(const Renderer::Scene::Base::Skin::IdType& skinId);
 
     // Debugging, testing ... seeing if works.
     Renderer::Programs::TextureProgram _textureDrawProgram;
-    Renderer::Programs::EdgeProgram _edgeProgram;
 
     void CombinePass();
     void ContourPass();

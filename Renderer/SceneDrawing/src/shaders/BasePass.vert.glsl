@@ -55,7 +55,7 @@ vec2 calculateTexCoords(in vec2 texCoords);
 void main()
 {
     mat4 modelTransform = calculateModelTransform(model);
-    vec4 worldPos = modelTransform * vec4(aPos, 1);
+    vec4 worldPos = modelTransform * vec4(aPos, 1.0);
     gl_Position = proj * view * worldPos;
 
     OUT.Position = worldPos.xyz;

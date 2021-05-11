@@ -15,6 +15,8 @@ struct SharedData {
     GLuint silhouetteTexture;
     GLuint normalMapTexture;
     GLuint depthTexture;
+
+    glm::vec2 cameraNearFar;
 };
 
 
@@ -54,6 +56,8 @@ class ContourFragmentProgram {
     static constexpr unsigned int NormalMapTextureLocation = 1;
     static constexpr std::string_view DepthSamplerUniform = "depthTexture";
     static constexpr unsigned int DepthTextureLocation = 2;
+
+    static constexpr std::string_view CameraNearFarUniform = "cameraNearFar";
 
     ContourFragmentProgram(const ContourFragmentProgram& other) = delete;
     ContourFragmentProgram& operator=(const ContourFragmentProgram& other) = delete;

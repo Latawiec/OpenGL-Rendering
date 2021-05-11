@@ -175,6 +175,8 @@ void ContourFragmentProgram::prepareShared(const SharedData& data) const {
 
     glActiveTexture(GL_TEXTURE0 + DepthTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.depthTexture);
+
+    glProgramUniform2fv(_program, glGetUniformLocation(_program, CameraNearFarUniform.data()), 1, glm::value_ptr(data.cameraNearFar));
 }
 
 void ContourFragmentProgram::prepareIndividual() const {

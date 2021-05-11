@@ -25,7 +25,6 @@ add_library(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME}
     Renderer_Utils
     Renderer_Scene
-    Renderer_Programs_EdgeProgram
     Renderer_Programs_TextureProgram
     Renderer_Programs_DebugMeshProgram
     Assets
@@ -39,7 +38,6 @@ PRIVATE
     Renderer_Scene
     Assets
 PUBLIC
-    Renderer_Programs_EdgeProgram
     Renderer_Programs_TextureProgram
     Renderer_Programs_DebugMeshProgram
 )

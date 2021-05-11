@@ -68,14 +68,22 @@ int main() {
 
     const std::chrono::duration<float> frameTimeCap(1.f / FPS);
 
+    
+
     while(!glfwWindowShouldClose(window)) {
-        //stolenLight.SetTransform(glm::translate(glm::mat4(1), glm::vec3(5 * glm::sin(glfwGetTime()), 2.5, 1)));
         const std::chrono::time_point<std::chrono::system_clock> startFrame = std::chrono::system_clock::now();
         sceneDrawingManager.Draw();
 
         const auto transform = cacheLightTransform * glm::rotate(glm::mat4{1}, glm::radians(90.f), glm::vec3(0, 1, 0));
-        const auto transform2 = glm::rotate(cacheTransform, float(glfwGetTime())/1.f, glm::vec3(0, 1, 0));
+        const auto transform2 = glm::rotate(cacheLightTransform, float(glfwGetTime())/1.f, glm::vec3(0, 1, 0));
         lightNode.SetTransform(transform2);
+
+        const static glm::mat4 cameraCachedTransform = [&]() {
+            // just once.
+            return sceneDrawingManager.GetNodeWorldTransform(mainScene.GetSceneViews().begin()->nodeId);
+        }();
+
+        cameraNode.SetTransform(glm::rotate(cacheTransform, float(glm::radians(3.f * glfwGetTime())), glm::vec3(0, 1, 0)));
 
         glfwSwapBuffers(window);
         glfwPollEvents();
