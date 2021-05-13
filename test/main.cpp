@@ -15,7 +15,7 @@ int main() {
 
     constexpr int windowWidth = 1600;
     constexpr int windowHeight= 1200;
-    constexpr float FPS = 60.0;
+    constexpr float FPS = 15.0;
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -83,7 +83,7 @@ int main() {
             return sceneDrawingManager.GetNodeWorldTransform(mainScene.GetSceneViews().begin()->nodeId);
         }();
 
-        cameraNode.SetTransform(glm::rotate(cacheTransform, float(glm::radians(3.f * glfwGetTime())), glm::vec3(0, 1, 0)));
+        //cameraNode.SetTransform(glm::rotate(cacheTransform, float(glm::radians(3.f * glfwGetTime())), glm::vec3(0, 1, 0)));
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -97,7 +97,7 @@ int main() {
         const auto frameTime = std::chrono::duration_cast<std::chrono::milliseconds>(endFrame - startFrame);
         const auto frameTimeLeft = std::chrono::duration_cast<std::chrono::milliseconds>(frameTimeCap - frameTime);
 
-        std::this_thread::sleep_for(frameTimeLeft / 2.0);
+        std::this_thread::sleep_for(frameTimeLeft);
     }
 	glfwTerminate();
 	return 0;

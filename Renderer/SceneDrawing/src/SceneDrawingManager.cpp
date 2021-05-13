@@ -252,8 +252,7 @@ void SceneDrawingManager::LightingPass()
 void SceneDrawingManager::ShadowMappingPass()
 {
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
+    glDisable(GL_CULL_FACE);
 
     for (const auto& sceneLight : _scene.GetSceneLights()) {
         const auto& nodeId = sceneLight.nodeId;
@@ -313,6 +312,7 @@ void SceneDrawingManager::ShadowMappingPass()
         }
     }
 
+    glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 }
 
