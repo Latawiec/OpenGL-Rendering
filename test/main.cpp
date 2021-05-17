@@ -1,3 +1,10 @@
+
+// IMGUI
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+// IMGUI
+
 #include <iostream>
 #include <chrono>
 #include <numeric>
@@ -10,6 +17,9 @@
 #include <Scene/Base/Texture.hpp>
 #include <Scene/Scene.hpp>
 #include <SceneDrawing/SceneDrawingManager.hpp>
+
+#include <UI/Components/TransformEditor.hpp>
+#include <UI/Components/SceneHierarchy.hpp>
 
 int main() {
 
@@ -68,15 +78,39 @@ int main() {
 
     const std::chrono::duration<float> frameTimeCap(1.f / FPS);
 
-    
+    // IMGUI
+    // Setup Dear ImGui context
+    gladLoadGL();
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsClassic();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+
+    const char* glsl_version = "#version 410";
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    Renderer::UI::Components::TransformEditor transformEditor;
+    Renderer::UI::Components::SceneHierarchy sceneHierarchy;
+    sceneHierarchy.SetScene(&mainScene);
+    // IMGUI
 
     while(!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+
         const std::chrono::time_point<std::chrono::system_clock> startFrame = std::chrono::system_clock::now();
         sceneDrawingManager.Draw();
 
         const auto transform = cacheLightTransform * glm::rotate(glm::mat4{1}, glm::radians(90.f), glm::vec3(0, 1, 0));
         const auto transform2 = glm::rotate(cacheLightTransform, float(glfwGetTime())/1.f, glm::vec3(0, 1, 0));
-        lightNode.SetTransform(transform2);
+        //lightNode.SetTransform(transform2);
 
         const static glm::mat4 cameraCachedTransform = [&]() {
             // just once.
@@ -85,8 +119,19 @@ int main() {
 
         //cameraNode.SetTransform(glm::rotate(cacheTransform, float(glm::radians(3.f * glfwGetTime())), glm::vec3(0, 1, 0)));
 
+        // IMGUI
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        transformEditor.Append();
+        sceneHierarchy.Append();
+        bool showDemoWindow = true;
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // IMGUI
+
         glfwSwapBuffers(window);
-        glfwPollEvents();
 
         #ifndef NDEBUG
         while (auto error = glGetError()) {
@@ -98,6 +143,9 @@ int main() {
         const auto frameTimeLeft = std::chrono::duration_cast<std::chrono::milliseconds>(frameTimeCap - frameTime);
 
         std::this_thread::sleep_for(frameTimeLeft);
+
+        transformEditor.Apply();
+        transformEditor.SetNode(sceneHierarchy.GetSelected() ? &mainScene.GetNode(sceneHierarchy.GetSelected()->nodeId) : nullptr );
     }
 	glfwTerminate();
 	return 0;

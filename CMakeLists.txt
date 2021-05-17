@@ -25,7 +25,7 @@ if (AUTOINSTALL)
     file(READ vcpkg_required.txt VCPKG_REQUIRED NEWLINE_CONSUME)
     string(REPLACE "\n" "; " VCPKG_REQUIRED ${VCPKG_REQUIRED})
     string(REPLACE " " ";" VCPKG_REQUIRED ${VCPKG_REQUIRED})
-    execute_process(COMMAND "${VCPKG_EXE}" "install" "--triplet=x64-windows" ${VCPKG_REQUIRED})
+    execute_process(COMMAND "${VCPKG_EXE}" "install" "--triplet=x64-windows" "--recurse" ${VCPKG_REQUIRED})
 endif()
 
 project(root)
