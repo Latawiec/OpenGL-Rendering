@@ -6,6 +6,7 @@
 
 #include "Base/Camera.hpp"
 #include "Base/DirectionalLight.hpp"
+#include "Base/PointLight.hpp"
 #include "Base/Material.hpp"
 #include "Base/Mesh.hpp"
 #include "Base/Node.hpp"
@@ -58,6 +59,11 @@ struct Scene {
     const Base::DirectionalLight& GetDirectionalLight(const Base::DirectionalLight::IdType id) const;
     const std::unordered_map<Base::DirectionalLight::IdType, Base::DirectionalLight>& GetDirectionalLights() const;
 
+    Base::PointLight::IdType AddPointLight(Base::PointLight&& light);
+    Base::PointLight& GetPointLight(const Base::PointLight::IdType id);
+    const Base::PointLight& GetPointLight(const Base::PointLight::IdType id) const;
+    const std::unordered_map<Base::PointLight::IdType, Base::PointLight>& GetPointLights() const;
+
     void AddNodeHierarchy(NodeLink&& nodeLink);
     NodeLink& GetNodeHierarchy();
     const NodeLink& GetNodeHierarchy() const;
@@ -79,6 +85,7 @@ private:
     Utils::IdGenerator<Base::Camera::IdType> _cameraIdGenerator;
     Utils::IdGenerator<Base::Skin::IdType> _skinIdGenerator;
     Utils::IdGenerator<Base::DirectionalLight::IdType> _directionalLightIdGenerator;
+    Utils::IdGenerator<Base::PointLight::IdType> _pointLightIdGenerator;
 
     // Raw data
     std::unordered_map<Base::Node::IdType, Base::Node> _nodes;
@@ -87,7 +94,8 @@ private:
     std::unordered_map<Base::Material::IdType, Base::Material> _materials;
     std::unordered_map<Base::Camera::IdType, Base::Camera> _cameras;
     std::unordered_map<Base::Skin::IdType, Base::Skin> _skins;
-    std::unordered_map<Base::Skin::IdType, Base::DirectionalLight> _directionalLights;
+    std::unordered_map<Base::DirectionalLight::IdType, Base::DirectionalLight> _directionalLights;
+    std::unordered_map<Base::PointLight::IdType, Base::PointLight> _pointLights;
 
     // Data connections
     std::vector<SceneObject> _sceneObjects;

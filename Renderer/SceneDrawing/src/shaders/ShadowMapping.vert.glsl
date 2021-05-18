@@ -3,6 +3,10 @@
 #define DIRECTIONAL_LIGHT 0
 #endif
 
+#ifndef POINT_LIGHT
+#define POINT_LIGHT 0
+#endif
+
 #ifndef SKINNED_MESH
 #define SKINNED_MESH 0
 #endif

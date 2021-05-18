@@ -25,7 +25,7 @@ private:
     struct {
         std::vector<SceneId> convertedNodes;
         std::unordered_map<gltfId, gltfId> cameraToOrientationNode;
-        std::unordered_map<gltfId, gltfId> directionalLightToOrientationNode;
+        std::unordered_map<gltfId, gltfId> lightToOrientationNode;
     } nodeConversionData;
 
     struct {
@@ -46,6 +46,7 @@ private:
 
     struct {
         std::unordered_map<gltfId, SceneId> convertedDirectionalLights;
+        std::unordered_map<gltfId, SceneId> convertedPointLights;
     } lightsConversionData;
 
     struct {

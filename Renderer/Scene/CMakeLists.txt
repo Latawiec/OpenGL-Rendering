@@ -10,6 +10,7 @@ add_library(${PROJECT_NAME}
     src/Mesh.cpp
     src/Node.cpp
     src/NodeLink.cpp
+    src/PointLight.cpp
     src/Scene.cpp
     src/Skin.cpp
     src/Texture.cpp

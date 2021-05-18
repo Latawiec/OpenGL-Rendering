@@ -11,6 +11,7 @@ add_library(${PROJECT_NAME}
     src/CombinePassPipelineManager.cpp
     src/ContourPassBuffer.cpp
     src/ContourPassPipelineManager.cpp
+    src/CubeDepthBuffer.cpp
     src/DepthBuffer.cpp
     src/FramebufferBase.cpp
     src/GlobalTexturesBuffer.cpp

@@ -24,6 +24,7 @@ uniform vec4 directionalLightColor[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
 uniform sampler2D directionalLightShadowmapSamplers[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
 #endif
 
+#if DIRECTIONAL_LIGHTS
 float CalculateShadow_DirectionalLight(in vec2 coord, in uint lightIndex) {
     mat4 lightTransform = directionalLightTransforms[lightIndex];
 
@@ -70,11 +71,13 @@ vec3 CalculateSpecular_DirectionalLight(in vec2 coord, in uint lightIndex) {
     float specular = specularPower * pow(max(dot(viewDirection, reflectDirection), 0.0), pow(2, howShinyXD));
     return vec3(specular);
 }
+#endif
 
 void main() {
     vec3 diffuse = vec3(0);
     vec3 specular = vec3(0);
     
+#if DIRECTIONAL_LIGHTS
     for (int i=0; i<directionalLightCount; i++) {
 
         float shadowFactor = CalculateShadow_DirectionalLight(TextureCoord, i);
@@ -86,6 +89,7 @@ void main() {
         diffuse += (1.0 - shadowFactor) * diffuseFactor * lightColor;
         specular += (1.0 - shadowFactor) * specularFactor * lightColor;
     }
+#endif
 
     DiffuseTexture = diffuse;
     SpecularTexture = specular;

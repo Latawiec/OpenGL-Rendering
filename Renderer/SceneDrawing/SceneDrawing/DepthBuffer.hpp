@@ -22,5 +22,5 @@ private:
     DepthBuffer& operator=(const DepthBuffer&) = delete;
 };
 
-} // namespace Renderer
 } // namespace SceneDrawing
+} // namespace Renderer

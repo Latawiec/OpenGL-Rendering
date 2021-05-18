@@ -13,6 +13,7 @@
 #include "Scene/Base/Camera.hpp"
 #include "Scene/Base/Texture.hpp"
 #include "Scene/Base/DirectionalLight.hpp"
+#include "Scene/Base/PointLight.hpp"
 #include "Scene/NodeLink.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -185,7 +186,7 @@ void Importer::convertNodes(
         if (gltfNode.extensions.size() != 0 && gltfNode.extensions.contains(LightsExtensionName)) {
             const static std::string LightProperty_Name = "light";
             const auto lightId = gltfNode.extensions.at(LightsExtensionName).Get(LightProperty_Name).Get<int>();
-            nodeConversionData.directionalLightToOrientationNode[lightId] = i;
+            nodeConversionData.lightToOrientationNode[lightId] = i;
             nodeTransform = glm::mat4{1};
         }
 
@@ -259,6 +260,7 @@ void Importer::convertLights (
 {
     // Lights are only available in gltf2 through an extension. So we need to fetch them from there.
     const static std::string LightType_Directional = "directional";
+    const static std::string LightType_Point = "point";
 
     const int lightsCount = gltfModel.lights.size();
     for (int i=0; i < lightsCount; ++i) {
@@ -266,19 +268,24 @@ void Importer::convertLights (
 
         const glm::vec3 convertedColor { light.color[0], light.color[1], light.color[2] };
         const float convertedIntensity = light.intensity;
+        const bool lightHasOrientationTransform = nodeConversionData.lightToOrientationNode.contains(i);
+        const glm::mat4 orientationTransform = lightHasOrientationTransform ? processNodeTransform(gltfModel.nodes[nodeConversionData.lightToOrientationNode[i]]) : glm::mat4{1};
 
         if (light.type == LightType_Directional) {
-            // For directional light, we need their direction, which is set under it's Node.
-            const bool lightHasOrientationTransform = nodeConversionData.directionalLightToOrientationNode.contains(i);
-            if (lightHasOrientationTransform) {
-                const tinygltf::Node& gltfNode = gltfModel.nodes[nodeConversionData.directionalLightToOrientationNode[i]];
-                const glm::mat4 orientationTransform = processNodeTransform(gltfNode);
                 
-                Scene::Base::DirectionalLight convertedDirectionalLight{ orientationTransform };
-                convertedDirectionalLight.SetColor(convertedColor);
-                convertedDirectionalLight.SetIntensity(convertedIntensity);
-                lightsConversionData.convertedDirectionalLights.emplace(i, scene.AddDirectionalLight(std::move(convertedDirectionalLight)));
-            }
+            Scene::Base::DirectionalLight convertedDirectionalLight{ orientationTransform };
+            convertedDirectionalLight.SetColor(convertedColor);
+            convertedDirectionalLight.SetIntensity(convertedIntensity);
+            lightsConversionData.convertedDirectionalLights.emplace(i, scene.AddDirectionalLight(std::move(convertedDirectionalLight)));
+        }
+
+        if (light.type == LightType_Point) {
+                
+            Scene::Base::PointLight convertedPointLight{ orientationTransform };
+            convertedPointLight.SetColor(convertedColor);
+            convertedPointLight.SetIntensity(convertedIntensity);
+            lightsConversionData.convertedPointLights.emplace(i, scene.AddPointLight(std::move(convertedPointLight)));
+
         }
     }
 }

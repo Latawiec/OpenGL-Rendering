@@ -114,6 +114,24 @@ const std::unordered_map<Base::DirectionalLight::IdType, Base::DirectionalLight>
     return _directionalLights;
 }
 
+Base::PointLight::IdType Scene::AddPointLight(Base::PointLight&& light) {
+    const auto id = _pointLightIdGenerator.GenerateId();
+    _pointLights.insert({id, std::move(light)});
+    return id;
+}
+
+Base::PointLight& Scene::GetPointLight(const Base::PointLight::IdType id) {
+    return _pointLights.at(id);
+}
+
+const Base::PointLight& Scene::GetPointLight(const Base::PointLight::IdType id) const {
+    return _pointLights.at(id);
+}
+
+const std::unordered_map<Base::PointLight::IdType, Base::PointLight>& Scene::GetPointLights() const {
+    return _pointLights;
+}
+
 void Scene::AddNodeHierarchy(NodeLink&& nodeLink) {
     _sceneRoot.AddChild(std::move(nodeLink));
 }

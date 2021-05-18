@@ -20,5 +20,5 @@ void main() {
     float specularAvg = (specular.r + specular.g + specular.b) / 3.0;
     float diffuseMax = max(max(diffuse.r, diffuse.g), diffuse.b);
     vec3 contour = texture(contourTexture, TextureCoord).rgb;
-    FragColor = vec4(max(vec3(0), vec3(round(diffuseAvg - dither) + round(specularAvg - dither))) + contour, 1);
+    FragColor = vec4(max(vec3(0), vec3(ceil(diffuseAvg - dither) + ceil(specularAvg - dither))) + contour, 1);
 }

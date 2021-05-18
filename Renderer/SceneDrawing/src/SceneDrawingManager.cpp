@@ -236,7 +236,7 @@ void SceneDrawingManager::LightingPass()
             data.directionalLightsTransforms.push_back(_shadowMappingPassBuffer.GetDirectionalLightTransform(lightId));
             data.directionalLightsDirections.push_back(lightDirection);
             data.directionalLightsColors.push_back(lightColor);
-            data.directionalLightsShadowmapTextureIds.push_back(_shadowMappingPassBuffer.GetDirectionalLightShadowTexture(lightId));
+            data.directionalLightsShadowmapTextureIds.push_back(_shadowMappingPassBuffer.GetDirectionalLightShadowRenderTarget(lightId).getTexture());
         }
     }
 
