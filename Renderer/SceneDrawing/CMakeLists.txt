@@ -8,6 +8,9 @@ find_package(glm CONFIG REQUIRED)
 add_library(${PROJECT_NAME}
     src/BasePassPipelineManager.cpp
     src/BasePassBuffer.cpp
+    src/BlendPipelineManager.cpp
+    src/BlurPipelineManager.cpp
+    src/BrightnessFilterPipelineManager.cpp
     src/CombinePassPipelineManager.cpp
     src/ContourPassBuffer.cpp
     src/ContourPassPipelineManager.cpp
@@ -20,6 +23,7 @@ add_library(${PROJECT_NAME}
     src/SceneDrawingManager.cpp
     src/ShadowMappingPipelineManager.cpp
     src/ShadowMappingPassBuffer.cpp
+    src/PostProcessBuffer.cpp
     src/TransformProcessor.cpp
 )
 
@@ -59,6 +63,12 @@ PRIVATE
 
     CONTOUR_MATERIAL_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Contour.vert.glsl"
     CONTOUR_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Contour.frag.glsl"
+
+    FORWARD_VERTEX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Forward.vert.glsl"
+
+    BLUR_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Blur.frag.glsl"
+    BLEND_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/Blend.frag.glsl"
+    BRIGHTNESS_FILTER_MATERIAL_FRAGMENT_SOURCE_PATH="${PROJECT_SOURCE_DIR}/src/shaders/BrightnessFilter.frag.glsl"
 )
 
 target_include_directories(${PROJECT_NAME}

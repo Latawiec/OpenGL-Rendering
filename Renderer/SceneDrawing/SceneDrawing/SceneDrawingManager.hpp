@@ -18,6 +18,10 @@
 #include "LightingPass/LightingPassPipelineManager.hpp"
 #include "ShadowMappingPass/ShadowMappingPassBuffer.hpp"
 #include "ShadowMappingPass/ShadowMappingPassPipelineManager.hpp"
+#include "PostProcess/PostProcessBuffer.hpp"
+#include "PostProcess/Blend/BlendPipelineManager.hpp"
+#include "PostProcess/Blur/BlurPipelineManager.hpp"
+#include "PostProcess/BrightnessFilter/BrightnessFilterPipelineManager.hpp"
 #include "GlobalTexturesBuffer.hpp"
 #include "DepthBuffer.hpp"
 #include "TransformProcessor.hpp"
@@ -54,6 +58,13 @@ private:
     ShadowMappingPass::ShadowMappingPipelineManager _shadowMappingPassPipelineManager;
     CombinePass::CombinePipelineManager _combinePassPipelineManager;
 
+    // Bloom setup
+    PostProcess::PostProcessBuffer _intermediateBloomBuffer;
+    PostProcess::PostProcessBuffer _finalBloomBuffer;
+    PostProcess::BrightnessFilter::BrightnessFilterPipelineManager _brightnessFilterPipelineManager;
+    PostProcess::Blur::BlurPipelineManager _blurPipelineManager;
+    PostProcess::Blend::BlendPipelineManager _blendPipelineManager;
+
     Scene::Base::VertexDataBase _framebufferPlane;
     TransformProcessor _transformProcessor;
     std::unordered_map<Renderer::Scene::Base::Skin::IdType, std::array<glm::mat4, 32>> _jointTransforms;
@@ -71,6 +82,8 @@ private:
     void LightingPass();
     void ShadowMappingPass();
     void BasePass();
+
+    void Bloom();
 
     constexpr static inline glm::vec3 quadCoords[4] = {
         {-1.f, -1.f, 0.f},

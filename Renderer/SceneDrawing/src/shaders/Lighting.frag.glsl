@@ -83,8 +83,8 @@ void main() {
         float shadowFactor = CalculateShadow_DirectionalLight(TextureCoord, i);
         vec3 diffuseFactor = CalculateDiffuse_DirectionalLight(TextureCoord, i);
         vec3 specularFactor = CalculateSpecular_DirectionalLight(TextureCoord, i);
-
-        vec3 lightColor = directionalLightColor[i].rgb;
+        // I keep intensity in Alpha channel.
+        vec3 lightColor = directionalLightColor[i].rgb * directionalLightColor[i].a;
         
         diffuse += (1.0 - shadowFactor) * diffuseFactor * lightColor;
         specular += (1.0 - shadowFactor) * specularFactor * lightColor;

@@ -109,6 +109,8 @@ SceneDrawingManager::SceneDrawingManager(const Renderer::Scene::Scene& scene, co
 , _contourPassBuffer(windowWidth, windowHeight)
 , _lightingPassBuffer(windowWidth, windowHeight)
 , _shadowMappingPassBuffer(_shadowMapWidth, _shadowMapHeight)
+, _intermediateBloomBuffer(windowWidth, windowHeight)
+, _finalBloomBuffer(windowWidth, windowHeight)
 , _width(windowWidth)
 , _height(windowHeight) {
     auto indicesVector = std::vector<unsigned int>(indices, indices + 6);
@@ -121,7 +123,10 @@ void SceneDrawingManager::Draw() {
     BasePass();
     ContourPass();
     LightingPass();
+    // TODO: post processing should be last.
+    Bloom();
     CombinePass();
+
 
     // {
         // glDisable(GL_DEPTH_TEST);
@@ -149,6 +154,8 @@ void SceneDrawingManager::SetResolution(const int pixelWidth, const int pixelHei
     _basePassBuffer = BasePass::BasePassBuffer(pixelWidth, pixelHeight);
     _contourPassBuffer = ContourPass::ContourPassBuffer(pixelWidth, pixelHeight);
     _lightingPassBuffer = LightingPass::LightingPassBuffer(pixelWidth, pixelHeight);
+    _intermediateBloomBuffer = PostProcess::PostProcessBuffer(pixelWidth, pixelHeight);
+    _finalBloomBuffer = PostProcess::PostProcessBuffer(pixelWidth, pixelHeight);
 }
 
 const glm::mat4& SceneDrawingManager::GetNodeWorldTransform(const Scene::Base::Node::IdType& id) const
@@ -158,12 +165,18 @@ const glm::mat4& SceneDrawingManager::GetNodeWorldTransform(const Scene::Base::N
 
 void SceneDrawingManager::CombinePass()
 {
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+
     CombinePass::CombinePipelineManager::PropertiesSet properties = 0;
     const auto& pipeline = _combinePassPipelineManager.GetPipeline(properties);
 
     CombinePass::SharedData data;
     data.albedoTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Albedo);
-    data.diffuseTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Diffuse);
+    // TODO: fix this mess.
+    // Temporarily use the one from Bloom. I need to rething combine stage. It doesn't work with post-processing.
+    //data.diffuseTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Diffuse);
+    data.diffuseTexture = _finalBloomBuffer.getTexture(PostProcess::PostProcessBuffer::Output::PostProcessOutput);
     data.specularTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Specular);
     data.ditherTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Dither);
     data.contourTexture = _contourPassBuffer.getTexture(ContourPass::ContourPassBuffer::Output::ContourMap);
@@ -183,6 +196,9 @@ void SceneDrawingManager::CombinePass()
 
 void SceneDrawingManager::ContourPass()
 {
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+
     ContourPass::ContourPipelineManager::PropertiesSet properties = 0;
     const auto& pipeline = _contourPassPipelineManager.GetPipeline(properties);
 
@@ -207,6 +223,9 @@ void SceneDrawingManager::ContourPass()
 
 void SceneDrawingManager::LightingPass() 
 {
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+
     const auto gbufferBinding = _lightingPassBuffer.Bind();
 
     LightingPass::SharedData data;
@@ -252,6 +271,7 @@ void SceneDrawingManager::LightingPass()
 void SceneDrawingManager::ShadowMappingPass()
 {
     glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
     glDisable(GL_CULL_FACE);
 
     for (const auto& sceneLight : _scene.GetSceneLights()) {
@@ -318,6 +338,9 @@ void SceneDrawingManager::ShadowMappingPass()
 
 void SceneDrawingManager::BasePass()
 {
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+
     const auto& [nodeId, cameraId] = getActiveSceneView();
     const auto& camera = _scene.GetCamera(cameraId);
     const auto viewTransform = glm::inverse(_transformProcessor.GetNodeTransforms().at(nodeId) * camera.GetCameraOrientation());
@@ -450,6 +473,89 @@ void SceneDrawingManager::prepareSkin(const Renderer::Scene::Base::Skin::IdType&
     auto& skinJointTransforms = _jointTransforms[skinId];
     skinJointTransforms.fill(glm::mat4(1));
     setTransforms(glm::mat4{1}, skinJointTransforms, _scene, skin, skinHierarchy);
+}
+
+void SceneDrawingManager::Bloom() {
+
+    // Draw to screen
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+
+    // Find super-bright places
+    {
+        PostProcess::BrightnessFilter::BrightnessFilterPipelineManager::PropertiesSet properties = PostProcess::BrightnessFilter::BrightnessFilterPipelineManager::PipelineProperties::NULLIFY_BELOW;
+
+        PostProcess::BrightnessFilter::SharedData data;
+        data.filterTreshold = 1.0f;
+        data.sourceTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Diffuse);
+
+        const auto& pipeline = _brightnessFilterPipelineManager.GetPipeline(properties);
+        const auto pipelineBinding = pipeline.Bind();
+
+        pipeline.prepareShared(data);
+        pipeline.prepareIndividual();
+        
+        const auto bufferBinding = _intermediateBloomBuffer.Bind();
+
+        Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { _framebufferPlane };
+        glDrawElements(GL_TRIANGLES, _framebufferPlane.vertexCount(), GL_UNSIGNED_INT, 0);
+    }
+
+    // Horizontal Blur
+    {
+        PostProcess::Blur::BlurPipelineManager::PropertiesSet properties = PostProcess::Blur::BlurPipelineManager::PipelineProperties::HORIZONTAL_BLUR;
+
+        PostProcess::Blur::SharedData data;
+        data.sourceTexture = _intermediateBloomBuffer.getTexture(PostProcess::PostProcessBuffer::Output::PostProcessOutput);
+
+        const auto& pipeline = _blurPipelineManager.GetPipeline(properties);
+        const auto pipelineBinding = pipeline.Bind();
+
+        pipeline.prepareShared(data);
+        pipeline.prepareIndividual();
+        const auto bufferBinding = _finalBloomBuffer.Bind();
+
+        Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { _framebufferPlane };
+        glDrawElements(GL_TRIANGLES, _framebufferPlane.vertexCount(), GL_UNSIGNED_INT, 0);
+    }
+
+    // Vertical Blur
+    {
+        PostProcess::Blur::BlurPipelineManager::PropertiesSet properties = PostProcess::Blur::BlurPipelineManager::PipelineProperties::VERTICAL_BLUR;
+
+        PostProcess::Blur::SharedData data;
+        data.sourceTexture = _finalBloomBuffer.getTexture(PostProcess::PostProcessBuffer::Output::PostProcessOutput);
+
+        const auto& pipeline = _blurPipelineManager.GetPipeline(properties);
+        const auto pipelineBinding = pipeline.Bind();
+
+        pipeline.prepareShared(data);
+        pipeline.prepareIndividual();
+        const auto bufferBinding = _intermediateBloomBuffer.Bind();
+
+        Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { _framebufferPlane };
+        glDrawElements(GL_TRIANGLES, _framebufferPlane.vertexCount(), GL_UNSIGNED_INT, 0);
+    }
+    
+    // Blend original and the result
+    {
+        PostProcess::Blend::BlendPipelineManager::PropertiesSet properties = PostProcess::Blend::BlendPipelineManager::PipelineProperties::ADDITIVE;
+
+        PostProcess::Blend::SharedData data;
+        data.sourcesCount = 2;
+        data.sourceTextures[0] = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Diffuse);
+        data.sourceTextures[1] = _intermediateBloomBuffer.getTexture(PostProcess::PostProcessBuffer::Output::PostProcessOutput);
+
+        const auto& pipeline = _blendPipelineManager.GetPipeline(properties);
+        const auto pipelineBinding = pipeline.Bind();
+
+        pipeline.prepareShared(data);
+        pipeline.prepareIndividual();
+        const auto bufferBinding = _finalBloomBuffer.Bind();
+
+        Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { _framebufferPlane };
+        glDrawElements(GL_TRIANGLES, _framebufferPlane.vertexCount(), GL_UNSIGNED_INT, 0);
+    }
 }
 
 } // namespace SceneDrawing

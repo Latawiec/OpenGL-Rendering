@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../SceneDrawing/FramebufferBase.hpp"
+#include "../FramebufferBase.hpp"
 
 #include <cstddef>
 #include <utility>
