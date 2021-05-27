@@ -143,6 +143,7 @@ CombineFragmentProgram::CombineFragmentProgram()
     glProgramUniform1i(_program, glGetUniformLocation(_program, SpecularSamplerUniform.data()), SpecularTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, DitheringSamplerUniform.data()), DitherTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, ContourSamplerUniform.data()), ContourTextureLocation);
+    glProgramUniform1i(_program, glGetUniformLocation(_program, MetallicRoughnessSamplerUniform.data()), MetallicRoughnessTextureLocation);
 
     // Delete shader as we only need program.
     glDetachShader(_program, shader);
@@ -183,6 +184,9 @@ void CombineFragmentProgram::prepareShared(const SharedData& data) const {
 
     glActiveTexture(GL_TEXTURE0 + ContourTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.contourTexture);
+
+    glActiveTexture(GL_TEXTURE0 + MetallicRoughnessTextureLocation);
+    glBindTexture(GL_TEXTURE_2D, data.metallicRoughnessTexture);
 }
 
 void CombineFragmentProgram::prepareIndividual() const {

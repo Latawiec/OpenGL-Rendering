@@ -175,11 +175,12 @@ void SceneDrawingManager::CombinePass()
     data.albedoTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Albedo);
     // TODO: fix this mess.
     // Temporarily use the one from Bloom. I need to rething combine stage. It doesn't work with post-processing.
-    //data.diffuseTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Diffuse);
-    data.diffuseTexture = _finalBloomBuffer.getTexture(PostProcess::PostProcessBuffer::Output::PostProcessOutput);
+    data.diffuseTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Diffuse);
+    //data.diffuseTexture = _finalBloomBuffer.getTexture(PostProcess::PostProcessBuffer::Output::PostProcessOutput);
     data.specularTexture = _lightingPassBuffer.getTexture(LightingPass::LightingPassBuffer::Output::Specular);
     data.ditherTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::Dither);
     data.contourTexture = _contourPassBuffer.getTexture(ContourPass::ContourPassBuffer::Output::ContourMap);
+    data.metallicRoughnessTexture = _basePassBuffer.getTexture(BasePass::BasePassBuffer::Output::MetallicRoughness);
 
     const auto binding = pipeline.Bind();
     pipeline.prepareShared(data);

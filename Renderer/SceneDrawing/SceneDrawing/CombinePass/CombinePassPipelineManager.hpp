@@ -17,6 +17,7 @@ struct SharedData {
     GLuint specularTexture;
     GLuint ditherTexture;
     GLuint contourTexture;
+    GLuint metallicRoughnessTexture;
 };
 
 
@@ -60,6 +61,8 @@ class CombineFragmentProgram {
     static constexpr unsigned int DitherTextureLocation = 3;
     static constexpr std::string_view ContourSamplerUniform = "contourTexture";
     static constexpr unsigned int ContourTextureLocation = 4;
+    static constexpr std::string_view MetallicRoughnessSamplerUniform = "metallicRoughnessTexture";
+    static constexpr unsigned int MetallicRoughnessTextureLocation = 5;
 
     CombineFragmentProgram(const CombineFragmentProgram& other) = delete;
     CombineFragmentProgram& operator=(const CombineFragmentProgram& other) = delete;

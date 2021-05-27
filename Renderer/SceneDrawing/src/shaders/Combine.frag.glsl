@@ -8,6 +8,7 @@ uniform sampler2D diffuseTexture;
 uniform sampler2D specularTexture;
 uniform sampler2D ditherTexture;
 uniform sampler2D contourTexture;
+uniform sampler2D metallicRoughnessTexture;
 
 vec3 GammaCorrection(in vec3 linearColor);
 vec3 ToneMapping(in vec3 hdrColor, in float exposure);
@@ -18,6 +19,9 @@ void main() {
     vec3 diffuse = texture(diffuseTexture, TextureCoord).rgb;
     vec3 specular = texture(specularTexture, TextureCoord).rgb;
     float dither = texture(ditherTexture, TextureCoord).r;
+    float roughness = texture(metallicRoughnessTexture, TextureCoord).g;
+
+    float roughnessDither = (1.0 - roughness) * (dither - 0.5) + 0.5;
     //FragColor = vec4(diffuse * albedo + specular, 1);
     float diffuseAvg = (diffuse.r + diffuse.g + diffuse.b) / 3.0;
     float specularAvg = (specular.r + specular.g + specular.b) / 3.0;
@@ -31,7 +35,7 @@ void main() {
     float exposure = 1.5;
 
     vec3 outColor = GammaCorrection(ToneMapping(vec3(diffuseMax + specularAvg), exposure));
-    FragColor = vec4(ceil(outColor - dither) + contour, 1);
+    FragColor = vec4(ceil(outColor - roughnessDither) + contour, 1);
 
 }
 
