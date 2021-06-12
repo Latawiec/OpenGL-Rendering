@@ -1,5 +1,5 @@
 #include "SceneDrawing/ContourPass/ContourPassPipelineManager.hpp"
-#include <read_file.hpp>
+#include "ShaderCompiler/ShaderCompiler.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
@@ -19,50 +19,8 @@ namespace ContourPass {
 
 ContourVertexProgram::ContourVertexProgram()
 {
-    std::vector<const char*> compilerInput { VersionFlag.data() };
-
-    const std::string shaderSource = Utils::readFile(CONTOUR_MATERIAL_VERTEX_SOURCE_PATH);
-    compilerInput.emplace_back(shaderSource.data());
-
-    _program = glCreateProgram();
-    glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);
-
-    GLuint shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(shader, compilerInput.size(), compilerInput.data(), NULL);
-    glCompileShader(shader);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    glAttachShader(_program, shader);
-    glLinkProgram(_program);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetProgramiv(_program, GL_LINK_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetProgramInfoLog(_program, 512, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    // Delete shader as we only need program.
-    glDetachShader(_program, shader);
-    glDeleteShader(shader); 
+    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, CONTOUR_MATERIAL_VERTEX_SOURCE_PATH);
+    _program = Programs::ShaderCompiler::Compile(data);
 }
 
 ContourVertexProgram::~ContourVertexProgram() {
@@ -96,55 +54,13 @@ void ContourVertexProgram::prepareIndividual() const {
 
 ContourFragmentProgram::ContourFragmentProgram()
 {
-    std::vector<const char*> compilerInput { VersionFlag.data() };
-
-    const std::string shaderSource = Utils::readFile(CONTOUR_MATERIAL_FRAGMENT_SOURCE_PATH);
-    compilerInput.emplace_back(shaderSource.data());
-
-    _program = glCreateProgram();
-    glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);
-
-    GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(shader, compilerInput.size(), compilerInput.data(), NULL);
-    glCompileShader(shader);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    glAttachShader(_program, shader);
-    glLinkProgram(_program);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetProgramiv(_program, GL_LINK_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetProgramInfoLog(_program, 512, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
+    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, CONTOUR_MATERIAL_FRAGMENT_SOURCE_PATH);
+    _program = Programs::ShaderCompiler::Compile(data);
+ 
     // Setup textures
     glProgramUniform1i(_program, glGetUniformLocation(_program, SilhouetteSamplerUniform.data()), SilhouetteTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), NormalMapTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, DepthSamplerUniform.data()), DepthTextureLocation);
-
-    // Delete shader as we only need program.
-    glDetachShader(_program, shader);
-    glDeleteShader(shader); 
 }
 
 ContourFragmentProgram::~ContourFragmentProgram() {

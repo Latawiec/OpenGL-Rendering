@@ -1,5 +1,5 @@
 #include "SceneDrawing/BasePass/BasePassPipelineManager.hpp"
-#include <read_file.hpp>
+#include "ShaderCompiler/ShaderCompiler.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -17,58 +17,17 @@ namespace SceneDrawing {
 namespace BasePass {
 
 BasePassVertexProgram::BasePassVertexProgram(bool skinned, bool normalMap) : _isSkinned(skinned), _hasNormalMapTexture(normalMap) {
-    std::vector<const char*> compilerInput { VersionFlag.data() };
+    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, BASEPASS_MATERIAL_VERTEX_SOURCE_PATH);
 
     if (_isSkinned) {
-        compilerInput.emplace_back(SkinFlag.data());
+        data.AddFlag(SkinFlag);
     }
 
     if (_hasNormalMapTexture) {
-        compilerInput.emplace_back(NormalMapTextureFlag.data());
+        data.AddFlag(NormalMapTextureFlag);
     }
 
-    const std::string shaderSource = Utils::readFile(BASEPASS_MATERIAL_VERTEX_SOURCE_PATH);
-    compilerInput.emplace_back(shaderSource.data());
-
-    _program = glCreateProgram();
-    glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);
-
-    GLuint shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(shader, compilerInput.size(), compilerInput.data(), NULL);
-    glCompileShader(shader);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    glAttachShader(_program, shader);
-    glLinkProgram(_program);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetProgramiv(_program, GL_LINK_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetProgramInfoLog(_program, 512, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    // Delete shader as we only need program.
-    glDetachShader(_program, shader);
-    glDeleteShader(shader);  
+    _program = Programs::ShaderCompiler::Compile(data);
 }
 
 BasePassVertexProgram::~BasePassVertexProgram() {
@@ -114,64 +73,28 @@ BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool 
 , _hasMetallicRoughnessTexture(hasMetallicRoughnessTexture)
 , _dithering(dithering)
 {
-    std::vector<const char*> compilerInput { VersionFlag.data() };
+    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, BASEPASS_MATERIAL_FRAGMENT_SOURCE_PATH);
+    
 
     if (_hasBaseColorTexture) {
-        compilerInput.emplace_back(BaseColorTextureFlag.data());
+        data.AddFlag(BaseColorTextureFlag);
     }
 
     if (_hasNormalMapTexture) {
-        compilerInput.emplace_back(NormalMapTextureFlag.data());
+        data.AddFlag(NormalMapTextureFlag);
     }
 
     if (_hasMetallicRoughnessTexture) {
-        compilerInput.emplace_back(MetallicRoughnessTextureFlag.data());
+        data.AddFlag(MetallicRoughnessTextureFlag);
     }
 
     if (_dithering) {
-        compilerInput.emplace_back(DitheringFlag.data());
+        data.AddFlag(DitheringFlag);
     }
 
-    const std::string shaderSource = Utils::readFile(BASEPASS_MATERIAL_FRAGMENT_SOURCE_PATH);
-    compilerInput.emplace_back(shaderSource.data());
+    _program = Programs::ShaderCompiler::Compile(data);
 
-    _program = glCreateProgram();
-    glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);
-
-    GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(shader, compilerInput.size(), compilerInput.data(), NULL);
-    glCompileShader(shader);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (!success) {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    glAttachShader(_program, shader);
-    glLinkProgram(_program);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetProgramiv(_program, GL_LINK_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetProgramInfoLog(_program, 512, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    // Setup textures
+        // Setup textures
     if (_hasBaseColorTexture) {
         glProgramUniform1i(_program, glGetUniformLocation(_program, BaseColorSamplerUniform.data()), BaseColorTextureLocation);
     }
@@ -188,9 +111,6 @@ BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool 
         glProgramUniform1i(_program, glGetUniformLocation(_program, DitheringSamplerUniform.data()), DitherTextureLocation);
     }
 
-    // Delete shader as we only need program.
-    glDetachShader(_program, shader);
-    glDeleteShader(shader);  
 }
 
 BasePassFragmentProgram::~BasePassFragmentProgram() {

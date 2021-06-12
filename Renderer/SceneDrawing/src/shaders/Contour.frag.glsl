@@ -47,8 +47,8 @@ void main() {
         float silhouetteWeight = silhouetteDiff.x + silhouetteDiff.y + silhouetteDiff.z + silhouetteDiff.w != 0 ? 1.0 : 0.0;
 
         // Test 2 - depth test. Anything below treshold is not edge, anything above is an edge. We'll linearize depth for it.
-        const float depthEdgeTreshold = 0.005;
-        const float depthExponent = 0.1; // bump lower values so when we're close, we see edge sooner.
+        const float depthEdgeTreshold = 0.008;
+        const float depthExponent = 0.5; // bump lower values so when we're close, we see edge sooner.
         float near = cameraNearFar.x;
         float far = cameraNearFar.y;
         float centerDepthLin =  2.0 * near / (far + near - (2.0 * centerDepth - 1.0) * (far - near));
@@ -58,7 +58,7 @@ void main() {
         float depthWeight = depthDiff / (depthEdgeTreshold);
 
         // Test 3 - normal test. Treshold again, using dot product.
-        const float normalEdgeTreshold = 0.4;
+        const float normalEdgeTreshold = 0.3;
         vec3 sampleNormal = normalize(texture(normalMapTexture, uvPos).rgb);
         float dotProduct = dot(centerNormal, sampleNormal);
         // For x == 1, f(x) == 0;

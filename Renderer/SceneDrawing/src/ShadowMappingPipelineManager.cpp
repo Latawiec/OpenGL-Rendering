@@ -1,5 +1,5 @@
 #include "SceneDrawing/ShadowMappingPass/ShadowMappingPassPipelineManager.hpp"
-#include <read_file.hpp>
+#include "ShaderCompiler/ShaderCompiler.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -20,58 +20,17 @@ ShadowMappingVertexProgram::ShadowMappingVertexProgram(const LightType type, boo
 : _type(type)
 , _isSkinned(skinned)
 {
-    std::vector<const char*> compilerInput { VersionFlag.data() };
+    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, SHADOWMAPPING_MATERIAL_VERTEX_SOURCE_PATH);
 
     if (_isSkinned) {
-        compilerInput.emplace_back(SkinFlag.data());
+        data.AddFlag(SkinFlag);
     }
 
     if (_type == LightType::DIRECTIONAL) {
-        compilerInput.emplace_back(DirectionalLightFlag.data());
+        data.AddFlag(DirectionalLightFlag);
     }
 
-    const std::string shaderSource = Utils::readFile(SHADOWMAPPING_MATERIAL_VERTEX_SOURCE_PATH);
-    compilerInput.emplace_back(shaderSource.data());
-
-    _program = glCreateProgram();
-    glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);
-
-    GLuint shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(shader, compilerInput.size(), compilerInput.data(), NULL);
-    glCompileShader(shader);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    glAttachShader(_program, shader);
-    glLinkProgram(_program);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetProgramiv(_program, GL_LINK_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetProgramInfoLog(_program, 512, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    // Delete shader as we only need program.
-    glDetachShader(_program, shader);
-    glDeleteShader(shader); 
+    _program = Programs::ShaderCompiler::Compile(data);
 }
 
 ShadowMappingVertexProgram::~ShadowMappingVertexProgram() {
@@ -114,51 +73,8 @@ void ShadowMappingVertexProgram::prepareIndividual(const IndividualData& sceneOb
 
 
 ShadowMappingFragmentProgram::ShadowMappingFragmentProgram() {
-
-    std::vector<const char*> compilerInput { VersionFlag.data() };
-
-    const std::string shaderSource = Utils::readFile(SHADOWMAPPING_MATERIAL_FRAGMENT_SOURCE_PATH);
-    compilerInput.emplace_back(shaderSource.data());
-
-    _program = glCreateProgram();
-    glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);
-
-    GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(shader, compilerInput.size(), compilerInput.data(), NULL);
-    glCompileShader(shader);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    glAttachShader(_program, shader);
-    glLinkProgram(_program);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetProgramiv(_program, GL_LINK_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetProgramInfoLog(_program, 512, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    // Delete shader as we only need program.
-    glDetachShader(_program, shader);
-    glDeleteShader(shader); 
+    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, SHADOWMAPPING_MATERIAL_FRAGMENT_SOURCE_PATH);
+    _program = Programs::ShaderCompiler::Compile(data);
 }
 
 ShadowMappingFragmentProgram::~ShadowMappingFragmentProgram() {

@@ -21,7 +21,7 @@ void main() {
     float dither = texture(ditherTexture, TextureCoord).r;
     float roughness = texture(metallicRoughnessTexture, TextureCoord).g;
 
-    float roughnessDither = (1.0 - roughness) * (dither - 0.5) + 0.5;
+    float roughnessDither = (roughness) * (dither - 0.5) + 0.5;
     //FragColor = vec4(diffuse * albedo + specular, 1);
     float diffuseAvg = (diffuse.r + diffuse.g + diffuse.b) / 3.0;
     float specularAvg = (specular.r + specular.g + specular.b) / 3.0;

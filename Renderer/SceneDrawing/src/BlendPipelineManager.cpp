@@ -1,5 +1,5 @@
 #include "SceneDrawing/PostProcess/Blend/BlendPipelineManager.hpp"
-#include <read_file.hpp>
+#include "ShaderCompiler/ShaderCompiler.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
@@ -21,50 +21,8 @@ namespace Blend {
 
 BlendVertexProgram::BlendVertexProgram()
 {
-    std::vector<const char*> compilerInput { VersionFlag.data() };
-
-    const std::string shaderSource = Utils::readFile(FORWARD_VERTEX_SOURCE_PATH);
-    compilerInput.emplace_back(shaderSource.data());
-
-    _program = glCreateProgram();
-    glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);
-
-    GLuint shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(shader, compilerInput.size(), compilerInput.data(), NULL);
-    glCompileShader(shader);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    glAttachShader(_program, shader);
-    glLinkProgram(_program);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetProgramiv(_program, GL_LINK_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetProgramInfoLog(_program, 512, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    // Delete shader as we only need program.
-    glDetachShader(_program, shader);
-    glDeleteShader(shader); 
+    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, FORWARD_VERTEX_SOURCE_PATH);
+    _program = Programs::ShaderCompiler::Compile(data);
 }
 
 BlendVertexProgram::~BlendVertexProgram() {
@@ -99,52 +57,15 @@ void BlendVertexProgram::prepareIndividual() const {
 BlendFragmentProgram::BlendFragmentProgram(bool additive)
 : _additive(additive)
 {
-    std::vector<const char*> compilerInput { VersionFlag.data() };
+    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, BLEND_MATERIAL_FRAGMENT_SOURCE_PATH);
 
     if (_additive) {
-        compilerInput.emplace_back(AdditiveBlendFlag.data());
+        data.AddFlag(AdditiveBlendFlag);
     }
 
-    const std::string shaderSource = Utils::readFile(BLEND_MATERIAL_FRAGMENT_SOURCE_PATH);
-    compilerInput.emplace_back(shaderSource.data());
+    _program = Programs::ShaderCompiler::Compile(data);
 
-    _program = glCreateProgram();
-    glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);
-
-    GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(shader, compilerInput.size(), compilerInput.data(), NULL);
-    glCompileShader(shader);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    glAttachShader(_program, shader);
-    glLinkProgram(_program);
-
-#ifndef NDEBUG
-{
-    int success;
-    char infoLog[512];
-    glGetProgramiv(_program, GL_LINK_STATUS, &success);
-
-    if (success != GL_TRUE) {
-        glGetProgramInfoLog(_program, 512, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-}
-#endif
-
-    // Setup textures
+        // Setup textures
     std::stringstream ss;
     for (int i=0; i<MaxBlendSourcesPerExecute; ++i) {
         ss << SourceSamplersUniform << '[' << i << ']';
@@ -152,10 +73,7 @@ BlendFragmentProgram::BlendFragmentProgram(bool additive)
         ss.clear();
         ss.str(std::string());
     }
-
-    // Delete shader as we only need program.
-    glDetachShader(_program, shader);
-    glDeleteShader(shader); 
+    
 }
 
 BlendFragmentProgram::~BlendFragmentProgram() {
