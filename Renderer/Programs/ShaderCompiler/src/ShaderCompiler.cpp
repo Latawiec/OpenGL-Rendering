@@ -91,7 +91,7 @@ GLuint Compile(const ShaderData& data) {
 {
     int success;
     char infoLog[512];
-    glGetProgramiv(shader, GL_COMPILE_STATUS, &success);
+    glGetProgramiv(outputProgram, GL_LINK_STATUS, &success);
 
     if (success != GL_TRUE) {
         glGetProgramInfoLog(shader, 512, NULL, infoLog);
