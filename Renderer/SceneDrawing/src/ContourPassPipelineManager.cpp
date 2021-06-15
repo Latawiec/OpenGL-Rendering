@@ -1,5 +1,6 @@
 #include "SceneDrawing/ContourPass/ContourPassPipelineManager.hpp"
-#include "ShaderCompiler/ShaderCompiler.hpp"
+#include "Base/ShaderCompiler.hpp"
+#include "Base/UniformValue.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
@@ -19,14 +20,8 @@ namespace ContourPass {
 
 ContourVertexProgram::ContourVertexProgram()
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, CONTOUR_MATERIAL_VERTEX_SOURCE_PATH);
-    _program = Programs::ShaderCompiler::Compile(data);
-}
-
-ContourVertexProgram::~ContourVertexProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Vertex> data(CONTOUR_MATERIAL_VERTEX_SOURCE_PATH);
+    _program = Programs::Base::Compile(data);
 }
 
 ContourVertexProgram::ContourVertexProgram(ContourVertexProgram&& other) {
@@ -54,19 +49,13 @@ void ContourVertexProgram::prepareIndividual() const {
 
 ContourFragmentProgram::ContourFragmentProgram()
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, CONTOUR_MATERIAL_FRAGMENT_SOURCE_PATH);
-    _program = Programs::ShaderCompiler::Compile(data);
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Fragment> data(CONTOUR_MATERIAL_FRAGMENT_SOURCE_PATH);
+    _program = Programs::Base::Compile(data);
  
     // Setup textures
     glProgramUniform1i(_program, glGetUniformLocation(_program, SilhouetteSamplerUniform.data()), SilhouetteTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), NormalMapTextureLocation);
     glProgramUniform1i(_program, glGetUniformLocation(_program, DepthSamplerUniform.data()), DepthTextureLocation);
-}
-
-ContourFragmentProgram::~ContourFragmentProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
 }
 
 ContourFragmentProgram::ContourFragmentProgram(ContourFragmentProgram&& other) {

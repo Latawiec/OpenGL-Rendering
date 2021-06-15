@@ -6,13 +6,23 @@ find_package(glad REQUIRED)
 find_package(glm REQUIRED)
 
 add_library(${PROJECT_NAME}
-    ShaderProgram.cpp
+    src/ShaderProgram.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
     glad::glad
     glm
+    Renderer_Utils
+)
+
+target_link_libraries(${PROJECT_NAME}
+PRIVATE
+    Renderer_Utils
+)
+
+add_dependencies(${PROJECT_NAME}
+    Renderer_Utils
 )
 
 target_include_directories(${PROJECT_NAME}

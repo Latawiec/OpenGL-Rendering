@@ -1,5 +1,6 @@
 #include "SceneDrawing/ShadowMappingPass/ShadowMappingPassPipelineManager.hpp"
-#include "ShaderCompiler/ShaderCompiler.hpp"
+#include "Base/ShaderCompiler.hpp"
+#include "Base/UniformValue.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -20,7 +21,7 @@ ShadowMappingVertexProgram::ShadowMappingVertexProgram(const LightType type, boo
 : _type(type)
 , _isSkinned(skinned)
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, SHADOWMAPPING_MATERIAL_VERTEX_SOURCE_PATH);
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Vertex> data(SHADOWMAPPING_MATERIAL_VERTEX_SOURCE_PATH);
 
     if (_isSkinned) {
         data.AddFlag(SkinFlag);
@@ -30,13 +31,7 @@ ShadowMappingVertexProgram::ShadowMappingVertexProgram(const LightType type, boo
         data.AddFlag(DirectionalLightFlag);
     }
 
-    _program = Programs::ShaderCompiler::Compile(data);
-}
-
-ShadowMappingVertexProgram::~ShadowMappingVertexProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    _program = Programs::Base::Compile(data);
 }
 
 ShadowMappingVertexProgram::ShadowMappingVertexProgram(ShadowMappingVertexProgram&& other) {
@@ -58,29 +53,25 @@ ShadowMappingVertexProgram::operator unsigned int() const {
 }
 
 void ShadowMappingVertexProgram::prepareShared(const SharedData& sceneView) const {
-    glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ViewTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneView.lightViewTransform));
-    glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ProjectionTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneView.lightProjectionTransform));
+    using namespace Programs::Base;
+    UniformValue<UniformType::Mat4>(_program, ViewTransformUniform).Set(sceneView.lightViewTransform);
+    UniformValue<UniformType::Mat4>(_program, ProjectionTransformUniform).Set(sceneView.lightProjectionTransform);
 }
 
 void ShadowMappingVertexProgram::prepareIndividual(const IndividualData& sceneObject) const {
-    glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ModelTransformUniform.data()), 1, GL_FALSE, glm::value_ptr(sceneObject.objectModelTransform));
+    using namespace Programs::Base;
+    UniformValue<UniformType::Mat4>(_program, ModelTransformUniform).Set(sceneObject.objectModelTransform);
     if (_isSkinned) {
         assert(sceneObject.jointsArray != nullptr);
-        glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, JointTransformsUniform.data()), 32, GL_FALSE, glm::value_ptr(*sceneObject.jointsArray->data()));
+        UniformArray<UniformType::Mat4, MaxJointsCount>(_program, JointTransformsUniform).Set(sceneObject.jointsArray->data(), MaxJointsCount);
     }
 }
 
 
 
 ShadowMappingFragmentProgram::ShadowMappingFragmentProgram() {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, SHADOWMAPPING_MATERIAL_FRAGMENT_SOURCE_PATH);
-    _program = Programs::ShaderCompiler::Compile(data);
-}
-
-ShadowMappingFragmentProgram::~ShadowMappingFragmentProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Fragment> data(SHADOWMAPPING_MATERIAL_FRAGMENT_SOURCE_PATH);
+    _program = Programs::Base::Compile(data);
 }
 
 ShadowMappingFragmentProgram::ShadowMappingFragmentProgram(ShadowMappingFragmentProgram&& other) {

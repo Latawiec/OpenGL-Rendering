@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/Scene.hpp"
+#include "Base/ShaderProgram.hpp"
 
 #include <string_view>
 #include <glm/glm.hpp>
@@ -28,11 +29,10 @@ class BlendVertexProgram {
     BlendVertexProgram(const BlendVertexProgram& other) = delete;
     BlendVertexProgram& operator=(const BlendVertexProgram& other) = delete;
 
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Vertex> _program;
 
 public:
     BlendVertexProgram();
-    ~BlendVertexProgram();
 
     BlendVertexProgram(BlendVertexProgram&& other);
     BlendVertexProgram& operator=(BlendVertexProgram&& other);
@@ -59,11 +59,10 @@ class BlendFragmentProgram {
 
     // TODO: Enum
     bool _additive = false;
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Fragment> _program;
 
 public:
     BlendFragmentProgram(bool additive);
-    ~BlendFragmentProgram();
 
     BlendFragmentProgram(BlendFragmentProgram&& other);
     BlendFragmentProgram& operator=(BlendFragmentProgram&& other);

@@ -1,4 +1,3 @@
-#version 330
 in vec2 FragPos;
 
 out vec4 FragColor;

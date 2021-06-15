@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/Scene.hpp"
+#include "Base/ShaderProgram.hpp"
 
 #include <string_view>
 #include <glm/glm.hpp>
@@ -27,11 +28,10 @@ class BlurVertexProgram {
     BlurVertexProgram(const BlurVertexProgram& other) = delete;
     BlurVertexProgram& operator=(const BlurVertexProgram& other) = delete;
 
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Vertex> _program;
 
 public:
     BlurVertexProgram();
-    ~BlurVertexProgram();
 
     BlurVertexProgram(BlurVertexProgram&& other);
     BlurVertexProgram& operator=(BlurVertexProgram&& other);
@@ -58,11 +58,10 @@ class BlurFragmentProgram {
     // TODO: Enum
     // It has to be either horizontal or vertical. We doing Gaussian blur.
     bool _isVertical = false;
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Fragment> _program;
 
 public:
     BlurFragmentProgram(bool isVertical = false);
-    ~BlurFragmentProgram();
 
     BlurFragmentProgram(BlurFragmentProgram&& other);
     BlurFragmentProgram& operator=(BlurFragmentProgram&& other);

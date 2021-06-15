@@ -1,44 +1,62 @@
-#include "../ShaderCompiler/ShaderCompiler.hpp"
+#pragma once
+
+#include <glad/glad.h>
+#include <string_view>
+#include <vector>
+#include <string>
 
 #include <read_file.hpp>
+#include "ShaderType.hpp"
+#include "ShaderProgram.hpp"
+
 #ifndef NDEBUG
 #include <iostream>
 #endif
 
 namespace Renderer {
 namespace Programs {
-namespace ShaderCompiler {
+namespace Base {
 
-ShaderData::ShaderData(const ShaderType type, const std::string& sourceFilePath)
-: _type(type)
-, _shaderCode(Utils::readFile(sourceFilePath))
-{}
+static constexpr std::string_view VersionFlag = "#version 410 core\n";
 
-void ShaderData::AddFlag(const std::string& flag) {
-    _dynamicFlags.push_back(flag);
-}
+template<ShaderType Type>
+struct ShaderData {
 
-void ShaderData::AddFlag(const std::string_view& flag) {
-    _staticFlags.push_back(flag);
-}
+    ShaderData(const std::string& sourceFilePath)
+    : _shaderCode(Utils::readFile(sourceFilePath)) {}
 
-ShaderType ShaderData::GetType() const {
-    return _type;
-}
+    void AddFlag(const std::string& flag) {
+        _dynamicFlags.push_back(flag);
+    }
 
-const std::vector<std::string_view>& ShaderData::GetStaticFlags() const {
-    return _staticFlags;
-}
+    void AddFlag(const std::string_view& flag) {
+        _staticFlags.push_back(flag);
+    }
 
-const std::vector<std::string>& ShaderData::GetDynamicFlags() const {
-    return _dynamicFlags;
-}
+    ShaderType GetType() const {
+        return Type;
+    }
 
-const std::string& ShaderData::GetShaderCode() const {
-    return _shaderCode;
-}
+    const std::vector<std::string_view>& GetStaticFlags() const {
+        return _staticFlags;
+    }
 
-GLuint Compile(const ShaderData& data) {
+    const std::vector<std::string>& GetDynamicFlags() const {
+        return _dynamicFlags;
+    }
+
+    const std::string& GetShaderCode() const {
+        return _shaderCode;
+    }
+
+private:
+    std::vector<std::string_view> _staticFlags;
+    std::vector<std::string> _dynamicFlags;
+    std::string _shaderCode;
+};
+
+template<ShaderType Type>
+ShaderProgram<Type> Compile(const ShaderData<Type>& data) {
     std::vector<const char*> compilerInput = { VersionFlag.data() };
 
     for (const auto& flag : data.GetStaticFlags()) {
@@ -80,6 +98,7 @@ GLuint Compile(const ShaderData& data) {
     if (success != GL_TRUE) {
         glGetShaderInfoLog(shader, 512, NULL, infoLog);
         std::cerr << "ERROR::SHADER::COMPILATION: Failed\n" << infoLog << std::endl;
+        throw std::runtime_error("Failed to compile shader.");
     }
 }
 #endif
@@ -94,8 +113,9 @@ GLuint Compile(const ShaderData& data) {
     glGetProgramiv(outputProgram, GL_LINK_STATUS, &success);
 
     if (success != GL_TRUE) {
-        glGetProgramInfoLog(shader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::COMPILATION: Failed\n" << infoLog << std::endl;
+        glGetProgramInfoLog(outputProgram, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::LINK: Failed\n" << infoLog << std::endl;
+        throw std::runtime_error("Failed to link shader.");
     }
 }
 #endif
@@ -103,9 +123,9 @@ GLuint Compile(const ShaderData& data) {
     glDetachShader(outputProgram, shader);
     glDeleteShader(shader);
 
-    return outputProgram;
+    return { outputProgram };
 }
 
-} // namespace ShaderCompiler
+} // namespace Base
 } // namespace Programs
 } // namespace Renderer

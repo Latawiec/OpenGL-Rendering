@@ -32,7 +32,7 @@ add_dependencies(${PROJECT_NAME}
     Renderer_Scene
     Renderer_Programs_TextureProgram
     Renderer_Programs_DebugMeshProgram
-    Renderer_Programs_ShaderCompiler
+    Renderer_Programs_Base
     Assets
 )
 
@@ -46,7 +46,7 @@ PRIVATE
 PUBLIC
     Renderer_Programs_TextureProgram
     Renderer_Programs_DebugMeshProgram
-    Renderer_Programs_ShaderCompiler
+    Renderer_Programs_Base
 )
 
 target_compile_definitions(${PROJECT_NAME}

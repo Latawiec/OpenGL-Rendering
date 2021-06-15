@@ -1,5 +1,6 @@
 #include "SceneDrawing/BasePass/BasePassPipelineManager.hpp"
-#include "ShaderCompiler/ShaderCompiler.hpp"
+#include "Base/ShaderCompiler.hpp"
+#include "Base/UniformValue.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -17,23 +18,16 @@ namespace SceneDrawing {
 namespace BasePass {
 
 BasePassVertexProgram::BasePassVertexProgram(bool skinned, bool normalMap) : _isSkinned(skinned), _hasNormalMapTexture(normalMap) {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, BASEPASS_MATERIAL_VERTEX_SOURCE_PATH);
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Vertex> data(BASEPASS_MATERIAL_VERTEX_SOURCE_PATH);
+    if (_isSkinned) { data.AddFlag(SkinFlag); }
+    if (_hasNormalMapTexture) { data.AddFlag(NormalMapTextureFlag); }
 
-    if (_isSkinned) {
-        data.AddFlag(SkinFlag);
+    _program = Programs::Base::Compile(data);
+    #ifndef NDEBUG
+    while (auto error = glGetError()) {
+        std::cerr << "Error: " << error << '\n';
     }
-
-    if (_hasNormalMapTexture) {
-        data.AddFlag(NormalMapTextureFlag);
-    }
-
-    _program = Programs::ShaderCompiler::Compile(data);
-}
-
-BasePassVertexProgram::~BasePassVertexProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    #endif
 }
 
 BasePassVertexProgram::BasePassVertexProgram(BasePassVertexProgram&& other) {
@@ -73,9 +67,7 @@ BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool 
 , _hasMetallicRoughnessTexture(hasMetallicRoughnessTexture)
 , _dithering(dithering)
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, BASEPASS_MATERIAL_FRAGMENT_SOURCE_PATH);
-    
-
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Fragment> data(BASEPASS_MATERIAL_FRAGMENT_SOURCE_PATH);
     if (_hasBaseColorTexture) {
         data.AddFlag(BaseColorTextureFlag);
     }
@@ -91,31 +83,26 @@ BasePassFragmentProgram::BasePassFragmentProgram(bool hasBaseColorTexture, bool 
     if (_dithering) {
         data.AddFlag(DitheringFlag);
     }
+    
+    _program = Programs::Base::Compile(data);
 
-    _program = Programs::ShaderCompiler::Compile(data);
-
-        // Setup textures
+    // Setup textures
+    using Programs::Base::UniformValue;
+    using Programs::Base::UniformType;
     if (_hasBaseColorTexture) {
-        glProgramUniform1i(_program, glGetUniformLocation(_program, BaseColorSamplerUniform.data()), BaseColorTextureLocation);
+        UniformValue<UniformType::Sampler2D>(_program, BaseColorSamplerUniform).Set(BaseColorTextureLocation);
     }
 
     if (_hasNormalMapTexture) {
-        glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), NormalMapTextureLocation);
+        UniformValue<UniformType::Sampler2D>(_program, NormalMapSamplerUniform).Set(NormalMapTextureLocation);
     }
 
     if (_hasMetallicRoughnessTexture) {
-        glProgramUniform1i(_program, glGetUniformLocation(_program, MetallicRougnessSamplerUniform.data()), MetallicRoughnessTextureLocation);
+        UniformValue<UniformType::Sampler2D>(_program, MetallicRougnessSamplerUniform).Set(MetallicRoughnessTextureLocation);
     }
 
     if (_dithering) {
-        glProgramUniform1i(_program, glGetUniformLocation(_program, DitheringSamplerUniform.data()), DitherTextureLocation);
-    }
-
-}
-
-BasePassFragmentProgram::~BasePassFragmentProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
+        UniformValue<UniformType::Sampler2D>(_program, DitheringSamplerUniform).Set(DitherTextureLocation);
     }
 }
 
@@ -245,6 +232,12 @@ void BasePassPipelineManager::buildVariant(const PropertiesSet& properties)
     const auto vertexProperties = properties & PropertiesAffectingVertexProgram;
     const auto fragmentProperties = properties & PropertiesAffectingFragmentProgram;
 
+    #ifndef NDEBUG
+    while (auto error = glGetError()) {
+        std::cerr << "Error: " << error << '\n';
+    }
+    #endif
+
     if (!_cachedVertexPrograms.contains(vertexProperties)) {
         _cachedVertexPrograms.emplace(
             vertexProperties,
@@ -266,6 +259,12 @@ void BasePassPipelineManager::buildVariant(const PropertiesSet& properties)
             )
         );
     }
+
+    #ifndef NDEBUG
+    while (auto error = glGetError()) {
+        std::cerr << "Error: " << error << '\n';
+    }
+    #endif
 
     auto& vertexProgram = _cachedVertexPrograms.at(vertexProperties);
     auto& fragmentProgram = _cachedFragmentPrograms.at(fragmentProperties);

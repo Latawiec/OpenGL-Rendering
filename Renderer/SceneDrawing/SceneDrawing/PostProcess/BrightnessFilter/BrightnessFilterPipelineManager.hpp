@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/Scene.hpp"
+#include "Base/ShaderProgram.hpp"
 
 #include <string_view>
 #include <glm/glm.hpp>
@@ -27,11 +28,10 @@ class BrightnessFilterVertexProgram {
     BrightnessFilterVertexProgram(const BrightnessFilterVertexProgram& other) = delete;
     BrightnessFilterVertexProgram& operator=(const BrightnessFilterVertexProgram& other) = delete;
 
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Vertex> _program;
 
 public:
     BrightnessFilterVertexProgram();
-    ~BrightnessFilterVertexProgram();
 
     BrightnessFilterVertexProgram(BrightnessFilterVertexProgram&& other);
     BrightnessFilterVertexProgram& operator=(BrightnessFilterVertexProgram&& other);
@@ -57,11 +57,10 @@ class BrightnessFilterFragmentProgram {
 
     // TODO: Enum
     bool _nullifyBelowTreshold = false;
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Fragment> _program;
 
 public:
     BrightnessFilterFragmentProgram(bool nullifyBelowTreshold = false);
-    ~BrightnessFilterFragmentProgram();
 
     BrightnessFilterFragmentProgram(BrightnessFilterFragmentProgram&& other);
     BrightnessFilterFragmentProgram& operator=(BrightnessFilterFragmentProgram&& other);

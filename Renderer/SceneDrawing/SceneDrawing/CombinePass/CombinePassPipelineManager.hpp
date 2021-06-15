@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/Scene.hpp"
+#include "Base/ShaderProgram.hpp"
 
 #include <string_view>
 #include <glm/glm.hpp>
@@ -30,11 +31,10 @@ class CombineVertexProgram {
     CombineVertexProgram(const CombineVertexProgram& other) = delete;
     CombineVertexProgram& operator=(const CombineVertexProgram& other) = delete;
 
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Vertex> _program;
 
 public:
     CombineVertexProgram();
-    ~CombineVertexProgram();
 
     CombineVertexProgram(CombineVertexProgram&& other);
     CombineVertexProgram& operator=(CombineVertexProgram&& other);
@@ -67,11 +67,10 @@ class CombineFragmentProgram {
     CombineFragmentProgram(const CombineFragmentProgram& other) = delete;
     CombineFragmentProgram& operator=(const CombineFragmentProgram& other) = delete;
 
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Fragment> _program;
 
 public:
     CombineFragmentProgram();
-    ~CombineFragmentProgram();
 
     CombineFragmentProgram(CombineFragmentProgram&& other);
     CombineFragmentProgram& operator=(CombineFragmentProgram&& other);

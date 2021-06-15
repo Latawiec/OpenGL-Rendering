@@ -1,5 +1,6 @@
 #include "SceneDrawing/CombinePass/CombinePassPipelineManager.hpp"
-#include "ShaderCompiler/ShaderCompiler.hpp"
+#include "Base/ShaderCompiler.hpp"
+#include "Base/UniformValue.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
@@ -19,14 +20,8 @@ namespace CombinePass {
 
 CombineVertexProgram::CombineVertexProgram()
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, COMBINE_MATERIAL_VERTEX_SOURCE_PATH);
-    _program = Programs::ShaderCompiler::Compile(data);
-}
-
-CombineVertexProgram::~CombineVertexProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Vertex> data(COMBINE_MATERIAL_VERTEX_SOURCE_PATH);
+    _program = Programs::Base::Compile(data);
 }
 
 CombineVertexProgram::CombineVertexProgram(CombineVertexProgram&& other) {
@@ -54,22 +49,18 @@ void CombineVertexProgram::prepareIndividual() const {
 
 CombineFragmentProgram::CombineFragmentProgram()
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, COMBINE_MATERIAL_FRAGMENT_SOURCE_PATH);
-    _program = Programs::ShaderCompiler::Compile(data);
+    using namespace Programs::Base;
+    ShaderData<ShaderType::Fragment> data(COMBINE_MATERIAL_FRAGMENT_SOURCE_PATH);
+    _program = Compile(data);
 
     // Setup textures
-    glProgramUniform1i(_program, glGetUniformLocation(_program, AlbedoSamplerUniform.data()), AlbedoTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, DiffuseSamplerUniform.data()), DiffuseTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, SpecularSamplerUniform.data()), SpecularTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, DitheringSamplerUniform.data()), DitherTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, ContourSamplerUniform.data()), ContourTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, MetallicRoughnessSamplerUniform.data()), MetallicRoughnessTextureLocation);
-}
-
-CombineFragmentProgram::~CombineFragmentProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    auto wtf = glGetUniformLocation(_program, AlbedoSamplerUniform.data());
+    UniformValue<UniformType::Sampler2D>(_program, AlbedoSamplerUniform).Set(AlbedoTextureLocation);
+    UniformValue<UniformType::Sampler2D>(_program, DiffuseSamplerUniform).Set(DiffuseTextureLocation);
+    UniformValue<UniformType::Sampler2D>(_program, SpecularSamplerUniform).Set(SpecularTextureLocation);
+    UniformValue<UniformType::Sampler2D>(_program, DitheringSamplerUniform).Set(DitherTextureLocation);
+    UniformValue<UniformType::Sampler2D>(_program, ContourSamplerUniform).Set(ContourTextureLocation);
+    UniformValue<UniformType::Sampler2D>(_program, MetallicRoughnessSamplerUniform).Set(MetallicRoughnessTextureLocation);
 }
 
 CombineFragmentProgram::CombineFragmentProgram(CombineFragmentProgram&& other) {

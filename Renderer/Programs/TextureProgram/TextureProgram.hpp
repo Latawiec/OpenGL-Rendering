@@ -1,7 +1,7 @@
 #pragma once 
 
 #include "Scene/Base/VertexData.hpp"
-#include "ShaderProgram.hpp"
+#include "Base/ShaderProgram.hpp"
 
 #include "glm/glm.hpp"
 
@@ -12,10 +12,13 @@ class TextureProgram {
     constexpr static auto processedTextureName = std::string_view("imageTexture");
 
     Scene::Base::VertexDataBase _vertexData;
-    Base::ShaderProgram _shaderProgram;
+    Base::ShaderProgram<Base::ShaderType::Vertex> _vertexProgram;
+    Base::ShaderProgram<Base::ShaderType::Fragment> _fragmentProgram;
+    GLuint _pipeline = -1;
 
 public:
     TextureProgram();
+    ~TextureProgram();
     void draw(unsigned int texture) const;
 
 private:

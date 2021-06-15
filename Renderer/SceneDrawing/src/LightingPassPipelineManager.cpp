@@ -1,7 +1,9 @@
 #include "SceneDrawing/LightingPass/LightingPassPipelineManager.hpp"
-#include "ShaderCompiler/ShaderCompiler.hpp"
+#include "Base/ShaderCompiler.hpp"
+#include "Base/UniformValue.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <numeric>
 #include <sstream>
 
 #ifndef LIGHTING_MATERIAL_VERTEX_SOURCE_PATH
@@ -19,14 +21,8 @@ namespace LightingPass {
 
 LightingVertexProgram::LightingVertexProgram()
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, LIGHTING_MATERIAL_VERTEX_SOURCE_PATH);
-    _program = Programs::ShaderCompiler::Compile(data);
-}
-
-LightingVertexProgram::~LightingVertexProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Vertex> data(LIGHTING_MATERIAL_VERTEX_SOURCE_PATH);
+    _program = Programs::Base::Compile(data);
 }
 
 LightingVertexProgram::LightingVertexProgram(LightingVertexProgram&& other) {
@@ -56,33 +52,25 @@ void LightingVertexProgram::prepareIndividual() const {
 LightingFragmentProgram::LightingFragmentProgram(const LightType type)
 : _type(type)
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, LIGHTING_MATERIAL_FRAGMENT_SOURCE_PATH);
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Fragment> data(LIGHTING_MATERIAL_FRAGMENT_SOURCE_PATH);
 
     if (_type == LightType::DIRECTIONAL) {
         data.AddFlag(DirectionalLightFlag);
     }
 
-    _program = Programs::ShaderCompiler::Compile(data);
+    _program = Programs::Base::Compile(data);
 
     // Setup textures
-    glProgramUniform1i(_program, glGetUniformLocation(_program, AlbedoSamplerUniform.data()), AlbedoTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, PositionSamplerUniform.data()), PositionTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), NormalMapTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, MetallicRoughnessSamplerUniform.data()), MetallicRoughnessTextureLocation);
+    using namespace Programs::Base;
+    UniformValue<UniformType::Sampler2D>(_program, AlbedoSamplerUniform).Set(AlbedoTextureLocation);
+    UniformValue<UniformType::Sampler2D>(_program, PositionSamplerUniform).Set(PositionTextureLocation);
+    UniformValue<UniformType::Sampler2D>(_program, NormalMapSamplerUniform).Set(NormalMapTextureLocation);
+    UniformValue<UniformType::Sampler2D>(_program, MetallicRoughnessSamplerUniform).Set(MetallicRoughnessTextureLocation);
 
-    std::stringstream ss;
-    for (int i=0; i<MaxDirectionalLightsPerExecute; ++i) {
-        ss << DirectionalLightShadowmapSamplersUniform << '[' << i << ']';
-        glProgramUniform1i(_program, glGetUniformLocation(_program, ss.str().data()), DirectionalLightShadowmapTexturesLocationBegin + i);
-        ss.clear();
-        ss.str(std::string());
-    }
-}
+    std::array<GLint, MaxDirectionalLightsPerExecute> directionalLightShadowmapTexturesLocations;
+    std::iota(directionalLightShadowmapTexturesLocations.begin(), directionalLightShadowmapTexturesLocations.end(), DirectionalLightShadowmapTexturesLocationBegin);
 
-LightingFragmentProgram::~LightingFragmentProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    UniformArray<UniformType::Sampler2D, MaxDirectionalLightsPerExecute>(_program, DirectionalLightShadowmapSamplersUniform).Set(directionalLightShadowmapTexturesLocations.data(), MaxDirectionalLightsPerExecute);
 }
 
 LightingFragmentProgram::LightingFragmentProgram(LightingFragmentProgram&& other) {
@@ -113,31 +101,19 @@ void LightingFragmentProgram::prepareShared(const SharedData& data) const {
     glActiveTexture(GL_TEXTURE0 + MetallicRoughnessTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.metallicRoughnessTexture);
 
-    glProgramUniform4fv(_program, glGetUniformLocation(_program, CameraPositionUniform.data()), 1, glm::value_ptr(data.cameraPosition));
-
     const unsigned int directionalLightsCount = glm::min(static_cast<unsigned int>(data.directionalLightsTransforms.size()), MaxDirectionalLightsPerExecute);
-    glProgramUniform1ui(_program, glGetUniformLocation(_program, DirectionalLightsCountUniform.data()), directionalLightsCount);
 
     for (int i=0; i<directionalLightsCount; ++i) {
         glActiveTexture(GL_TEXTURE0 + DirectionalLightShadowmapTexturesLocationBegin + i);
         glBindTexture(GL_TEXTURE_2D, data.directionalLightsShadowmapTextureIds[i]);
-
-        std::stringstream ss;
-        ss << DirectionalLightTransformsUniform << '[' << i << ']';
-        glProgramUniformMatrix4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, GL_FALSE, glm::value_ptr(data.directionalLightsTransforms[i]));
-        ss.clear();
-        ss.str(std::string());
-
-        ss << DirectionalLightDirectionsUniform << '[' << i << ']';
-        glProgramUniform4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, glm::value_ptr(data.directionalLightsDirections[i]));
-        ss.clear();
-        ss.str(std::string());
-
-        ss << DirectionalLightColor << '[' << i << ']';
-        glProgramUniform4fv(_program, glGetUniformLocation(_program, ss.str().data()), 1, glm::value_ptr(data.directionalLightsColors[i]));
-        ss.clear();
-        ss.str(std::string());
     }
+
+    using namespace Programs::Base;
+    UniformValue<UniformType::Vec4>(_program, CameraPositionUniform).Set(data.cameraPosition);
+    UniformValue<UniformType::UnsignedInt>(_program, DirectionalLightsCountUniform).Set(directionalLightsCount);
+    UniformArray<UniformType::Mat4, MaxDirectionalLightsPerExecute>(_program, DirectionalLightTransformsUniform).Set(data.directionalLightsTransforms.data(), directionalLightsCount);
+    UniformArray<UniformType::Vec4, MaxDirectionalLightsPerExecute>(_program, DirectionalLightDirectionsUniform).Set(data.directionalLightsDirections.data(), directionalLightsCount);
+    UniformArray<UniformType::Vec4, MaxDirectionalLightsPerExecute>(_program, DirectionalLightColor).Set(data.directionalLightsColors.data(), directionalLightsCount);
 }
 
 void LightingFragmentProgram::prepareIndividual() const {

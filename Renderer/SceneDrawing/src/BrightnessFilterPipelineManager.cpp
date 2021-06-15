@@ -1,5 +1,6 @@
 #include "SceneDrawing/PostProcess/BrightnessFilter/BrightnessFilterPipelineManager.hpp"
-#include "ShaderCompiler/ShaderCompiler.hpp"
+#include "Base/ShaderCompiler.hpp"
+#include "Base/UniformValue.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
@@ -21,14 +22,8 @@ namespace BrightnessFilter {
 
 BrightnessFilterVertexProgram::BrightnessFilterVertexProgram()
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, FORWARD_VERTEX_SOURCE_PATH);
-    _program = Programs::ShaderCompiler::Compile(data);
-}
-
-BrightnessFilterVertexProgram::~BrightnessFilterVertexProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Vertex> data(FORWARD_VERTEX_SOURCE_PATH);
+    _program = Programs::Base::Compile(data);
 }
 
 BrightnessFilterVertexProgram::BrightnessFilterVertexProgram(BrightnessFilterVertexProgram&& other) {
@@ -57,22 +52,14 @@ void BrightnessFilterVertexProgram::prepareIndividual() const {
 BrightnessFilterFragmentProgram::BrightnessFilterFragmentProgram(bool nullifyBelowTreshold)
 : _nullifyBelowTreshold(nullifyBelowTreshold)
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, BRIGHTNESS_FILTER_MATERIAL_FRAGMENT_SOURCE_PATH);
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Fragment> data(BRIGHTNESS_FILTER_MATERIAL_FRAGMENT_SOURCE_PATH);
 
-    if (_nullifyBelowTreshold) {
-        data.AddFlag(NullifyBelowFlag);
-    }
+    if (_nullifyBelowTreshold) { data.AddFlag(NullifyBelowFlag); }
 
-    _program = Programs::ShaderCompiler::Compile(data);
+    _program = Programs::Base::Compile(data);
 
     // Setup textures
-    glProgramUniform1i(_program, glGetUniformLocation(_program, SourceSamplerUniform.data()), SourceTextureLocation);
-}
-
-BrightnessFilterFragmentProgram::~BrightnessFilterFragmentProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    Programs::Base::UniformValue<Programs::Base::UniformType::Sampler2D>(_program, SourceSamplerUniform).Set(SourceTextureLocation);
 }
 
 BrightnessFilterFragmentProgram::BrightnessFilterFragmentProgram(BrightnessFilterFragmentProgram&& other) {

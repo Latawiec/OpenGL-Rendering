@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/Scene.hpp"
+#include "Base/ShaderProgram.hpp"
 
 #include <string_view>
 #include <glm/glm.hpp>
@@ -29,11 +30,10 @@ class ContourVertexProgram {
     ContourVertexProgram(const ContourVertexProgram& other) = delete;
     ContourVertexProgram& operator=(const ContourVertexProgram& other) = delete;
 
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Vertex> _program;
 
 public:
     ContourVertexProgram();
-    ~ContourVertexProgram();
 
     ContourVertexProgram(ContourVertexProgram&& other);
     ContourVertexProgram& operator=(ContourVertexProgram&& other);
@@ -62,11 +62,10 @@ class ContourFragmentProgram {
     ContourFragmentProgram(const ContourFragmentProgram& other) = delete;
     ContourFragmentProgram& operator=(const ContourFragmentProgram& other) = delete;
 
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Fragment> _program;
 
 public:
     ContourFragmentProgram();
-    ~ContourFragmentProgram();
 
     ContourFragmentProgram(ContourFragmentProgram&& other);
     ContourFragmentProgram& operator=(ContourFragmentProgram&& other);

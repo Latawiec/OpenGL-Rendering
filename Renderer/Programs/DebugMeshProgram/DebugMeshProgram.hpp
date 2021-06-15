@@ -5,7 +5,7 @@
 
 #include "Scene/Base/Texture.hpp"
 #include "Scene/Base/VertexData.hpp"
-#include "ShaderProgram.hpp"
+#include "Base/ShaderProgram.hpp"
 
 namespace Renderer {
 namespace Programs {
@@ -20,6 +20,7 @@ class DebugMeshProgram {
 
 public:
     DebugMeshProgram();
+    ~DebugMeshProgram();
 
     void Draw() const;
 
@@ -43,7 +44,9 @@ private:
     std::vector<glm::vec3> _vertices;
     std::vector<unsigned int> _indices;
     std::optional<Scene::Base::VertexData<Scene::Base::Layout::Sequential, Scene::Base::Vec3>> _vertexData = std::nullopt;
-    Base::ShaderProgram _shaderProgram;
+    Base::ShaderProgram<Base::ShaderType::Fragment> _fragmentProgram;
+    Base::ShaderProgram<Base::ShaderType::Vertex> _vertexProgram;
+    GLuint _pipeline = -1;
 };
 
 } // namespace Programs

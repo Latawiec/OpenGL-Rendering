@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/Scene.hpp"
+#include "Base/ShaderProgram.hpp"
 
 #include <string_view>
 #include <glm/glm.hpp>
@@ -45,11 +46,10 @@ class ShadowMappingVertexProgram {
 
     LightType _type;
     bool _isSkinned = false;
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Vertex> _program;
 
 public:
     ShadowMappingVertexProgram(const LightType type, bool skinned);
-    ~ShadowMappingVertexProgram();
 
     ShadowMappingVertexProgram(ShadowMappingVertexProgram&& other);
     ShadowMappingVertexProgram& operator=(ShadowMappingVertexProgram&& other);
@@ -70,11 +70,10 @@ class ShadowMappingFragmentProgram {
     ShadowMappingFragmentProgram(const ShadowMappingFragmentProgram& other) = delete;
     ShadowMappingFragmentProgram& operator=(const ShadowMappingFragmentProgram& other) = delete;
 
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Fragment> _program;
 
 public:
     ShadowMappingFragmentProgram();
-    ~ShadowMappingFragmentProgram();
 
     ShadowMappingFragmentProgram(ShadowMappingFragmentProgram&& other);
     ShadowMappingFragmentProgram& operator=(ShadowMappingFragmentProgram&& other);

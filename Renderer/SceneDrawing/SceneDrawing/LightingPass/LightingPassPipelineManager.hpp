@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/Scene.hpp"
+#include "Base/ShaderProgram.hpp"
 
 #include <string_view>
 #include <glm/glm.hpp>
@@ -41,11 +42,10 @@ class LightingVertexProgram {
     LightingVertexProgram(const LightingVertexProgram& other) = delete;
     LightingVertexProgram& operator=(const LightingVertexProgram& other) = delete;
 
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Vertex> _program;
 
 public:
     LightingVertexProgram();
-    ~LightingVertexProgram();
 
     LightingVertexProgram(LightingVertexProgram&& other);
     LightingVertexProgram& operator=(LightingVertexProgram&& other);
@@ -85,11 +85,10 @@ class LightingFragmentProgram {
     LightingFragmentProgram& operator=(const LightingFragmentProgram& other) = delete;
 
     LightType _type;
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Fragment> _program;
 
 public:
     LightingFragmentProgram(const LightType type);
-    ~LightingFragmentProgram();
 
     LightingFragmentProgram(LightingFragmentProgram&& other);
     LightingFragmentProgram& operator=(LightingFragmentProgram&& other);

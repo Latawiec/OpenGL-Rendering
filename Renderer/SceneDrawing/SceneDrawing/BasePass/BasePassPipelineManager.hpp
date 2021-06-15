@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/Scene.hpp"
+#include "Base/ShaderProgram.hpp"
 
 #include <string_view>
 #include <glm/glm.hpp>
@@ -48,11 +49,10 @@ class BasePassVertexProgram {
 
     bool _isSkinned = false;
     bool _hasNormalMapTexture = false;
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Vertex> _program;
 
 public:
     BasePassVertexProgram(bool skinned, bool hasNormalMapTexture);
-    ~BasePassVertexProgram();
 
     BasePassVertexProgram(BasePassVertexProgram&& other);
     BasePassVertexProgram& operator=(BasePassVertexProgram&& other);
@@ -87,11 +87,10 @@ class BasePassFragmentProgram {
     bool _hasNormalMapTexture = false;
     bool _hasMetallicRoughnessTexture = false;
     bool _dithering = false;
-    GLuint _program = -1;
+    Programs::Base::ShaderProgram<Programs::Base::ShaderType::Fragment> _program;
 
 public:
     BasePassFragmentProgram(bool hasBaseColorTexture, bool hasNormalMapTexture, bool hasMetallicRoughnessTexture, bool dithering);
-    ~BasePassFragmentProgram();
 
     BasePassFragmentProgram(BasePassFragmentProgram&& other);
     BasePassFragmentProgram& operator=(BasePassFragmentProgram&& other);

@@ -1,5 +1,6 @@
 #include "SceneDrawing/PostProcess/Blend/BlendPipelineManager.hpp"
-#include "ShaderCompiler/ShaderCompiler.hpp"
+#include "Base/ShaderCompiler.hpp"
+#include "Base/UniformValue.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
@@ -21,14 +22,8 @@ namespace Blend {
 
 BlendVertexProgram::BlendVertexProgram()
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, FORWARD_VERTEX_SOURCE_PATH);
-    _program = Programs::ShaderCompiler::Compile(data);
-}
-
-BlendVertexProgram::~BlendVertexProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Vertex> data(FORWARD_VERTEX_SOURCE_PATH);
+    _program = Programs::Base::Compile(data);
 }
 
 BlendVertexProgram::BlendVertexProgram(BlendVertexProgram&& other) {
@@ -57,13 +52,13 @@ void BlendVertexProgram::prepareIndividual() const {
 BlendFragmentProgram::BlendFragmentProgram(bool additive)
 : _additive(additive)
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, BLEND_MATERIAL_FRAGMENT_SOURCE_PATH);
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Fragment> data(BLEND_MATERIAL_FRAGMENT_SOURCE_PATH);
 
     if (_additive) {
         data.AddFlag(AdditiveBlendFlag);
     }
 
-    _program = Programs::ShaderCompiler::Compile(data);
+    _program = Programs::Base::Compile(data);
 
         // Setup textures
     std::stringstream ss;
@@ -74,12 +69,6 @@ BlendFragmentProgram::BlendFragmentProgram(bool additive)
         ss.str(std::string());
     }
     
-}
-
-BlendFragmentProgram::~BlendFragmentProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
 }
 
 BlendFragmentProgram::BlendFragmentProgram(BlendFragmentProgram&& other) {

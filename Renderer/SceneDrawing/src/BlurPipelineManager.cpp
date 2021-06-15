@@ -1,5 +1,6 @@
 #include "SceneDrawing/PostProcess/Blur/BlurPipelineManager.hpp"
-#include "ShaderCompiler/ShaderCompiler.hpp"
+#include "Base/ShaderCompiler.hpp"
+#include "Base/UniformValue.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
@@ -21,14 +22,8 @@ namespace Blur {
 
 BlurVertexProgram::BlurVertexProgram()
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Vertex, FORWARD_VERTEX_SOURCE_PATH);
-    _program = Programs::ShaderCompiler::Compile(data);
-}
-
-BlurVertexProgram::~BlurVertexProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Vertex> data(FORWARD_VERTEX_SOURCE_PATH);
+    _program = Programs::Base::Compile(data);
 }
 
 BlurVertexProgram::BlurVertexProgram(BlurVertexProgram&& other) {
@@ -57,7 +52,7 @@ void BlurVertexProgram::prepareIndividual() const {
 BlurFragmentProgram::BlurFragmentProgram(bool isVertical)
 : _isVertical(isVertical)
 {
-    Programs::ShaderCompiler::ShaderData data(Programs::ShaderCompiler::ShaderType::Fragment, BLUR_MATERIAL_FRAGMENT_SOURCE_PATH);
+    Programs::Base::ShaderData<Programs::Base::ShaderType::Fragment> data(BLUR_MATERIAL_FRAGMENT_SOURCE_PATH);
 
     if (_isVertical) {
         data.AddFlag(VerticalBlurFlag);
@@ -65,17 +60,10 @@ BlurFragmentProgram::BlurFragmentProgram(bool isVertical)
         data.AddFlag(HorizontalBlurFlag);
     }
 
-    _program = Programs::ShaderCompiler::Compile(data);
+    _program = Programs::Base::Compile(data);
 
-        // Setup textures
-    glProgramUniform1i(_program, glGetUniformLocation(_program, SourceSamplerUniform.data()), SourceTextureLocation);
-    
-}
-
-BlurFragmentProgram::~BlurFragmentProgram() {
-    if (_program != -1) {
-        glDeleteProgram(_program);
-    }
+    // Setup textures
+    Programs::Base::UniformValue<Programs::Base::UniformType::Sampler2D>(_program, SourceSamplerUniform).Set(SourceTextureLocation);
 }
 
 BlurFragmentProgram::BlurFragmentProgram(BlurFragmentProgram&& other) {

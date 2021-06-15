@@ -118,11 +118,11 @@ Scene::Base::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh
 }
 
 Scene::Base::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {
-    return Scene::Base::Camera(0.1f, 30.f, static_cast<float>(camera.perspective.yfov), 800.f/600.f, glm::mat4{1});
+    return Scene::Base::Camera(0.1f, 1.2f, static_cast<float>(camera.perspective.yfov), 800.f/600.f, glm::mat4{1});
 }
 
 Scene::Base::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera, const glm::mat4& cameraOrientation) {
-    return Scene::Base::Camera(0.1f, 30.f, static_cast<float>(camera.perspective.yfov), 800.f/600.f, cameraOrientation);
+    return Scene::Base::Camera(0.1f, 1.2f, static_cast<float>(camera.perspective.yfov), 800.f/600.f, cameraOrientation);
 }
 
 Scene::Base::Texture processTexture(const tinygltf::Model& model, const tinygltf::Image& image) {

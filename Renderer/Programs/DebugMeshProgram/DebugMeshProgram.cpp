@@ -1,6 +1,8 @@
 #pragma once 
 
 #include "DebugMeshProgram.hpp"
+#include "Base/ShaderCompiler.hpp"
+#include "Base/UniformValue.hpp"
 #include "glad/glad.h"
 
 #include <read_file.hpp>
@@ -14,13 +16,36 @@ namespace Programs {
 
 DebugMeshProgram::DebugMeshProgram() {
 
-    const auto vertexShaderCode = Utils::readFile(DEBUG_MESH_PROGRAM_DIR "/debugMesh.vert.glsl");
-    const auto fragmentShaderCode = Utils::readFile(DEBUG_MESH_PROGRAM_DIR "/debugMesh.frag.glsl");
+    Base::ShaderData<Base::ShaderType::Vertex> vertexShaderData(DEBUG_MESH_PROGRAM_DIR "/debugMesh.vert.glsl");
+    Base::ShaderData<Base::ShaderType::Fragment> fragmentShaderData(DEBUG_MESH_PROGRAM_DIR "/debugMesh.frag.glsl");
 
-    _shaderProgram = Base::ShaderProgram(
-        Base::Shader<Base::ShaderType::Vertex>(vertexShaderCode.c_str()),
-        Base::Shader<Base::ShaderType::Fragment>(fragmentShaderCode.c_str())
-    );
+    _vertexProgram = Base::Compile(vertexShaderData);
+    _fragmentProgram = Base::Compile(fragmentShaderData);
+
+    glGenProgramPipelines(1, &_pipeline);
+
+    glUseProgramStages(_pipeline, GL_VERTEX_SHADER_BIT, _vertexProgram.GetId());
+    glUseProgramStages(_pipeline, GL_FRAGMENT_SHADER_BIT, _fragmentProgram.GetId());
+
+#ifndef NDEBUG
+{
+    glValidateProgramPipeline(_pipeline);
+    int success;
+    glGetProgramPipelineiv(_pipeline, GL_VALIDATE_STATUS, &success);
+
+    if (!success) {
+        char infoLog[512];
+        glGetProgramPipelineInfoLog(_pipeline, 512, NULL, infoLog);
+        std::cerr << "ERROR::PIPELINE::FAIL\n" << infoLog << std::endl;
+    }
+}
+#endif
+}
+
+DebugMeshProgram::~DebugMeshProgram() {
+    if (_pipeline != -1) {
+        glDeleteProgramPipelines(1, &_pipeline);
+    }
 }
 
 void DebugMeshProgram::SetMesh(std::vector<glm::vec3> vertices, std::vector<unsigned int> indices) {
@@ -47,20 +72,22 @@ void DebugMeshProgram::Draw() const {
 
     if (_vertexData) {
         const auto& vertexData = *_vertexData;
-        Base::ShaderProgram::ScopedBinding programBinding{ _shaderProgram };
+        glUseProgram(0);
+        glBindProgramPipeline(_pipeline);
 
         prepareUniforms();
 
         Scene::Base::VertexDataBase::ScopedBinding dataBinding{ vertexData };
         glDrawElements(GL_TRIANGLES, vertexData.vertexCount(), GL_UNSIGNED_INT, 0);
+        glBindProgramPipeline(0);
     }
 }
 
 void DebugMeshProgram::prepareUniforms() const {
-    _shaderProgram.set(u_viewTransform, _view);
-    _shaderProgram.set(u_projectionTransform, _proj);
-    _shaderProgram.set(u_modelTransform, _model);
-    _shaderProgram.set(u_color, _color);
+    Base::UniformValue<Base::UniformType::Mat4>(_vertexProgram.GetId(), u_viewTransform).Set(_view);
+    Base::UniformValue<Base::UniformType::Mat4>(_vertexProgram.GetId(), u_projectionTransform).Set(_proj);
+    Base::UniformValue<Base::UniformType::Mat4>(_vertexProgram.GetId(), u_modelTransform).Set(_model);
+    Base::UniformValue<Base::UniformType::Vec3>(_fragmentProgram.GetId(), u_color).Set(_color);
 }
 
 } // namespace Programs
