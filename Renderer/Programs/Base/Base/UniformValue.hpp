@@ -176,6 +176,9 @@ struct UniformValue {
             if constexpr (std::is_same_v<std::int16_t, T>) return glProgramUniform1i(_shaderProgram, _uniformLocation, value); else
             if constexpr (std::is_same_v<std::int32_t, T>) return glProgramUniform1i(_shaderProgram, _uniformLocation, value); else
             if constexpr (std::is_same_v<std::int64_t, T>) return glProgramUniform1i(_shaderProgram, _uniformLocation, value); else
+            if constexpr (std::is_same_v<std::uint16_t, T>) return glProgramUniform1i(_shaderProgram, _uniformLocation, GLint(value)); else
+            if constexpr (std::is_same_v<std::uint32_t, T>) return glProgramUniform1i(_shaderProgram, _uniformLocation, GLint(value)); else
+            if constexpr (std::is_same_v<std::uint64_t, T>) return glProgramUniform1i(_shaderProgram, _uniformLocation, GLint(value)); else
             evaluationFailed<T>();
         }
         else

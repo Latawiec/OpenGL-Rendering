@@ -53,9 +53,10 @@ ContourFragmentProgram::ContourFragmentProgram()
     _program = Programs::Base::Compile(data);
  
     // Setup textures
-    glProgramUniform1i(_program, glGetUniformLocation(_program, SilhouetteSamplerUniform.data()), SilhouetteTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, NormalMapSamplerUniform.data()), NormalMapTextureLocation);
-    glProgramUniform1i(_program, glGetUniformLocation(_program, DepthSamplerUniform.data()), DepthTextureLocation);
+    using namespace Programs::Base;
+    UniformValue<UniformType::Sampler2D>(_program, SilhouetteSamplerUniform).Set(SilhouetteTextureLocation);
+    UniformValue<UniformType::Sampler2D>(_program, NormalMapSamplerUniform).Set(NormalMapTextureLocation);
+    UniformValue<UniformType::Sampler2D>(_program, DepthSamplerUniform).Set(DepthTextureLocation);
 }
 
 ContourFragmentProgram::ContourFragmentProgram(ContourFragmentProgram&& other) {
@@ -81,7 +82,8 @@ void ContourFragmentProgram::prepareShared(const SharedData& data) const {
     glActiveTexture(GL_TEXTURE0 + DepthTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.depthTexture);
 
-    glProgramUniform2fv(_program, glGetUniformLocation(_program, CameraNearFarUniform.data()), 1, glm::value_ptr(data.cameraNearFar));
+    using namespace Programs::Base;
+    UniformValue<UniformType::Vec2>(_program, CameraNearFarUniform).Set(data.cameraNearFar);
 }
 
 void ContourFragmentProgram::prepareIndividual() const {

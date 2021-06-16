@@ -59,7 +59,8 @@ BrightnessFilterFragmentProgram::BrightnessFilterFragmentProgram(bool nullifyBel
     _program = Programs::Base::Compile(data);
 
     // Setup textures
-    Programs::Base::UniformValue<Programs::Base::UniformType::Sampler2D>(_program, SourceSamplerUniform).Set(SourceTextureLocation);
+    using namespace Programs::Base;
+    UniformValue<UniformType::Sampler2D>(_program, SourceSamplerUniform).Set(SourceTextureLocation);
 }
 
 BrightnessFilterFragmentProgram::BrightnessFilterFragmentProgram(BrightnessFilterFragmentProgram&& other) {
@@ -81,7 +82,8 @@ void BrightnessFilterFragmentProgram::prepareShared(const SharedData& data) cons
     glActiveTexture(GL_TEXTURE0 + SourceTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.sourceTexture);
 
-    glProgramUniform1f(_program, glGetUniformLocation(_program, BrightnessTresholdUniform.data()), data.filterTreshold);
+    using namespace Programs::Base;
+    UniformValue<UniformType::Float>(_program, BrightnessTresholdUniform).Set(data.filterTreshold);
 }
 
 void BrightnessFilterFragmentProgram::prepareIndividual() const {
