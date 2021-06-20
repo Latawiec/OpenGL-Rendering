@@ -13,6 +13,7 @@ add_library(${PROJECT_NAME}
     src/PointLight.cpp
     src/Scene.cpp
     src/Skin.cpp
+    src/SpotLight.cpp
     src/Texture.cpp
 )
 

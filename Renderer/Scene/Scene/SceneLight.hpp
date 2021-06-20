@@ -10,7 +10,7 @@ struct SceneLight {
     Base::Node::IdType nodeId = Base::Node::INVALID_ID;
     Base::DirectionalLight::IdType directionalLightId = Base::DirectionalLight::INVALID_ID;
     Base::PointLight::IdType pointLightId = Base::PointLight::INVALID_ID;
-    // Probably I'll just add more light ids here.
+    Base::SpotLight::IdType spotLightId = Base::SpotLight::INVALID_ID;
 };
 
 } // namespace Common

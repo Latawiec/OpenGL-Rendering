@@ -11,6 +11,7 @@ namespace SceneDrawing {
 namespace LightingPass {
 
 static constexpr unsigned int MaxDirectionalLightsPerExecute = 4; // HAS TO MATCH SHADER CODE.
+static constexpr unsigned int MaxSpotLightsPerExecute = 4; // HAS TO MATCH SHADER CODE.
 static constexpr std::string_view VersionFlag = "#version 410 core\n";
 
 struct SharedData {
@@ -25,12 +26,20 @@ struct SharedData {
     std::vector<glm::vec4> directionalLightsDirections;
     std::vector<glm::vec4> directionalLightsColors;
     std::vector<GLuint> directionalLightsShadowmapTextureIds;
+
+    std::vector<glm::mat4> spotLightsTransforms;
+    std::vector<glm::vec4> spotLightsDirections;
+    std::vector<glm::vec4> spotLightsPositions;
+    std::vector<glm::vec4> spotLightsColors;
+    std::vector<glm::vec2> spotLightsInnerOuterConeAngle;
+    std::vector<GLuint> spotLightsShadowmapTextureIds;
 };
 
 
 enum class LightType : uint8_t {
     NONE,
-    DIRECTIONAL
+    DIRECTIONAL,
+    SPOT
 };
 
 class LightingVertexProgram {
@@ -60,6 +69,7 @@ public:
 class LightingFragmentProgram {
     // Flags
     static constexpr std::string_view DirectionalLightFlag = "#define DIRECTIONAL_LIGHTS 1\n";
+    static constexpr std::string_view SpotLightFlag = "#define SPOT_LIGHTS 1\n";
 
     // Uniform names
     static constexpr std::string_view AlbedoSamplerUniform = "albedoTexture";
@@ -76,10 +86,20 @@ class LightingFragmentProgram {
     static constexpr std::string_view DirectionalLightsCountUniform = "directionalLightCount";
     static constexpr std::string_view DirectionalLightTransformsUniform = "directionalLightTransforms";
     static constexpr std::string_view DirectionalLightDirectionsUniform = "directionalLightDirections";
-    static constexpr std::string_view DirectionalLightColor = "directionalLightColor";
+    static constexpr std::string_view DirectionalLightColorsUniform = "directionalLightColors";
     static constexpr std::string_view DirectionalLightShadowmapSamplersUniform = "directionalLightShadowmapSamplers";
     static constexpr unsigned int DirectionalLightShadowmapTexturesLocationBegin = 4;
     static constexpr unsigned int DirectionalLightShadowmapTexturesLocationEnd = DirectionalLightShadowmapTexturesLocationBegin + MaxDirectionalLightsPerExecute;
+    
+    static constexpr std::string_view SpotLightsCountUniform = "spotLightCount";
+    static constexpr std::string_view SpotLightTransformsUniform = "spotLightTransforms";
+    static constexpr std::string_view SpotLightDirectionsUniform = "spotLightDirections";
+    static constexpr std::string_view SpotLightPositionsUniform = "spotLightPositions";
+    static constexpr std::string_view SpotLightColorsUniform = "spotLightColors";
+    static constexpr std::string_view SpotLightInnerOuterConeAnglesUniform = "spotLightInnerOuterConeAngles";
+    static constexpr std::string_view SpotLightShadowmapSamplersUniform = "spotLightShadowmapSamplers";
+    static constexpr unsigned int SpotLightShadowmapTexturesLocationBegin = DirectionalLightShadowmapTexturesLocationEnd;
+    static constexpr unsigned int SpotLightShadowmapTexturesLocationEnd = SpotLightShadowmapTexturesLocationBegin + MaxSpotLightsPerExecute;
 
     LightingFragmentProgram(const LightingFragmentProgram& other) = delete;
     LightingFragmentProgram& operator=(const LightingFragmentProgram& other) = delete;
@@ -133,7 +153,8 @@ public:
 struct LightingPipelineManager {
     using PropertiesSet = uint64_t;
     enum PipelineProperties : PropertiesSet {
-        LIGHTTYPE_DIRECTIONAL = 1 << 0
+        LIGHTTYPE_DIRECTIONAL = 1 << 0,
+        LIGHTTYPE_SPOT = 2 << 0
     };
 
 private:
@@ -145,7 +166,8 @@ private:
         0;
 
     constexpr static PropertiesSet PropertiesAffectingFragmentProgram =
-        PipelineProperties::LIGHTTYPE_DIRECTIONAL;
+        PipelineProperties::LIGHTTYPE_DIRECTIONAL |
+        PipelineProperties::LIGHTTYPE_SPOT;
 
     void buildVariant(const PropertiesSet& properties);
 

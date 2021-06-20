@@ -47,6 +47,7 @@ private:
     struct {
         std::unordered_map<gltfId, SceneId> convertedDirectionalLights;
         std::unordered_map<gltfId, SceneId> convertedPointLights;
+        std::unordered_map<gltfId, SceneId> convertedSpotLights;
     } lightsConversionData;
 
     struct {

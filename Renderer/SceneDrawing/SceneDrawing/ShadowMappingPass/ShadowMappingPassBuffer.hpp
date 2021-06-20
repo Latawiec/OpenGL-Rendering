@@ -2,6 +2,7 @@
 
 #include <Scene/Base/DirectionalLight.hpp>
 #include <Scene/Base/PointLight.hpp>
+#include <Scene/Base/SpotLight.hpp>
 #include "../DepthBuffer.hpp"
 #include "../CubeDepthBuffer.hpp"
 
@@ -32,6 +33,13 @@ public:
     const CubeDepthBuffer& GetPointLightShadowRenderTarget(const Scene::Base::PointLight::IdType& id);
     void RemovePointLightShadowRenderTarget(const Scene::Base::PointLight::IdType& id);
 
+    // Spot
+    void SetSpotLightTransform(const Scene::Base::SpotLight::IdType& id, glm::mat4 transform);
+    const glm::mat4& GetSpotLightTransform(const Scene::Base::PointLight::IdType& id) const;
+
+    const DepthBuffer& GetSpotLightShadowRenderTarget(const Scene::Base::SpotLight::IdType& id);
+    void RemoveSpotLightShadowRenderTarget(const Scene::Base::SpotLight::IdType& id);
+
 private:
     unsigned int _shadowMapWidth;
     unsigned int _shadowMapHeight;
@@ -41,6 +49,9 @@ private:
 
     std::unordered_map<Scene::Base::PointLight::IdType, CubeDepthBuffer> _pointLightShadows;
     std::unordered_map<Scene::Base::PointLight::IdType, glm::mat4> _pointLightTransforms;
+
+    std::unordered_map<Scene::Base::SpotLight::IdType, DepthBuffer> _spotLightShadows;
+    std::unordered_map<Scene::Base::SpotLight::IdType, glm::mat4> _spotLightTransforms;
 
     void setupDirectionalShadowRenderTarget();
 };

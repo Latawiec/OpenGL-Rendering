@@ -7,6 +7,7 @@
 #include "Base/Camera.hpp"
 #include "Base/DirectionalLight.hpp"
 #include "Base/PointLight.hpp"
+#include "Base/SpotLight.hpp"
 #include "Base/Material.hpp"
 #include "Base/Mesh.hpp"
 #include "Base/Node.hpp"
@@ -64,6 +65,11 @@ struct Scene {
     const Base::PointLight& GetPointLight(const Base::PointLight::IdType id) const;
     const std::unordered_map<Base::PointLight::IdType, Base::PointLight>& GetPointLights() const;
 
+    Base::SpotLight::IdType AddSpotLight(Base::SpotLight&& light);
+    Base::SpotLight& GetSpotLight(const Base::SpotLight::IdType id);
+    const Base::SpotLight& GetSpotLight(const Base::SpotLight::IdType id) const;
+    const std::unordered_map<Base::SpotLight::IdType, Base::SpotLight>& GetSpotLights() const;
+
     void AddNodeHierarchy(NodeLink&& nodeLink);
     NodeLink& GetNodeHierarchy();
     const NodeLink& GetNodeHierarchy() const;
@@ -86,6 +92,7 @@ private:
     Utils::IdGenerator<Base::Skin::IdType> _skinIdGenerator;
     Utils::IdGenerator<Base::DirectionalLight::IdType> _directionalLightIdGenerator;
     Utils::IdGenerator<Base::PointLight::IdType> _pointLightIdGenerator;
+    Utils::IdGenerator<Base::SpotLight::IdType> _spotLightIdGenerator;
 
     // Raw data
     std::unordered_map<Base::Node::IdType, Base::Node> _nodes;
@@ -96,6 +103,7 @@ private:
     std::unordered_map<Base::Skin::IdType, Base::Skin> _skins;
     std::unordered_map<Base::DirectionalLight::IdType, Base::DirectionalLight> _directionalLights;
     std::unordered_map<Base::PointLight::IdType, Base::PointLight> _pointLights;
+    std::unordered_map<Base::SpotLight::IdType, Base::SpotLight> _spotLights;
 
     // Data connections
     std::vector<SceneObject> _sceneObjects;

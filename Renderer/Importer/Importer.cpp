@@ -14,6 +14,7 @@
 #include "Scene/Base/Texture.hpp"
 #include "Scene/Base/DirectionalLight.hpp"
 #include "Scene/Base/PointLight.hpp"
+#include "Scene/Base/SpotLight.hpp"
 #include "Scene/NodeLink.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -261,6 +262,7 @@ void Importer::convertLights (
     // Lights are only available in gltf2 through an extension. So we need to fetch them from there.
     const static std::string LightType_Directional = "directional";
     const static std::string LightType_Point = "point";
+    const static std::string LightType_Spot = "spot";
 
     const int lightsCount = gltfModel.lights.size();
     for (int i=0; i < lightsCount; ++i) {
@@ -285,7 +287,16 @@ void Importer::convertLights (
             convertedPointLight.SetColor(convertedColor);
             convertedPointLight.SetIntensity(convertedIntensity);
             lightsConversionData.convertedPointLights.emplace(i, scene.AddPointLight(std::move(convertedPointLight)));
+        }
 
+        if (light.type == LightType_Spot) {
+            
+            Scene::Base::SpotLight convertedSpotLight{ orientationTransform };
+            convertedSpotLight.SetColor(convertedColor);
+            convertedSpotLight.SetIntensity(convertedIntensity);
+            convertedSpotLight.SetInnerConeAngle(light.spot.innerConeAngle);
+            convertedSpotLight.SetOuterConeAngle(light.spot.outerConeAngle);
+            lightsConversionData.convertedSpotLights.emplace(i, scene.AddSpotLight(std::move(convertedSpotLight)));
         }
     }
 }
@@ -465,6 +476,13 @@ Scene::NodeLink Importer::traverseNodes(Scene::Scene& scene, const tinygltf::Mod
             light.directionalLightId = lightsConversionData.convertedDirectionalLights.at(lightId);
             scene.AddSceneLight(light);
         } 
+
+        if (lightsConversionData.convertedSpotLights.contains(lightId)) {
+            Scene::SceneLight light;
+            light.nodeId = nodeId;
+            light.spotLightId = lightsConversionData.convertedSpotLights.at(lightId);
+            scene.AddSceneLight(light);
+        }
     }
 
     for (const auto& childNodeId : gltfNode.children) {

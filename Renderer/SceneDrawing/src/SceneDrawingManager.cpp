@@ -258,6 +258,26 @@ void SceneDrawingManager::LightingPass()
             data.directionalLightsColors.push_back(lightColor);
             data.directionalLightsShadowmapTextureIds.push_back(_shadowMappingPassBuffer.GetDirectionalLightShadowRenderTarget(lightId).getTexture());
         }
+
+        if (sceneLight.spotLightId != Scene::Base::SpotLight::INVALID_ID) {
+            const auto& lightId = sceneLight.spotLightId;
+            const auto& lightObject = _scene.GetSpotLight(lightId);
+
+            properties |= LightingPass::LightingPipelineManager::PipelineProperties::LIGHTTYPE_SPOT;
+
+            const glm::mat4 lightTransform = _transformProcessor.GetNodeTransforms().at(nodeId);
+            const glm::vec4 lightDirection = lightTransform * lightObject.GetLightDirection();
+            const glm::vec4 lightPosition = lightTransform * glm::vec4(0, 0, 0, 1);
+            const glm::vec4 lightColor = glm::vec4(lightObject.GetColor(), lightObject.GetIntensity());
+            const float lightInnerConeAngle = lightObject.GetInnerConeAngle();
+            const float lightOuterConeAngle = lightObject.GetOuterConeAngle();
+
+            data.spotLightsTransforms.push_back(_shadowMappingPassBuffer.GetSpotLightTransform(lightId));
+            data.spotLightsDirections.push_back(lightDirection);
+            data.spotLightsPositions.push_back(lightPosition);
+            data.spotLightsColors.push_back(lightColor);
+            data.spotLightsInnerOuterConeAngle.push_back({lightInnerConeAngle, lightOuterConeAngle});
+        }
     }
 
     const auto& pipeline = _lightingPassPipelineManager.GetPipeline(properties);
@@ -330,6 +350,27 @@ void SceneDrawingManager::ShadowMappingPass()
 
                 glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
             }            
+        }
+
+
+        if (sceneLight.spotLightId != Scene::Base::SpotLight::INVALID_ID) {
+            const auto& lightId = sceneLight.spotLightId;
+            // const auto& lightObject = _scene.GetSpotLight(lightId);
+
+            // const auto& shadowMapBuffer = _shadowMappingPassBuffer.GetSpotLightShadowRenderTarget(lightId);
+            // const auto framebufferBinding = shadowMapBuffer.Bind();
+            // glClear(GL_DEPTH_BUFFER_BIT);
+
+            // const auto& [cameraNodeId, cameraId] = getActiveSceneView();
+            // const auto& camera = _scene.GetCamera(cameraId);
+            // const auto& cameraTransform = _transformProcessor.GetNodeTransforms().at(cameraNodeId);
+
+            // ShadowMappingPass::SharedData viewData = createFittingShadowmapTransform(lightObject, _transformProcessor.GetNodeTransforms.at(nodeId), camera, cameraTransform);
+            // Remember it for drawing shadows
+            _shadowMappingPassBuffer.SetSpotLightTransform(lightId, glm::mat4{1});//viewData.lightProjectionTransform * viewData.lightViewTransform);
+
+
+
         }
     }
 

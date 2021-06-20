@@ -31,6 +31,10 @@ ShadowMappingVertexProgram::ShadowMappingVertexProgram(const LightType type, boo
         data.AddFlag(DirectionalLightFlag);
     }
 
+    if (_type == LightType::SPOT) {
+        data.AddFlag(SpotLightFlag);
+    }
+
     _program = Programs::Base::Compile(data);
 }
 

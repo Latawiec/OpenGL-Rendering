@@ -296,8 +296,13 @@ struct UniformArray {
             evaluationFailed<T>();
         }
         else
+        if constexpr (UniformType::Vec2 == Type) {
+            if constexpr (std::is_same_v<glm::vec2, T>) return glProgramUniform2fv(_shaderProgram, _uniformLocation, size, glm::value_ptr(*value)); else
+            evaluationFailed<T>();
+        }
+        else
         if constexpr (UniformType::Vec3 == Type) {
-            if constexpr (std::is_same_v<glm::vec3, T>) return glProgramUniform4fv(_shaderProgram, _uniformLocation, size, glm::value_ptr(*value)); else
+            if constexpr (std::is_same_v<glm::vec3, T>) return glProgramUniform3fv(_shaderProgram, _uniformLocation, size, glm::value_ptr(*value)); else
             evaluationFailed<T>();
         }
         else

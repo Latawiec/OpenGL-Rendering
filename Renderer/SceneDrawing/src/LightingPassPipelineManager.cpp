@@ -53,9 +53,13 @@ LightingFragmentProgram::LightingFragmentProgram(const LightType type)
 : _type(type)
 {
     Programs::Base::ShaderData<Programs::Base::ShaderType::Fragment> data(LIGHTING_MATERIAL_FRAGMENT_SOURCE_PATH);
-
+    //TODO: Because it accepts single type, I can now only have either directional or spot light. I need to fix it to be able to process both in single shader.
     if (_type == LightType::DIRECTIONAL) {
         data.AddFlag(DirectionalLightFlag);
+    }
+
+    if (_type == LightType::SPOT) {
+        data.AddFlag(SpotLightFlag);
     }
 
     _program = Programs::Base::Compile(data);
@@ -101,19 +105,44 @@ void LightingFragmentProgram::prepareShared(const SharedData& data) const {
     glActiveTexture(GL_TEXTURE0 + MetallicRoughnessTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.metallicRoughnessTexture);
 
-    const unsigned int directionalLightsCount = glm::min(static_cast<unsigned int>(data.directionalLightsTransforms.size()), MaxDirectionalLightsPerExecute);
+    if (_type == LightType::DIRECTIONAL) {
+        const unsigned int directionalLightsCount = glm::min(static_cast<unsigned int>(data.directionalLightsTransforms.size()), MaxDirectionalLightsPerExecute);
+        if (directionalLightsCount > 0)
+        {    
+            for (int i=0; i<directionalLightsCount; ++i) {
+                glActiveTexture(GL_TEXTURE0 + DirectionalLightShadowmapTexturesLocationBegin + i);
+                glBindTexture(GL_TEXTURE_2D, data.directionalLightsShadowmapTextureIds[i]);
+            }
 
-    for (int i=0; i<directionalLightsCount; ++i) {
-        glActiveTexture(GL_TEXTURE0 + DirectionalLightShadowmapTexturesLocationBegin + i);
-        glBindTexture(GL_TEXTURE_2D, data.directionalLightsShadowmapTextureIds[i]);
+            using namespace Programs::Base;
+            UniformValue<UniformType::Vec4>(_program, CameraPositionUniform).Set(data.cameraPosition);
+            UniformValue<UniformType::UnsignedInt>(_program, DirectionalLightsCountUniform).Set(directionalLightsCount);
+            UniformArray<UniformType::Mat4, MaxDirectionalLightsPerExecute>(_program, DirectionalLightTransformsUniform).Set(data.directionalLightsTransforms.data(), directionalLightsCount);
+            UniformArray<UniformType::Vec4, MaxDirectionalLightsPerExecute>(_program, DirectionalLightDirectionsUniform).Set(data.directionalLightsDirections.data(), directionalLightsCount);
+            UniformArray<UniformType::Vec4, MaxDirectionalLightsPerExecute>(_program, DirectionalLightColorsUniform).Set(data.directionalLightsColors.data(), directionalLightsCount);
+        }
     }
 
-    using namespace Programs::Base;
-    UniformValue<UniformType::Vec4>(_program, CameraPositionUniform).Set(data.cameraPosition);
-    UniformValue<UniformType::UnsignedInt>(_program, DirectionalLightsCountUniform).Set(directionalLightsCount);
-    UniformArray<UniformType::Mat4, MaxDirectionalLightsPerExecute>(_program, DirectionalLightTransformsUniform).Set(data.directionalLightsTransforms.data(), directionalLightsCount);
-    UniformArray<UniformType::Vec4, MaxDirectionalLightsPerExecute>(_program, DirectionalLightDirectionsUniform).Set(data.directionalLightsDirections.data(), directionalLightsCount);
-    UniformArray<UniformType::Vec4, MaxDirectionalLightsPerExecute>(_program, DirectionalLightColor).Set(data.directionalLightsColors.data(), directionalLightsCount);
+    if (_type == LightType::SPOT) {
+        const unsigned int spotLightsCount = glm::min(static_cast<unsigned int>(data.spotLightsTransforms.size()), MaxSpotLightsPerExecute);
+        if (spotLightsCount > 0)
+        {
+
+            // for (int i=0; i<spotLightsCount; ++i) {
+            //     glActiveTexture(GL_TEXTURE0 + SpotLightShadowmapTexturesLocationBegin + i);
+            //     glBindTexture(GL_TEXTURE_2D, data.spotLightsShadowmapTextureIds[i]);
+            // }
+
+            using namespace Programs::Base;
+            UniformValue<UniformType::Vec4>(_program, CameraPositionUniform).Set(data.cameraPosition);
+            UniformValue<UniformType::UnsignedInt>(_program, SpotLightsCountUniform).Set(spotLightsCount);
+            UniformArray<UniformType::Vec2, MaxSpotLightsPerExecute>(_program, SpotLightInnerOuterConeAnglesUniform).Set(data.spotLightsInnerOuterConeAngle.data(), spotLightsCount);
+            UniformArray<UniformType::Mat4, MaxSpotLightsPerExecute>(_program, SpotLightTransformsUniform).Set(data.spotLightsTransforms.data(), spotLightsCount);
+            UniformArray<UniformType::Vec4, MaxSpotLightsPerExecute>(_program, SpotLightDirectionsUniform).Set(data.spotLightsDirections.data(), spotLightsCount);
+            UniformArray<UniformType::Vec4, MaxSpotLightsPerExecute>(_program, SpotLightPositionsUniform).Set(data.spotLightsPositions.data(), spotLightsCount);
+            UniformArray<UniformType::Vec4, MaxSpotLightsPerExecute>(_program, SpotLightColorsUniform).Set(data.spotLightsColors.data(), spotLightsCount);
+        }
+    }
 }
 
 void LightingFragmentProgram::prepareIndividual() const {
@@ -201,11 +230,15 @@ void LightingPipelineManager::buildVariant(const PropertiesSet& properties)
         );
     }
 
+    LightType lightType = LightType::NONE;
+    if ((fragmentProperties & PipelineProperties::LIGHTTYPE_DIRECTIONAL) != 0) lightType = LightType::DIRECTIONAL;
+    if ((fragmentProperties & PipelineProperties::LIGHTTYPE_SPOT) != 0) lightType = LightType::SPOT;
+
     if (!_cachedFragmentPrograms.contains(fragmentProperties)) {
         _cachedFragmentPrograms.emplace(
             fragmentProperties,
             LightingFragmentProgram{
-                (fragmentProperties & PipelineProperties::LIGHTTYPE_DIRECTIONAL) != 0 ? LightType::DIRECTIONAL : LightType::NONE,
+                lightType
             }
         );
     }

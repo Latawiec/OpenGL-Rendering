@@ -20,8 +20,19 @@ const uint MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE = 4;
 uniform uint directionalLightCount = 0;
 uniform mat4 directionalLightTransforms[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
 uniform vec4 directionalLightDirections[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
-uniform vec4 directionalLightColor[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
+uniform vec4 directionalLightColors[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
 uniform sampler2D directionalLightShadowmapSamplers[MAX_DIRECTIONAL_LIGHTS_PER_EXECUTE];
+#endif
+
+#if SPOT_LIGHTS
+const uint MAX_SPOT_LIGHTS_PER_EXECUTE = 4;
+uniform uint spotLightCount = 0;
+uniform mat4 spotLightTransforms[MAX_SPOT_LIGHTS_PER_EXECUTE];
+uniform vec4 spotLightDirections[MAX_SPOT_LIGHTS_PER_EXECUTE];
+uniform vec4 spotLightPositions[MAX_SPOT_LIGHTS_PER_EXECUTE];
+uniform vec4 spotLightColors[MAX_SPOT_LIGHTS_PER_EXECUTE];
+uniform vec2 spotLightInnerOuterConeAngles[MAX_SPOT_LIGHTS_PER_EXECUTE];
+uniform sampler2D spotLightShadowmapSamplers[MAX_SPOT_LIGHTS_PER_EXECUTE];
 #endif
 
 #if DIRECTIONAL_LIGHTS
@@ -73,6 +84,34 @@ vec3 CalculateSpecular_DirectionalLight(in vec2 coord, in uint lightIndex) {
 }
 #endif
 
+#if SPOT_LIGHTS
+float CalculateShadow_SpotLight(in vec2 coord, in uint lightIndex) {
+    return 0.0;
+}
+
+vec3 CalculateDiffuse_SpotLight(in vec2 coord, in uint lightIndex) {
+    vec3 lightPos = spotLightPositions[lightIndex].xyz;
+    vec3 fragPos = texture(positionTexture, coord).xyz;
+    vec3 lightToFragDir = normalize(fragPos - lightPos);
+    vec3 lightDir = normalize(spotLightDirections[lightIndex].xyz);
+
+    vec2 lightInnerOuterConeAngles = spotLightInnerOuterConeAngles[lightIndex];
+
+    float cosAngle = dot(lightToFragDir, lightDir);
+    float innerConeCosAngle = cos(lightInnerOuterConeAngles.x);
+    float outerConeCosAngle = cos(lightInnerOuterConeAngles.y);
+
+    float falloffMultiplier = 1.0 - ( (cosAngle - innerConeCosAngle)/(outerConeCosAngle - innerConeCosAngle) );
+
+    vec3 normal = normalize(texture(normalMapTexture, coord).xyz);
+    return falloffMultiplier * vec3(max(dot(-lightDir, normal), 0.0));
+}
+
+vec3 CalculateSpecular_SpotLight(in vec2 coord, in uint lightIndex) {
+    return vec3(0);
+}
+#endif
+
 void main() {
     vec3 diffuse = vec3(0);
     vec3 specular = vec3(0);
@@ -84,8 +123,22 @@ void main() {
         vec3 diffuseFactor = CalculateDiffuse_DirectionalLight(TextureCoord, i);
         vec3 specularFactor = CalculateSpecular_DirectionalLight(TextureCoord, i);
         // I keep intensity in Alpha channel.
-        vec3 lightColor = directionalLightColor[i].rgb * directionalLightColor[i].a;
+        vec3 lightColor = directionalLightColors[i].rgb * directionalLightColors[i].a;
         
+        diffuse += (1.0 - shadowFactor) * diffuseFactor * lightColor;
+        specular += (1.0 - shadowFactor) * specularFactor * lightColor;
+    }
+#endif
+
+#if SPOT_LIGHTS
+    for (int i=0; i<spotLightCount; i++) {
+        
+        float shadowFactor = CalculateShadow_SpotLight(TextureCoord, i);
+        vec3 diffuseFactor = CalculateDiffuse_SpotLight(TextureCoord, i);
+        vec3 specularFactor = CalculateSpecular_SpotLight(TextureCoord, i);
+        // I keep intensity in Alpha channel.
+        vec3 lightColor = spotLightColors[i].rgb * spotLightColors[i].a;
+
         diffuse += (1.0 - shadowFactor) * diffuseFactor * lightColor;
         specular += (1.0 - shadowFactor) * specularFactor * lightColor;
     }

@@ -48,6 +48,24 @@ void ShadowMappingPassBuffer::RemovePointLightShadowRenderTarget(const Scene::Ba
     _pointLightShadows.erase(id);
 }
 
+void ShadowMappingPassBuffer::SetSpotLightTransform(const Scene::Base::SpotLight::IdType& id, glm::mat4 transform) {
+    _spotLightTransforms[id] = transform;
+}
+
+const glm::mat4& ShadowMappingPassBuffer::GetSpotLightTransform(const Scene::Base::PointLight::IdType& id) const {
+    return _spotLightTransforms.at(id);
+}
+
+const DepthBuffer& ShadowMappingPassBuffer::GetSpotLightShadowRenderTarget(const Scene::Base::SpotLight::IdType& id) {
+    if (!_spotLightShadows.contains(id)) {
+        _spotLightShadows.emplace(id, DepthBuffer(_shadowMapWidth, _shadowMapHeight));
+    }
+    return _spotLightShadows.at(id);
+}
+
+void ShadowMappingPassBuffer::RemoveSpotLightShadowRenderTarget(const Scene::Base::SpotLight::IdType& id) {
+    _spotLightShadows.erase(id);
+}
 
 } // namespace ShadowMappingPass
 } // namespace SceneDrawing

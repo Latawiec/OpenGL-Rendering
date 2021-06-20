@@ -27,13 +27,15 @@ struct IndividualData {
 
 enum class LightType : uint8_t {
     NONE,
-    DIRECTIONAL
+    DIRECTIONAL,
+    SPOT
 };
 
 
 class ShadowMappingVertexProgram {
     // Flags
     static constexpr std::string_view DirectionalLightFlag = "#define DIRECTIONAL_LIGHT 1\n";
+    static constexpr std::string_view SpotLightFlag = "#define SPOT_LIGHT 1\n";
     static constexpr std::string_view SkinFlag = "#define SKINNED_MESH 1\n";
     // Uniform names
     static constexpr std::string_view JointTransformsUniform = "jointTransform";
@@ -119,7 +121,8 @@ struct ShadowMappingPipelineManager {
     using PropertiesSet = uint64_t;
     enum PipelineProperties : PropertiesSet {
         SKIN = 1 << 0,
-        LIGHTTYPE_DIRECTIONAL = 1 << 1
+        LIGHTTYPE_DIRECTIONAL = 1 << 1,
+        LIGHTTYPE_SPOT = 1 << 2
     };
 
 private:
@@ -129,7 +132,8 @@ private:
 
     constexpr static PropertiesSet PropertiesAffectingVertexProgram =
         PipelineProperties::SKIN |
-        PipelineProperties::LIGHTTYPE_DIRECTIONAL;
+        PipelineProperties::LIGHTTYPE_DIRECTIONAL |
+        PipelineProperties::LIGHTTYPE_SPOT;
 
     constexpr static PropertiesSet PropertiesAffectingFragmentProgram =
         0;
