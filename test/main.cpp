@@ -47,17 +47,17 @@ int main() {
 
     Renderer::Scene::Scene mainScene;
     Renderer::Importer::Importer gltfImporter;
-    auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test.gltf", mainScene);
+    auto imported = gltfImporter.importGltf(ASSETS_DIR "/belf.gltf", mainScene);
 #ifndef NDEBUG
     std::cout << "SCENE!\n" << std::endl;
     std::cout << mainScene << std::endl;
 #endif
 
-    auto& cameraNode = mainScene.GetNode(mainScene.GetSceneViews().begin()->nodeId);
-    const auto cacheTransform = cameraNode.GetTransform();
+    // auto& cameraNode = mainScene.GetNode(mainScene.GetSceneViews().begin()->nodeId);
+    // const auto cacheTransform = cameraNode.GetTransform();
 
-    auto& lightNode = mainScene.GetNode(mainScene.GetSceneLights().begin()->nodeId);
-    const auto cacheLightTransform = lightNode.GetTransform();
+    // auto& lightNode = mainScene.GetNode(mainScene.GetSceneLights().begin()->nodeId);
+    // const auto cacheLightTransform = lightNode.GetTransform();
 
     Renderer::SceneDrawing::SceneDrawingManager sceneDrawingManager(mainScene, windowWidth, windowHeight);
 
@@ -108,8 +108,8 @@ int main() {
         const std::chrono::time_point<std::chrono::system_clock> startFrame = std::chrono::system_clock::now();
         sceneDrawingManager.Draw();
 
-        const auto transform = cacheLightTransform * glm::rotate(glm::mat4{1}, glm::radians(90.f), glm::vec3(0, 1, 0));
-        const auto transform2 = glm::rotate(cacheLightTransform, float(glfwGetTime())/1.f, glm::vec3(0, 1, 0));
+        // const auto transform = cacheLightTransform * glm::rotate(glm::mat4{1}, glm::radians(90.f), glm::vec3(0, 1, 0));
+        // const auto transform2 = glm::rotate(cacheLightTransform, float(glfwGetTime())/1.f, glm::vec3(0, 1, 0));
         //lightNode.SetTransform(transform2);
 
         const static glm::mat4 cameraCachedTransform = [&]() {
@@ -121,14 +121,14 @@ int main() {
 
         // IMGUI
         // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        transformEditor.Append();
-        sceneHierarchy.Append();
-        bool showDemoWindow = true;
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // ImGui_ImplOpenGL3_NewFrame();
+        // ImGui_ImplGlfw_NewFrame();
+        // ImGui::NewFrame();
+        // transformEditor.Append();
+        // sceneHierarchy.Append();
+        // bool showDemoWindow = true;
+        // ImGui::Render();
+        // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         // IMGUI
 
         glfwSwapBuffers(window);

@@ -48,17 +48,16 @@ void LightingVertexProgram::prepareIndividual() const {
 }
 
 
-
-LightingFragmentProgram::LightingFragmentProgram(const LightType type)
-: _type(type)
+LightingFragmentProgram::LightingFragmentProgram(const bool drawDirectionalLight, const bool drawSpotLight)
+: _drawDirectionalLight(drawDirectionalLight)
+, _drawSpotLight(drawSpotLight)
 {
     Programs::Base::ShaderData<Programs::Base::ShaderType::Fragment> data(LIGHTING_MATERIAL_FRAGMENT_SOURCE_PATH);
-    //TODO: Because it accepts single type, I can now only have either directional or spot light. I need to fix it to be able to process both in single shader.
-    if (_type == LightType::DIRECTIONAL) {
+    if (_drawDirectionalLight) {
         data.AddFlag(DirectionalLightFlag);
     }
 
-    if (_type == LightType::SPOT) {
+    if (_drawSpotLight) {
         data.AddFlag(SpotLightFlag);
     }
 
@@ -79,12 +78,14 @@ LightingFragmentProgram::LightingFragmentProgram(const LightType type)
 
 LightingFragmentProgram::LightingFragmentProgram(LightingFragmentProgram&& other) {
     std::swap(other._program, this->_program);
-    std::swap(other._type, this->_type);
+    std::swap(other._drawDirectionalLight, this->_drawDirectionalLight);
+    std::swap(other._drawSpotLight, this->_drawSpotLight);
 }
 
 LightingFragmentProgram& LightingFragmentProgram::operator=(LightingFragmentProgram&& other) {
     std::swap(other._program, this->_program);
-    std::swap(other._type, this->_type);
+    std::swap(other._drawDirectionalLight, this->_drawDirectionalLight);
+    std::swap(other._drawSpotLight, this->_drawSpotLight);
     return *this;
 }
 
@@ -105,7 +106,7 @@ void LightingFragmentProgram::prepareShared(const SharedData& data) const {
     glActiveTexture(GL_TEXTURE0 + MetallicRoughnessTextureLocation);
     glBindTexture(GL_TEXTURE_2D, data.metallicRoughnessTexture);
 
-    if (_type == LightType::DIRECTIONAL) {
+    if (_drawDirectionalLight) {
         const unsigned int directionalLightsCount = glm::min(static_cast<unsigned int>(data.directionalLightsTransforms.size()), MaxDirectionalLightsPerExecute);
         if (directionalLightsCount > 0)
         {    
@@ -123,7 +124,7 @@ void LightingFragmentProgram::prepareShared(const SharedData& data) const {
         }
     }
 
-    if (_type == LightType::SPOT) {
+    if (_drawSpotLight) {
         const unsigned int spotLightsCount = glm::min(static_cast<unsigned int>(data.spotLightsTransforms.size()), MaxSpotLightsPerExecute);
         if (spotLightsCount > 0)
         {
@@ -230,15 +231,12 @@ void LightingPipelineManager::buildVariant(const PropertiesSet& properties)
         );
     }
 
-    LightType lightType = LightType::NONE;
-    if ((fragmentProperties & PipelineProperties::LIGHTTYPE_DIRECTIONAL) != 0) lightType = LightType::DIRECTIONAL;
-    if ((fragmentProperties & PipelineProperties::LIGHTTYPE_SPOT) != 0) lightType = LightType::SPOT;
-
     if (!_cachedFragmentPrograms.contains(fragmentProperties)) {
         _cachedFragmentPrograms.emplace(
             fragmentProperties,
             LightingFragmentProgram{
-                lightType
+                (fragmentProperties & PipelineProperties::LIGHTTYPE_DIRECTIONAL) != 0,
+                (fragmentProperties & PipelineProperties::LIGHTTYPE_SPOT) != 0
             }
         );
     }

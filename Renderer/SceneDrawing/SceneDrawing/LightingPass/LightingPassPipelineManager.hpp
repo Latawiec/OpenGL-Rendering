@@ -36,12 +36,6 @@ struct SharedData {
 };
 
 
-enum class LightType : uint8_t {
-    NONE,
-    DIRECTIONAL,
-    SPOT
-};
-
 class LightingVertexProgram {
     // Flags
     //  none.
@@ -104,11 +98,12 @@ class LightingFragmentProgram {
     LightingFragmentProgram(const LightingFragmentProgram& other) = delete;
     LightingFragmentProgram& operator=(const LightingFragmentProgram& other) = delete;
 
-    LightType _type;
+    bool _drawDirectionalLight = false;
+    bool _drawSpotLight = false;
     Programs::Base::ShaderProgram<Programs::Base::ShaderType::Fragment> _program;
 
 public:
-    LightingFragmentProgram(const LightType type);
+    LightingFragmentProgram(const bool drawDirectionalLight, const bool drawSpotLight);
 
     LightingFragmentProgram(LightingFragmentProgram&& other);
     LightingFragmentProgram& operator=(LightingFragmentProgram&& other);

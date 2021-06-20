@@ -71,7 +71,8 @@ private:
     uint64_t _activeSceneViewIndex = 0;
 
     const Scene::SceneView& getActiveSceneView() const;
-    ShadowMappingPass::SharedData createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform);
+    ShadowMappingPass::SharedData createDirectionalLightFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform);
+    ShadowMappingPass::SharedData createSpotLightFittingShadowmapTransform(const Scene::Base::SpotLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform);
     void prepareSkin(const Renderer::Scene::Base::Skin::IdType& skinId);
 
     // Debugging, testing ... seeing if works.

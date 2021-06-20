@@ -3,6 +3,10 @@
 #define DIRECTIONAL_LIGHTS 0
 #endif
 
+#ifndef SPOT_LIGHTS
+#define SPOT_LIGHTS 0
+#endif
+
 in vec2 TextureCoord;
 
 layout (location = 0) out vec3 DiffuseTexture;

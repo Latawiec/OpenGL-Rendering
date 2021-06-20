@@ -10,22 +10,25 @@
 namespace Renderer {
 namespace SceneDrawing {
 
-ShadowMappingPass::SharedData SceneDrawingManager::createFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform) {
+struct FittingShadowmapData {
+    glm::mat4 lightViewTransform;
+    
+};
 
-    const glm::mat4 lightWorldTransform = lightTransform;
-    const glm::vec3 lightDirection = glm::normalize(lightWorldTransform * light.GetLightDirection());
+glm::mat4 createAlignedLightTransform(const glm::mat4& lightTransform, const glm::vec4& lightDirection, const glm::mat4& cameraTransform, const glm::mat4& cameraOrientation) {
+    const glm::vec3 lightDirWorldSpace = glm::normalize(lightTransform * lightDirection);
 
     // We'll build new transform matrix for the light.
     const glm::vec3 cameraPosition = cameraTransform * glm::vec4(0, 0, 0, 1);
-    const glm::vec3 cameraWorldRight = cameraTransform * camera.GetCameraOrientation() * glm::vec4(1, 0, 0, 0);
-    const glm::vec3 cameraWorldUp =    cameraTransform * camera.GetCameraOrientation() * glm::vec4(0, 1, 0, 0);
-    const glm::vec3 cameraWorldFront = cameraTransform * camera.GetCameraOrientation() * glm::vec4(0, 0, -1, 0);
+    const glm::vec3 cameraWorldRight = cameraTransform * cameraOrientation * glm::vec4(1, 0, 0, 0);
+    const glm::vec3 cameraWorldUp =    cameraTransform * cameraOrientation * glm::vec4(0, 1, 0, 0);
+    const glm::vec3 cameraWorldFront = cameraTransform * cameraOrientation * glm::vec4(0, 0, -1, 0);
 
     // I want to build perfect transform of shadowmap view - meaning side of shadowmap texture is parallel with the frustum.
     // For building the "perfect" space for shadowmap, we need to figure which 2 vectors we can use. Best is I think: two least parallel with light direction.
-    const float rightDot = glm::abs(glm::dot(cameraWorldRight, lightDirection));
-    const float upDot = glm::abs(glm::dot(cameraWorldRight, lightDirection));
-    const float frontDot = glm::abs(glm::dot(cameraWorldRight, lightDirection));
+    const float rightDot = glm::abs(glm::dot(cameraWorldRight, lightDirWorldSpace));
+    const float upDot = glm::abs(glm::dot(cameraWorldRight, lightDirWorldSpace));
+    const float frontDot = glm::abs(glm::dot(cameraWorldRight, lightDirWorldSpace));
 
     glm::vec3 firstSelected;
     glm::vec3 secondSelected;
@@ -50,7 +53,7 @@ ShadowMappingPass::SharedData SceneDrawingManager::createFittingShadowmapTransfo
     // I'll use glm::lookAt implementation partially.
     glm::mat4 lightNewTransform {1};
     {
-        glm::vec3 f = glm::normalize(lightDirection);
+        glm::vec3 f = glm::normalize(lightDirWorldSpace);
         glm::vec3 u = glm::normalize(firstSelected);
         glm::vec3 s = glm::normalize(glm::cross(f, u));
         u = glm::cross(s, f);
@@ -69,27 +72,71 @@ ShadowMappingPass::SharedData SceneDrawingManager::createFittingShadowmapTransfo
         lightNewTransform[3][2] = glm::dot(f, cameraPosition);
     }
 
+    return lightNewTransform;
+}
+
+glm::vec3 getFurthestCoordsOfCameraFrustumInLightView(const Scene::Base::Camera& camera, const glm::mat4& cameraTransform, const glm::mat4& lightTransform) {
     Frustum frustum(camera); // this is frustum created in camera-space
     frustum.Transform(cameraTransform * camera.GetCameraOrientation()); // now it's in world-space.
-    frustum.Transform(lightNewTransform);
+    frustum.Transform(lightTransform);
     
     // Now we simply find min's and max'es from the frustum vertices in light space, and we done!
     const auto& frustumVertices = frustum.GetVertices();
-    glm::vec3 minValues = frustumVertices[0];
     glm::vec3 maxValues = frustumVertices[0];
 
     for (int i=1; i<frustumVertices.size(); ++i) {
         const auto vertex = frustumVertices[i];
-        minValues.x = vertex.x < minValues.x ? vertex.x : minValues.x;
-        minValues.y = vertex.y < minValues.y ? vertex.y : minValues.y;
-        minValues.z = vertex.z < minValues.z ? vertex.z : minValues.z;
 
         maxValues.x = vertex.x > maxValues.x ? vertex.x : maxValues.x;
         maxValues.y = vertex.y > maxValues.y ? vertex.y : maxValues.y;
         maxValues.z = vertex.z > maxValues.z ? vertex.z : maxValues.z;
     }
 
-    const glm::mat4 lightProjectionTransform = glm::ortho(minValues.x, maxValues.x, minValues.y, maxValues.y, -maxValues.z, -minValues.z);
+    return maxValues;
+}
+
+glm::vec3 getNearestCoordsOfCameraFrustumInLightView(const Scene::Base::Camera& camera, const glm::mat4& cameraTransform, const glm::mat4& lightTransform) {
+    Frustum frustum(camera); // this is frustum created in camera-space
+    frustum.Transform(cameraTransform * camera.GetCameraOrientation()); // now it's in world-space.
+    frustum.Transform(lightTransform);
+    
+    // Now we simply find min's and max'es from the frustum vertices in light space, and we done!
+    const auto& frustumVertices = frustum.GetVertices();
+    glm::vec3 minValues = frustumVertices[0];
+
+    for (int i=1; i<frustumVertices.size(); ++i) {
+        const auto vertex = frustumVertices[i];
+        minValues.x = vertex.x < minValues.x ? vertex.x : minValues.x;
+        minValues.y = vertex.y < minValues.y ? vertex.y : minValues.y;
+        minValues.z = vertex.z < minValues.z ? vertex.z : minValues.z;
+    }
+
+    return minValues;
+}
+
+ShadowMappingPass::SharedData SceneDrawingManager::createDirectionalLightFittingShadowmapTransform(const Scene::Base::DirectionalLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform) {
+
+    const glm::mat4 lightNewTransform = createAlignedLightTransform(lightTransform, light.GetLightDirection(), cameraTransform, camera.GetCameraOrientation());
+    const glm::vec3 minCameraFrustumCoordsLightSpace = getNearestCoordsOfCameraFrustumInLightView(camera, cameraTransform, lightNewTransform);
+    const glm::vec3 maxCameraFrustumCoordsLightSpace = getFurthestCoordsOfCameraFrustumInLightView(camera, cameraTransform, lightNewTransform);
+
+    const glm::mat4 lightProjectionTransform = glm::ortho(minCameraFrustumCoordsLightSpace.x, maxCameraFrustumCoordsLightSpace.x, minCameraFrustumCoordsLightSpace.y, maxCameraFrustumCoordsLightSpace.y, -maxCameraFrustumCoordsLightSpace.z, -minCameraFrustumCoordsLightSpace.z);
+    
+    ShadowMappingPass::SharedData viewData;
+    viewData.lightViewTransform = lightNewTransform;
+    viewData.lightProjectionTransform = lightProjectionTransform;
+
+    return viewData;
+}
+
+
+ShadowMappingPass::SharedData SceneDrawingManager::createSpotLightFittingShadowmapTransform(const Scene::Base::SpotLight& light, const glm::mat4 lightTransform, const Scene::Base::Camera& camera, const glm::mat4 cameraTransform) {
+    const glm::vec4 lightPos = lightTransform * glm::vec4(0, 0, 0, 1);
+    const glm::mat4 lightNewTransform = glm::lookAt(glm::vec3(lightPos), glm::vec3(lightPos + lightTransform * light.GetLightDirection()), glm::vec3(0, 1, 0)); //(lightTransform, light.GetLightDirection(), cameraTransform, camera.GetCameraOrientation());
+    const glm::vec3 minCameraFrustumCoordsLightSpace = getNearestCoordsOfCameraFrustumInLightView(camera, cameraTransform, lightNewTransform);
+    const glm::vec3 maxCameraFrustumCoordsLightSpace = getFurthestCoordsOfCameraFrustumInLightView(camera, cameraTransform, lightNewTransform);
+
+    const glm::mat4 lightProjectionTransform = glm::perspective(2.f * light.GetOuterConeAngle(), 1.f, -maxCameraFrustumCoordsLightSpace.z, -minCameraFrustumCoordsLightSpace.z);
     
     ShadowMappingPass::SharedData viewData;
     viewData.lightViewTransform = lightNewTransform;
@@ -312,7 +359,7 @@ void SceneDrawingManager::ShadowMappingPass()
             const auto& camera = _scene.GetCamera(cameraId);
             const auto& cameraTransform = _transformProcessor.GetNodeTransforms().at(cameraNodeId);
 
-            ShadowMappingPass::SharedData viewData = createFittingShadowmapTransform(lightObject, _transformProcessor.GetNodeTransforms().at(nodeId), camera, cameraTransform);
+            ShadowMappingPass::SharedData viewData = createDirectionalLightFittingShadowmapTransform(lightObject, _transformProcessor.GetNodeTransforms().at(nodeId), camera, cameraTransform);
             // Remember it for drawing shadows
             _shadowMappingPassBuffer.SetDirectionalLightTransform(lightId, viewData.lightProjectionTransform * viewData.lightViewTransform);
 
@@ -355,21 +402,54 @@ void SceneDrawingManager::ShadowMappingPass()
 
         if (sceneLight.spotLightId != Scene::Base::SpotLight::INVALID_ID) {
             const auto& lightId = sceneLight.spotLightId;
-            // const auto& lightObject = _scene.GetSpotLight(lightId);
+            const auto& lightObject = _scene.GetSpotLight(lightId);
 
-            // const auto& shadowMapBuffer = _shadowMappingPassBuffer.GetSpotLightShadowRenderTarget(lightId);
-            // const auto framebufferBinding = shadowMapBuffer.Bind();
-            // glClear(GL_DEPTH_BUFFER_BIT);
+            const auto& shadowMapBuffer = _shadowMappingPassBuffer.GetSpotLightShadowRenderTarget(lightId);
+            const auto framebufferBinding = shadowMapBuffer.Bind();
+            glClear(GL_DEPTH_BUFFER_BIT);
 
-            // const auto& [cameraNodeId, cameraId] = getActiveSceneView();
-            // const auto& camera = _scene.GetCamera(cameraId);
-            // const auto& cameraTransform = _transformProcessor.GetNodeTransforms().at(cameraNodeId);
+            const auto& [cameraNodeId, cameraId] = getActiveSceneView();
+            const auto& camera = _scene.GetCamera(cameraId);
+            const auto& cameraTransform = _transformProcessor.GetNodeTransforms().at(cameraNodeId);
 
-            // ShadowMappingPass::SharedData viewData = createFittingShadowmapTransform(lightObject, _transformProcessor.GetNodeTransforms.at(nodeId), camera, cameraTransform);
+            ShadowMappingPass::SharedData viewData = createSpotLightFittingShadowmapTransform(lightObject, _transformProcessor.GetNodeTransforms().at(nodeId), camera, cameraTransform);
             // Remember it for drawing shadows
-            _shadowMappingPassBuffer.SetSpotLightTransform(lightId, glm::mat4{1});//viewData.lightProjectionTransform * viewData.lightViewTransform);
+            _shadowMappingPassBuffer.SetSpotLightTransform(lightId, viewData.lightProjectionTransform * viewData.lightViewTransform);
 
+            for (const auto& sceneElement : _scene.GetSceneObjects()) {
+                // Can't draw without geometry.
+                if (sceneElement.meshId == Renderer::Scene::Base::Mesh::INVALID_ID) { continue; }
+                // Can't draw without material for now. Maybe I'll replace it with a dummy material later on.
+                if (sceneElement.materialId == Renderer::Scene::Base::Material::INVALID_ID) { continue; }
 
+                const auto& material = _scene.GetMaterial(sceneElement.materialId);
+                // It doesn't cast shadow... so who cares!
+                if (!material.isCastingShadow()) { continue; }
+
+                ShadowMappingPass::ShadowMappingPipelineManager::PropertiesSet properties = ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::LIGHTTYPE_DIRECTIONAL;
+                {
+                    if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
+                        properties |= ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::SKIN;
+                    }
+                }
+
+                ShadowMappingPass::IndividualData objectData;
+                objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
+                if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
+                    prepareSkin(sceneElement.skinId);
+                    objectData.jointsArray = &_jointTransforms[sceneElement.skinId];
+                }
+
+                const auto& pipeline = _shadowMappingPassPipelineManager.GetPipeline(properties);
+                const auto pipelineBinding = pipeline.Bind();
+                pipeline.prepareShared(viewData);
+                pipeline.prepareIndividual(objectData);
+
+                const auto& mesh = _scene.GetMesh(sceneElement.meshId);
+                Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { mesh.getVertexData() };
+
+                glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
+            } 
 
         }
     }
