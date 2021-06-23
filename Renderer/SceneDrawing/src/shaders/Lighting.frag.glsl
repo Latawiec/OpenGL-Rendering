@@ -120,7 +120,7 @@ vec3 CalculateDiffuse_SpotLight(in vec2 coord, in uint lightIndex) {
     float innerConeCosAngle = cos(lightInnerOuterConeAngles.x);
     float outerConeCosAngle = cos(lightInnerOuterConeAngles.y);
 
-    float falloffMultiplier = 1.0 - ( (cosAngle - innerConeCosAngle)/(outerConeCosAngle - innerConeCosAngle) );
+    float falloffMultiplier = clamp(1.0 - ( (cosAngle - innerConeCosAngle)/(outerConeCosAngle - innerConeCosAngle) ), 0, 1);
 
     vec3 normal = normalize(texture(normalMapTexture, coord).xyz);
     return falloffMultiplier * vec3(max(dot(-lightDir, normal), 0.0));
