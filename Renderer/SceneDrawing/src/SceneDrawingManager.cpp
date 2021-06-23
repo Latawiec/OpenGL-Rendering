@@ -324,6 +324,7 @@ void SceneDrawingManager::LightingPass()
             data.spotLightsPositions.push_back(lightPosition);
             data.spotLightsColors.push_back(lightColor);
             data.spotLightsInnerOuterConeAngle.push_back({lightInnerConeAngle, lightOuterConeAngle});
+            data.spotLightsShadowmapTextureIds.push_back(_shadowMappingPassBuffer.GetSpotLightShadowRenderTarget(lightId).getTexture());
         }
     }
 

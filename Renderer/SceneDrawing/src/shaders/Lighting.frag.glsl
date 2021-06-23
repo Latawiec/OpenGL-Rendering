@@ -54,8 +54,6 @@ float CalculateShadow_DirectionalLight(in vec2 coord, in uint lightIndex) {
     float shadowmapDepth = texture(directionalLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy).r;
     float fragmentDepth = fragPos_LightSpace.z;
 
-    vec3 normal = texture(normalMapTexture, coord).xyz;
-
     float shadowBias = 0.005;
     float shadow = fragmentDepth - shadowBias > shadowmapDepth ? 1.0f : 0.0f;
 
@@ -90,7 +88,24 @@ vec3 CalculateSpecular_DirectionalLight(in vec2 coord, in uint lightIndex) {
 
 #if SPOT_LIGHTS
 float CalculateShadow_SpotLight(in vec2 coord, in uint lightIndex) {
-    return 0.0;
+    mat4 lightTransform = spotLightTransforms[lightIndex];
+
+    vec4 fragPos_WorldSpace = vec4(texture(positionTexture, coord).xyz, 1.0);
+    vec4 fragPos_LightSpace_Perspective = lightTransform * fragPos_WorldSpace;
+    vec3 fragPos_LightSpace = fragPos_LightSpace_Perspective.xyz / fragPos_LightSpace_Perspective.w;
+
+    if (fragPos_LightSpace.z > 1.0)
+        return 1.0f;
+
+    fragPos_LightSpace = fragPos_LightSpace * 0.5 + 0.5;
+
+    float shadowmapDepth = texture(spotLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy).r;
+    float fragmentDepth = fragPos_LightSpace.z;
+
+    float shadowBias = 0.005;
+    float shadow = (fragmentDepth - shadowBias > shadowmapDepth) ? 1.0f : 0.0f;
+
+    return shadow;
 }
 
 vec3 CalculateDiffuse_SpotLight(in vec2 coord, in uint lightIndex) {

@@ -74,6 +74,11 @@ LightingFragmentProgram::LightingFragmentProgram(const bool drawDirectionalLight
     std::iota(directionalLightShadowmapTexturesLocations.begin(), directionalLightShadowmapTexturesLocations.end(), DirectionalLightShadowmapTexturesLocationBegin);
 
     UniformArray<UniformType::Sampler2D, MaxDirectionalLightsPerExecute>(_program, DirectionalLightShadowmapSamplersUniform).Set(directionalLightShadowmapTexturesLocations.data(), MaxDirectionalLightsPerExecute);
+
+    std::array<GLint, MaxSpotLightsPerExecute> spotLightShadowmapTextureLocations;
+    std::iota(spotLightShadowmapTextureLocations.begin(), spotLightShadowmapTextureLocations.end(), SpotLightShadowmapTexturesLocationBegin);
+
+    UniformArray<UniformType::Sampler2D, MaxSpotLightsPerExecute>(_program, SpotLightShadowmapSamplersUniform).Set(spotLightShadowmapTextureLocations.data(), MaxSpotLightsPerExecute);
 }
 
 LightingFragmentProgram::LightingFragmentProgram(LightingFragmentProgram&& other) {
@@ -129,10 +134,10 @@ void LightingFragmentProgram::prepareShared(const SharedData& data) const {
         if (spotLightsCount > 0)
         {
 
-            // for (int i=0; i<spotLightsCount; ++i) {
-            //     glActiveTexture(GL_TEXTURE0 + SpotLightShadowmapTexturesLocationBegin + i);
-            //     glBindTexture(GL_TEXTURE_2D, data.spotLightsShadowmapTextureIds[i]);
-            // }
+            for (int i=0; i<spotLightsCount; ++i) {
+                glActiveTexture(GL_TEXTURE0 + SpotLightShadowmapTexturesLocationBegin + i);
+                glBindTexture(GL_TEXTURE_2D, data.spotLightsShadowmapTextureIds[i]);
+            }
 
             using namespace Programs::Base;
             UniformValue<UniformType::Vec4>(_program, CameraPositionUniform).Set(data.cameraPosition);
