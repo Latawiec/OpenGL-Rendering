@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ComponentBase.hpp"
 
 #include "imgui.h"
 #include <Scene/Base/Node.hpp>
@@ -8,9 +9,9 @@ namespace Renderer {
 namespace UI {
 namespace Components {
 
-struct TransformEditor {
+struct TransformEditor : public ComponentBase {
 
-    void Append() const;
+    void Draw() const override;
     void Apply();
     void SetNode(Scene::Base::Node* nodePtr);
 

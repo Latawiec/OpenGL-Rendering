@@ -7,7 +7,7 @@ namespace Renderer {
 namespace UI {
 namespace Components {
 
-void TransformEditor::Append() const {
+void TransformEditor::Draw() const {
 
     ImGui::Begin("Transform Editor");                          // Create a window called "Hello, world!" and append into it.
 

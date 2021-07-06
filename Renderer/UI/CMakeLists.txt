@@ -5,8 +5,11 @@ project(Renderer_UI)
 find_package(imgui REQUIRED)
 
 add_library(${PROJECT_NAME}
+    src/CameraController.cpp
     src/SceneHierarchy.cpp
     src/TransformEditor.cpp
+    src/InputManager.cpp
+    src/UIManager.cpp
 )
 
 add_dependencies(${PROJECT_NAME}

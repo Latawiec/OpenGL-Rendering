@@ -4,7 +4,7 @@ namespace Renderer {
 namespace UI {
 namespace Components {
 
-void SceneHierarchy::Append() const {
+void SceneHierarchy::Draw() const {
     ImGui::Begin("Scene Hierarchy");
 
     //ImGui::ListBoxHeader("", {300, 300});

@@ -20,6 +20,9 @@
 
 #include <UI/Components/TransformEditor.hpp>
 #include <UI/Components/SceneHierarchy.hpp>
+#include <UI/Components/CameraController.hpp>
+#include <UI/Manager/InputManager.hpp>
+#include <UI/Manager/UIManager.hpp>
 
 int main() {
 
@@ -47,6 +50,8 @@ int main() {
 
     Renderer::Scene::Scene mainScene;
     Renderer::Importer::Importer gltfImporter;
+    Renderer::UI::Manager::UIManager uiManager(window, "#version 410");
+    Renderer::UI::Manager::InputManager inputManager{};
     auto imported = gltfImporter.importGltf(ASSETS_DIR "/belf.gltf", mainScene);
 #ifndef NDEBUG
     std::cout << "SCENE!\n" << std::endl;
@@ -61,6 +66,18 @@ int main() {
 
     Renderer::SceneDrawing::SceneDrawingManager sceneDrawingManager(mainScene, windowWidth, windowHeight);
 
+    sceneDrawingManager.SetResolution(windowWidth / 2, windowHeight / 2);
+
+    const std::chrono::duration<float> frameTimeCap(1.f / FPS);
+
+    uiManager.Initialize();
+    auto transformEditor = std::make_shared<Renderer::UI::Components::TransformEditor>();
+    auto sceneHierarchy = std::make_shared<Renderer::UI::Components::SceneHierarchy>();
+    auto cameraController = std::make_shared<Renderer::UI::Components::CameraController>();
+    uiManager.AddComponent(transformEditor);
+    uiManager.AddComponent(sceneHierarchy);
+    uiManager.AddComponent(cameraController);
+
     // Just stick it in there...
     struct WindowData {
         Renderer::SceneDrawing::SceneDrawingManager* drawingManager;
@@ -74,33 +91,70 @@ int main() {
         userData->drawingManager->SetWindowSize(width, height);
     });
 
-    sceneDrawingManager.SetResolution(windowWidth / 2, windowHeight / 2);
+    sceneHierarchy->SetScene(&mainScene);
+    cameraController->SetScene(&mainScene);
 
-    const std::chrono::duration<float> frameTimeCap(1.f / FPS);
+    struct CameraControllerHandling : public Renderer::UI::Manager::InputManager::IKeyboardListener {
 
-    // IMGUI
-    // Setup Dear ImGui context
-    gladLoadGL();
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+        CameraControllerHandling(const Renderer::UI::Components::CameraController& cameraController, const Renderer::SceneDrawing::SceneDrawingManager& sceneDrawingManager, Renderer::Scene::Scene& scene)
+        : _scene(scene)
+        , _sceneDrawingManager(sceneDrawingManager)
+        , _cameraController(cameraController)
+        {}
 
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
+        virtual void OnHandleInput(bool (&keysDown)[512]) {
 
-    // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+            if (_cameraController.IsCameraPossessed()) {
+                
+                const auto& selectedSceneView = _cameraController.GetSelectedSceneView();
+                const auto& selectedCamera = _scene.GetCamera(selectedSceneView.cameraId);
+                auto& cameraNode = _scene.GetNode(selectedSceneView.nodeId);
+                const auto& cameraTransform = cameraNode.GetTransform();
 
-    const char* glsl_version = "#version 410";
-    ImGui_ImplOpenGL3_Init(glsl_version);
+                const float scale = 0.005f;
 
-    Renderer::UI::Components::TransformEditor transformEditor;
-    Renderer::UI::Components::SceneHierarchy sceneHierarchy;
-    sceneHierarchy.SetScene(&mainScene);
-    // IMGUI
+                if (keysDown[GLFW_KEY_W]) {
+                    cameraNode.SetTransform(
+                        glm::translate(cameraTransform, scale * glm::vec3(_sceneDrawingManager.GetNodeWorldTransform(selectedSceneView.nodeId) * selectedCamera.GetCameraOrientation() * glm::vec4{0, 0, -1.0, 0}))
+                    );
+                
+                }
+
+                if (keysDown[GLFW_KEY_S]) {
+                    cameraNode.SetTransform(
+                        glm::translate(cameraTransform, scale * glm::vec3(_sceneDrawingManager.GetNodeWorldTransform(selectedSceneView.nodeId) * selectedCamera.GetCameraOrientation() * glm::vec4{0, 0, 1.0, 0}))
+                    );
+                }
+
+                if (keysDown[GLFW_KEY_A]) {
+                    cameraNode.SetTransform(
+                        glm::translate(cameraTransform, scale * glm::vec3(_sceneDrawingManager.GetNodeWorldTransform(selectedSceneView.nodeId) * selectedCamera.GetCameraOrientation() * glm::vec4{-1.0, 0, 0, 0}))
+                    );
+                
+                }
+
+                if (keysDown[GLFW_KEY_D]) {
+                    cameraNode.SetTransform(
+                        glm::translate(cameraTransform, scale * glm::vec3(_sceneDrawingManager.GetNodeWorldTransform(selectedSceneView.nodeId) * selectedCamera.GetCameraOrientation() * glm::vec4{1.0, 0, 0, 0}))
+                    );
+                }
+
+                if (keysDown[GLFW_KEY_SPACE]) {
+                    cameraNode.SetTransform(
+                        glm::translate(cameraTransform, scale * glm::vec3(_sceneDrawingManager.GetNodeWorldTransform(selectedSceneView.nodeId) * selectedCamera.GetCameraOrientation() * glm::vec4{0, 1.0, 0, 0}))
+                    );
+                }
+
+            }
+        };
+
+        protected:
+            Renderer::Scene::Scene& _scene;
+            const Renderer::SceneDrawing::SceneDrawingManager& _sceneDrawingManager;
+            const Renderer::UI::Components::CameraController& _cameraController;
+    };
+
+    inputManager.RegisterKeyboardListener(std::make_unique<CameraControllerHandling>(*cameraController, sceneDrawingManager, mainScene));
 
     while(!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -119,17 +173,7 @@ int main() {
 
         //cameraNode.SetTransform(glm::rotate(cacheTransform, float(glm::radians(3.f * glfwGetTime())), glm::vec3(0, 1, 0)));
 
-        // IMGUI
-        // Start the Dear ImGui frame
-        // ImGui_ImplOpenGL3_NewFrame();
-        // ImGui_ImplGlfw_NewFrame();
-        // ImGui::NewFrame();
-        // transformEditor.Append();
-        // sceneHierarchy.Append();
-        // bool showDemoWindow = true;
-        // ImGui::Render();
-        // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        // IMGUI
+        uiManager.Render();
 
         glfwSwapBuffers(window);
 
@@ -144,8 +188,10 @@ int main() {
 
         std::this_thread::sleep_for(frameTimeLeft);
 
-        transformEditor.Apply();
-        transformEditor.SetNode(sceneHierarchy.GetSelected() ? &mainScene.GetNode(sceneHierarchy.GetSelected()->nodeId) : nullptr );
+        transformEditor->Apply();
+        transformEditor->SetNode(sceneHierarchy->GetSelected() ? &mainScene.GetNode(sceneHierarchy->GetSelected()->nodeId) : nullptr );
+
+        inputManager.HandleInput();
     }
 	glfwTerminate();
 	return 0;
