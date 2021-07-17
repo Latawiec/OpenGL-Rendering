@@ -48,6 +48,24 @@ int main() {
 		return -1;
 	}
 
+
+    {
+        GLint major, minor;
+        glGetIntegerv(GL_MAJOR_VERSION, &major);
+        glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+        if ((major > 4 || (major == 4 && minor >= 5)) ||
+            glfwExtensionSupported("GL_ARB_clip_control"))
+        {
+            glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+        }
+        else
+        {
+            fprintf(stderr, "glClipControl required, sorry.\n");
+            exit(1);
+        }
+    }
+
     Renderer::Scene::Scene mainScene;
     Renderer::Importer::Importer gltfImporter;
     Renderer::UI::Manager::UIManager uiManager(window, "#version 410");

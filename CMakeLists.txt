@@ -35,6 +35,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
 
+# We are going to use [0; 1] depth instead of [-1; 1]
+add_compile_definitions(GLM_FORCE_DEPTH_ZERO_TO_ONE)
+
 add_subdirectory(Renderer)
 add_subdirectory(Assets)
 add_subdirectory(test)

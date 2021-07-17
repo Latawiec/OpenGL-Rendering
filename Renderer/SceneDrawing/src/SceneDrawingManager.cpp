@@ -20,43 +20,23 @@ glm::mat4 createAlignedLightTransform(const glm::mat4& lightTransform, const glm
 
     // We'll build new transform matrix for the light.
     const glm::vec3 cameraPosition = cameraTransform * glm::vec4(0, 0, 0, 1);
-    const glm::vec3 cameraWorldRight = cameraTransform * cameraOrientation * glm::vec4(1, 0, 0, 0);
-    const glm::vec3 cameraWorldUp =    cameraTransform * cameraOrientation * glm::vec4(0, 1, 0, 0);
-    const glm::vec3 cameraWorldFront = cameraTransform * cameraOrientation * glm::vec4(0, 0, -1, 0);
+    const glm::vec3 cameraWorldRight = glm::normalize(cameraTransform * cameraOrientation * glm::vec4(1, 0, 0, 0));
+    const glm::vec3 cameraWorldUp =    glm::normalize(cameraTransform * cameraOrientation * glm::vec4(0, 1, 0, 0));
+    const glm::vec3 cameraWorldFront = -glm::normalize(cameraTransform * cameraOrientation * glm::vec4(0, 0, -1, 0));
 
     // I want to build perfect transform of shadowmap view - meaning side of shadowmap texture is parallel with the frustum.
     // For building the "perfect" space for shadowmap, we need to figure which 2 vectors we can use. Best is I think: two least parallel with light direction.
     const float rightDot = glm::abs(glm::dot(cameraWorldRight, lightDirWorldSpace));
-    const float upDot = glm::abs(glm::dot(cameraWorldRight, lightDirWorldSpace));
-    const float frontDot = glm::abs(glm::dot(cameraWorldRight, lightDirWorldSpace));
-
-    glm::vec3 firstSelected;
-    glm::vec3 secondSelected;
-
-    if (rightDot > upDot) {
-        firstSelected = cameraWorldRight;
-        if (upDot > frontDot) {
-            secondSelected = cameraWorldUp;
-        } else {
-            secondSelected = cameraWorldFront;
-        }
-    } else {
-        firstSelected = cameraWorldUp;
-        if (upDot > frontDot) {
-            secondSelected = cameraWorldUp;
-        } else {
-            secondSelected = cameraWorldFront;
-        }
-    }
+    const float upDot = glm::abs(glm::dot(cameraWorldUp, lightDirWorldSpace));
+    const float frontDot = glm::abs(glm::dot(cameraWorldFront, lightDirWorldSpace));
 
     // Now we need to build a transform to make our selected vectors X and Y axis of light-view matrix.
     // I'll use glm::lookAt implementation partially.
     glm::mat4 lightNewTransform {1};
     {
         glm::vec3 f = glm::normalize(lightDirWorldSpace);
-        glm::vec3 u = glm::normalize(firstSelected);
-        glm::vec3 s = glm::normalize(glm::cross(f, u));
-        u = glm::cross(s, f);
+        glm::vec3 s = glm::normalize(glm::cross(lightDirWorldSpace, cameraWorldRight));
+        glm::vec3 u = glm::normalize(glm::cross(f, s));
 
         lightNewTransform[0][0] = s.x;
         lightNewTransform[1][0] = s.y;
@@ -120,7 +100,15 @@ ShadowMappingPass::SharedData SceneDrawingManager::createDirectionalLightFitting
     const glm::vec3 minCameraFrustumCoordsLightSpace = getNearestCoordsOfCameraFrustumInLightView(camera, cameraTransform, lightNewTransform);
     const glm::vec3 maxCameraFrustumCoordsLightSpace = getFurthestCoordsOfCameraFrustumInLightView(camera, cameraTransform, lightNewTransform);
 
-    const glm::mat4 lightProjectionTransform = glm::ortho(minCameraFrustumCoordsLightSpace.x, maxCameraFrustumCoordsLightSpace.x, minCameraFrustumCoordsLightSpace.y, maxCameraFrustumCoordsLightSpace.y, -maxCameraFrustumCoordsLightSpace.z, -minCameraFrustumCoordsLightSpace.z);
+    glm::vec2 leftRight = { minCameraFrustumCoordsLightSpace.x, maxCameraFrustumCoordsLightSpace.x };
+    glm::vec2 topBottom = { minCameraFrustumCoordsLightSpace.y, maxCameraFrustumCoordsLightSpace.y };
+    glm::vec2 nearFar = { -maxCameraFrustumCoordsLightSpace.z, -minCameraFrustumCoordsLightSpace.z };
+
+    const glm::mat4 lightProjectionTransform = glm::ortho(
+        leftRight.x, leftRight.y,
+        topBottom.x, topBottom.y,
+        nearFar.x, nearFar.y
+    );
     
     ShadowMappingPass::SharedData viewData;
     viewData.lightViewTransform = lightNewTransform;
