@@ -64,6 +64,7 @@ class LightingFragmentProgram {
     // Flags
     static constexpr std::string_view DirectionalLightFlag = "#define DIRECTIONAL_LIGHTS 1\n";
     static constexpr std::string_view SpotLightFlag = "#define SPOT_LIGHTS 1\n";
+    static constexpr std::string_view DepthReverseZ = "#define DEPTH_REVERSE_Z 1\n";
 
     // Uniform names
     static constexpr std::string_view AlbedoSamplerUniform = "albedoTexture";

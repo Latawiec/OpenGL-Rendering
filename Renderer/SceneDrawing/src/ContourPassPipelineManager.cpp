@@ -50,6 +50,9 @@ void ContourVertexProgram::prepareIndividual() const {
 ContourFragmentProgram::ContourFragmentProgram()
 {
     Programs::Base::ShaderData<Programs::Base::ShaderType::Fragment> data(CONTOUR_MATERIAL_FRAGMENT_SOURCE_PATH);
+#ifdef DEPTH_REVERSE_Z
+    data.AddFlag(DepthReverseZ);
+#endif
     _program = Programs::Base::Compile(data);
  
     // Setup textures

@@ -47,7 +47,7 @@ public:
 
 class ContourFragmentProgram {
     // Flags
-    //  none.
+    static constexpr std::string_view DepthReverseZ = "#define DEPTH_REVERSE_Z 1\n";
 
     // Uniform names
     static constexpr std::string_view SilhouetteSamplerUniform = "silhouetteTexture";

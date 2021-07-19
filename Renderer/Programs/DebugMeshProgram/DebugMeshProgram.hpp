@@ -30,6 +30,7 @@ public:
     void SetModel(const glm::mat4& model);
 
     bool HasMesh() const;
+    std::optional<Scene::Base::VertexData<Scene::Base::Layout::Sequential, Scene::Base::Vec3>>& GetMesh() { return _vertexData; }
 
     DebugMeshProgram(DebugMeshProgram&) = delete;
     DebugMeshProgram(DebugMeshProgram&&) = delete;

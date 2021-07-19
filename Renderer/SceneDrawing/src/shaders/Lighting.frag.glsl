@@ -46,14 +46,28 @@ float CalculateShadow_DirectionalLight(in vec2 coord, in uint lightIndex) {
     vec4 fragPos_WorldSpace = vec4(texture(positionTexture, coord).xyz, 1.0);
     vec4 fragPos_LightSpace_Perspective = lightTransform * fragPos_WorldSpace;
     vec3 fragPos_LightSpace = fragPos_LightSpace_Perspective.xyz / fragPos_LightSpace_Perspective.w;
-    if(fragPos_LightSpace.z > 1.0)
-        return 1.0f;
-    
+
+#ifdef DEPTH_REVERSE_Z
+    if(fragPos_LightSpace.z <= 0.0)
+        return 1.f;
+
     float shadowmapDepth = texture(directionalLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy * 0.5 + 0.5).r;
     float fragmentDepth = fragPos_LightSpace.z;
 
+    float shadowBias = 0.009;
+    float shadow = (fragmentDepth + shadowBias < shadowmapDepth) ? 1.0f : 0.0f;
+#else
+    if(fragPos_LightSpace.z > 1.0)
+        return 1.0f;
+    
+    fragPos_LightSpace = fragPos_LightSpace * 0.5 + 0.5;
+
+    float shadowmapDepth = texture(directionalLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy).r;
+    float fragmentDepth = fragPos_LightSpace.z;
+
     float shadowBias = 0.005;
-    float shadow = fragmentDepth - shadowBias > shadowmapDepth ? 1.0f : 0.0f;
+    float shadow = (fragmentDepth - shadowBias > shadowmapDepth) ? 1.0f : 0.0f;
+#endif
 
     return shadow;
 }
@@ -92,14 +106,27 @@ float CalculateShadow_SpotLight(in vec2 coord, in uint lightIndex) {
     vec4 fragPos_LightSpace_Perspective = lightTransform * fragPos_WorldSpace;
     vec3 fragPos_LightSpace = fragPos_LightSpace_Perspective.xyz / fragPos_LightSpace_Perspective.w;
 
-    if (fragPos_LightSpace.z > 1.0)
-        return 1.0f;
+#ifdef DEPTH_REVERSE_Z
+    if(fragPos_LightSpace.z <= 0.0)
+        return 1.f;
 
-    float shadowmapDepth = texture(spotLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy * 0.5 + 0.5).r;
+    float shadowmapDepth = texture(directionalLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy * 0.5 + 0.5).r;
+    float fragmentDepth = fragPos_LightSpace.z;
+
+    float shadowBias = 0.009;
+    float shadow = (fragmentDepth + shadowBias < shadowmapDepth) ? 1.0f : 0.0f;
+#else
+    if(fragPos_LightSpace.z > 1.0)
+        return 1.0f;
+    
+    fragPos_LightSpace = fragPos_LightSpace * 0.5 + 0.5;
+
+    float shadowmapDepth = texture(directionalLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy).r;
     float fragmentDepth = fragPos_LightSpace.z;
 
     float shadowBias = 0.005;
     float shadow = (fragmentDepth - shadowBias > shadowmapDepth) ? 1.0f : 0.0f;
+#endif
 
     return shadow;
 }

@@ -38,7 +38,11 @@ void main() {
         // Test 0
         // I only draw edge outside from objects closer to the camera. So I draw on elements further away from camera.
         // I wanted to multiply by depth-fuse, but actually just abort mission if depth test failed. Less texture sampling.
+    #ifdef DEPTH_REVERSE_Z
+        float depthFuse = centerDepth > sampleDepth ? 1.0 : 0.0;
+    #else
         float depthFuse = centerDepth < sampleDepth ? 1.0 : 0.0;
+    #endif
         if (depthFuse == 0.0) continue;
 
         // Test 1 - silhouette test. If silhouette texture is any different, it is an edge 100%.

@@ -48,7 +48,7 @@ int main() {
 		return -1;
 	}
 
-
+#if DEPTH_REVERSE_Z
     {
         GLint major, minor;
         glGetIntegerv(GL_MAJOR_VERSION, &major);
@@ -58,6 +58,8 @@ int main() {
             glfwExtensionSupported("GL_ARB_clip_control"))
         {
             glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+            glDepthFunc(GL_GREATER);
+            glClearDepth(0.0f);
         }
         else
         {
@@ -65,6 +67,7 @@ int main() {
             exit(1);
         }
     }
+#endif
 
     Renderer::Scene::Scene mainScene;
     Renderer::Importer::Importer gltfImporter;

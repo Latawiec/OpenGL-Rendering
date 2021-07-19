@@ -1,6 +1,7 @@
 #include "../Scene/Base/Camera.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <projection.hpp>
 
 namespace Renderer {
 namespace Scene {
@@ -8,7 +9,7 @@ namespace Base {
 
 Camera::Camera(const float near, const float far, const float fov, const float aspect, const glm::mat4& orientationMatrix = glm::mat4{1})
 : _cameraOrientation{ orientationMatrix }
-, _projection{ glm::perspective(fov, aspect, near, far) }
+, _projection{ Utils::perspective(fov, aspect, near, far) }
 , _near(near)
 , _far(far)
 , _fov(fov)

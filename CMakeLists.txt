@@ -36,7 +36,12 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
 
 # We are going to use [0; 1] depth instead of [-1; 1]
-add_compile_definitions(GLM_FORCE_DEPTH_ZERO_TO_ONE)
+set (DEPTH_REVERSE_Z true)
+
+if (DEPTH_REVERSE_Z)
+    add_compile_definitions(GLM_FORCE_DEPTH_ZERO_TO_ONE)
+    add_compile_definitions(DEPTH_REVERSE_Z)
+endif()
 
 add_subdirectory(Renderer)
 add_subdirectory(Assets)

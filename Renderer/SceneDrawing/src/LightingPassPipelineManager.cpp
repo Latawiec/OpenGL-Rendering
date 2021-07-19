@@ -61,6 +61,10 @@ LightingFragmentProgram::LightingFragmentProgram(const bool drawDirectionalLight
         data.AddFlag(SpotLightFlag);
     }
 
+#ifdef DEPTH_REVERSE_Z
+    data.AddFlag(DepthReverseZ);
+#endif
+
     _program = Programs::Base::Compile(data);
 
     // Setup textures

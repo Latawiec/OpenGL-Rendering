@@ -1,6 +1,7 @@
 #include "../SceneDrawing/SceneDrawingManager.hpp"
 
 #include "../SceneDrawing/Frustum.hpp"
+#include <projection.hpp>
 
 #include <glad/glad.h>
 #include <unordered_map>
@@ -104,7 +105,7 @@ ShadowMappingPass::SharedData SceneDrawingManager::createDirectionalLightFitting
     glm::vec2 topBottom = { minCameraFrustumCoordsLightSpace.y, maxCameraFrustumCoordsLightSpace.y };
     glm::vec2 nearFar = { -maxCameraFrustumCoordsLightSpace.z, -minCameraFrustumCoordsLightSpace.z };
 
-    const glm::mat4 lightProjectionTransform = glm::ortho(
+    const glm::mat4 lightProjectionTransform = Utils::ortho(
         leftRight.x, leftRight.y,
         topBottom.x, topBottom.y,
         nearFar.x, nearFar.y
@@ -124,7 +125,7 @@ ShadowMappingPass::SharedData SceneDrawingManager::createSpotLightFittingShadowm
     const glm::vec3 minCameraFrustumCoordsLightSpace = getNearestCoordsOfCameraFrustumInLightView(camera, cameraTransform, lightNewTransform);
     const glm::vec3 maxCameraFrustumCoordsLightSpace = getFurthestCoordsOfCameraFrustumInLightView(camera, cameraTransform, lightNewTransform);
 
-    const glm::mat4 lightProjectionTransform = glm::perspective(2.f * light.GetOuterConeAngle(), 1.f, -maxCameraFrustumCoordsLightSpace.z, -minCameraFrustumCoordsLightSpace.z);
+    const glm::mat4 lightProjectionTransform = Utils::perspective(2.f * light.GetOuterConeAngle(), 1.f, -maxCameraFrustumCoordsLightSpace.z, -minCameraFrustumCoordsLightSpace.z);
     
     ShadowMappingPass::SharedData viewData;
     viewData.lightViewTransform = lightNewTransform;
