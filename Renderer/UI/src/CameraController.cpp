@@ -20,6 +20,9 @@ void CameraController::Draw() const
     if (_selectedSceneView.cameraId != Scene::Base::Camera::INVALID_ID) {
         ImGui::Checkbox("Possessed", &_cameraPossessed);
     }
+
+    const float changeSpeed = 0.2f;
+    ImGui::DragFloat("Speed", &_cameraSpeed, changeSpeed);
     ImGui::End();
 };
 
@@ -31,6 +34,11 @@ void CameraController::SetScene(Scene::Scene* scenePtr)
 const Scene::SceneView& CameraController::GetSelectedSceneView() const
 {
     return _selectedSceneView;
+}
+
+float CameraController::GetCameraSpeed() const
+{
+    return _cameraSpeed;
 }
 
 bool CameraController::IsCameraPossessed() const

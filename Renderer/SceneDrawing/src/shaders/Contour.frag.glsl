@@ -51,7 +51,7 @@ void main() {
         float silhouetteWeight = silhouetteDiff.x + silhouetteDiff.y + silhouetteDiff.z + silhouetteDiff.w != 0 ? 1.0 : 0.0;
 
         // Test 2 - depth test. Anything below treshold is not edge, anything above is an edge. We'll linearize depth for it.
-        const float depthEdgeTreshold = 0.017;
+        const float depthEdgeTreshold = 0.05;
         const float depthExponent = 0.5; // bump lower values so when we're close, we see edge sooner.
     #ifdef DEPTH_REVERSE_Z
         // Simply flip near and far for correct calculations to linearize depth.

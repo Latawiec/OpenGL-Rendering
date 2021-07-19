@@ -17,12 +17,14 @@ struct CameraController : public ComponentBase {
 
     const Scene::SceneView& GetSelectedSceneView() const;
     bool IsCameraPossessed() const;
+    float GetCameraSpeed() const;
 
 private:
     Scene::Scene* _scene = nullptr;
     
     mutable Scene::SceneView _selectedSceneView = {};
     mutable bool _cameraPossessed = false;
+    mutable float _cameraSpeed = 1.0f;
 };
 
 }; // Components 

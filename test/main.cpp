@@ -73,7 +73,7 @@ int main() {
     Renderer::Importer::Importer gltfImporter;
     Renderer::UI::Manager::UIManager uiManager(window, "#version 410");
     Renderer::UI::Manager::InputManager inputManager{};
-    auto imported = gltfImporter.importGltf(ASSETS_DIR "/belf.gltf", mainScene);
+    auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test.gltf", mainScene);
 #ifndef NDEBUG
     std::cout << "SCENE!\n" << std::endl;
     std::cout << mainScene << std::endl;
@@ -132,7 +132,7 @@ int main() {
                 auto& cameraNode = _scene.GetNode(selectedSceneView.nodeId);
                 const auto& cameraTransform = cameraNode.GetTransform();
 
-                const float scale = 0.005f;
+                const float scale = 0.005f * _cameraController.GetCameraSpeed();
 
                 if (keysDown[GLFW_KEY_W]) {
                     cameraNode.SetTransform(
