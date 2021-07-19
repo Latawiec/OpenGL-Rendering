@@ -51,10 +51,16 @@ void main() {
         float silhouetteWeight = silhouetteDiff.x + silhouetteDiff.y + silhouetteDiff.z + silhouetteDiff.w != 0 ? 1.0 : 0.0;
 
         // Test 2 - depth test. Anything below treshold is not edge, anything above is an edge. We'll linearize depth for it.
-        const float depthEdgeTreshold = 0.008;
+        const float depthEdgeTreshold = 0.017;
         const float depthExponent = 0.5; // bump lower values so when we're close, we see edge sooner.
+    #ifdef DEPTH_REVERSE_Z
+        // Simply flip near and far for correct calculations to linearize depth.
+        float near = cameraNearFar.y;
+        float far = cameraNearFar.x;
+    #else
         float near = cameraNearFar.x;
         float far = cameraNearFar.y;
+    #endif
         float centerDepthLin =  2.0 * near / (far + near - (2.0 * centerDepth - 1.0) * (far - near));
         float sampleDepthLin =  2.0 * near / (far + near - (2.0 * sampleDepth - 1.0) * (far - near));
 
