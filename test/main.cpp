@@ -9,6 +9,7 @@
 #include <chrono>
 #include <numeric>
 #include <thread>
+#include <map>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -24,7 +25,44 @@
 #include <UI/Manager/InputManager.hpp>
 #include <UI/Manager/UIManager.hpp>
 
-int main() {
+struct InputParameters {
+    // Parameter flags
+    constexpr static std::string_view SceneFilePathFlag = "-f";
+
+    // Arguments
+    std::string sceneFilePath = "";
+};
+
+InputParameters ParseProgramInput(int argc, char** argv) {
+    std::map<std::string_view, int> argumentsFound = {
+        {InputParameters::SceneFilePathFlag, -1}
+    };
+
+
+    // Iterate over passed arguments and find anything that matches our flags.
+    for (int i = 0; i < argc; ++i) {
+        const char* argumentValue = argv[i];
+        auto found = std::find_if(argumentsFound.begin(), argumentsFound.end(), [argumentValue](const std::pair<std::string_view, int>& element) {
+            return element.first.compare(argumentValue) == 0;
+        });
+
+        if (found != argumentsFound.end()) {
+            found->second = i;
+        }
+    }
+
+    // Prepare parsed input.
+    InputParameters parameters;
+    if (argumentsFound[InputParameters::SceneFilePathFlag] != -1) {
+        parameters.sceneFilePath = argv[argumentsFound[InputParameters::SceneFilePathFlag] + 1];
+    }
+
+    return parameters;
+}
+
+int main(int argc, char** argv) {
+
+    InputParameters inputParams = ParseProgramInput(argc, argv);
 
     constexpr int windowWidth = 1600;
     constexpr int windowHeight= 1200;
@@ -73,9 +111,17 @@ int main() {
     Renderer::Importer::Importer gltfImporter;
     Renderer::UI::Manager::UIManager uiManager(window, "#version 410");
     Renderer::UI::Manager::InputManager inputManager{};
-    auto imported = gltfImporter.importGltf(ASSETS_DIR "/scene_test.gltf", mainScene);
+    if (inputParams.sceneFilePath.empty()) {
+        std::cout << "No scene file path has been provided." << std::endl;
+    } else {
+        std::cout << "Scene file: " << inputParams.sceneFilePath << std::endl;
+        if (gltfImporter.importGltf(inputParams.sceneFilePath, mainScene)) {
+            std::cout << "Scene loaded successfuly." << std::endl;
+        } else {
+            std::cout << "Failed to load scene." << std::endl;
+        }
+    }
 #ifndef NDEBUG
-    std::cout << "SCENE!\n" << std::endl;
     std::cout << mainScene << std::endl;
 #endif
 

@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/test/Debug/test.exe",
-            "args": [],
+            "args": ["-f", "D:/Programming/Pepe/Assets/multimaterial_test.gltf"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

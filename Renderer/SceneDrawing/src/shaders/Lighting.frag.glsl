@@ -110,7 +110,7 @@ float CalculateShadow_SpotLight(in vec2 coord, in uint lightIndex) {
     if(fragPos_LightSpace.z <= 0.0)
         return 1.f;
 
-    float shadowmapDepth = texture(directionalLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy * 0.5 + 0.5).r;
+    float shadowmapDepth = texture(spotLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy * 0.5 + 0.5).r;
     float fragmentDepth = fragPos_LightSpace.z;
 
     float shadowBias = 0.009;
@@ -121,7 +121,7 @@ float CalculateShadow_SpotLight(in vec2 coord, in uint lightIndex) {
     
     fragPos_LightSpace = fragPos_LightSpace * 0.5 + 0.5;
 
-    float shadowmapDepth = texture(directionalLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy).r;
+    float shadowmapDepth = texture(spotLightShadowmapSamplers[lightIndex], fragPos_LightSpace.xy).r;
     float fragmentDepth = fragPos_LightSpace.z;
 
     float shadowBias = 0.005;
