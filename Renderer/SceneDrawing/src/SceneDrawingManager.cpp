@@ -355,37 +355,41 @@ void SceneDrawingManager::ShadowMappingPass()
 
             for (const auto& sceneElement : _scene.GetSceneObjects()) {
                 // Can't draw without geometry.
-                if (sceneElement.meshId == Renderer::Scene::Base::Mesh::INVALID_ID) { continue; }
-                // Can't draw without material for now. Maybe I'll replace it with a dummy material later on.
-                if (sceneElement.materialId == Renderer::Scene::Base::Material::INVALID_ID) { continue; }
-
-                const auto& material = _scene.GetMaterial(sceneElement.materialId);
-                // It doesn't cast shadow... so who cares!
-                if (!material.isCastingShadow()) { continue; }
-
-                ShadowMappingPass::ShadowMappingPipelineManager::PropertiesSet properties = ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::LIGHTTYPE_DIRECTIONAL;
-                {
-                    if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
-                        properties |= ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::SKIN;
-                    }
-                }
-
-                ShadowMappingPass::IndividualData objectData;
-                objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
-                if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
-                    prepareSkin(sceneElement.skinId);
-                    objectData.jointsArray = &_jointTransforms[sceneElement.skinId];
-                }
-
-                const auto& pipeline = _shadowMappingPassPipelineManager.GetPipeline(properties);
-                const auto pipelineBinding = pipeline.Bind();
-                pipeline.prepareShared(viewData);
-                pipeline.prepareIndividual(objectData);
-
+                if (sceneElement.meshId == Renderer::Scene::Base::Primitive::INVALID_ID) { continue; }
                 const auto& mesh = _scene.GetMesh(sceneElement.meshId);
-                Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { mesh.getVertexData() };
 
-                glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
+                for (const auto& [materialId, primitiveId] : mesh.materialPrimitiveIdsPairs) {
+
+                    // Can't draw without material for now. Maybe I'll replace it with a dummy material later on.
+                    if (materialId == Renderer::Scene::Base::Material::INVALID_ID) { continue; }
+                    const auto& material = _scene.GetMaterial(materialId);
+                    const auto& primitive = _scene.GetPrimitive(primitiveId);
+
+                    // It doesn't cast shadow... so who cares!
+                    if (!material.isCastingShadow()) { continue; }
+
+                    ShadowMappingPass::ShadowMappingPipelineManager::PropertiesSet properties = ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::LIGHTTYPE_DIRECTIONAL;
+                    {
+                        if (mesh.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
+                            properties |= ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::SKIN;
+                        }
+                    }
+
+                    ShadowMappingPass::IndividualData objectData;
+                    objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
+                    if (mesh.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
+                        prepareSkin(mesh.skinId);
+                        objectData.jointsArray = &_jointTransforms[mesh.skinId];
+                    }
+
+                    const auto& pipeline = _shadowMappingPassPipelineManager.GetPipeline(properties);
+                    const auto pipelineBinding = pipeline.Bind();
+                    pipeline.prepareShared(viewData);
+                    pipeline.prepareIndividual(objectData);
+
+                    Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { primitive.getVertexData() };
+                    glDrawElements(GL_TRIANGLES, primitive.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
+                }
             }            
         }
 
@@ -408,37 +412,42 @@ void SceneDrawingManager::ShadowMappingPass()
 
             for (const auto& sceneElement : _scene.GetSceneObjects()) {
                 // Can't draw without geometry.
-                if (sceneElement.meshId == Renderer::Scene::Base::Mesh::INVALID_ID) { continue; }
-                // Can't draw without material for now. Maybe I'll replace it with a dummy material later on.
-                if (sceneElement.materialId == Renderer::Scene::Base::Material::INVALID_ID) { continue; }
-
-                const auto& material = _scene.GetMaterial(sceneElement.materialId);
-                // It doesn't cast shadow... so who cares!
-                if (!material.isCastingShadow()) { continue; }
-
-                ShadowMappingPass::ShadowMappingPipelineManager::PropertiesSet properties = ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::LIGHTTYPE_DIRECTIONAL;
-                {
-                    if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
-                        properties |= ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::SKIN;
-                    }
-                }
-
-                ShadowMappingPass::IndividualData objectData;
-                objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
-                if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
-                    prepareSkin(sceneElement.skinId);
-                    objectData.jointsArray = &_jointTransforms[sceneElement.skinId];
-                }
-
-                const auto& pipeline = _shadowMappingPassPipelineManager.GetPipeline(properties);
-                const auto pipelineBinding = pipeline.Bind();
-                pipeline.prepareShared(viewData);
-                pipeline.prepareIndividual(objectData);
-
+                if (sceneElement.meshId == Renderer::Scene::Base::Primitive::INVALID_ID) { continue; }
                 const auto& mesh = _scene.GetMesh(sceneElement.meshId);
-                Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { mesh.getVertexData() };
 
-                glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
+                for (const auto& [materialId, primitiveId] : mesh.materialPrimitiveIdsPairs) {
+
+                    // Can't draw without material for now. Maybe I'll replace it with a dummy material later on.
+                    if (materialId == Renderer::Scene::Base::Material::INVALID_ID) { continue; }
+                    const auto& material = _scene.GetMaterial(materialId);
+                    const auto& primitive = _scene.GetPrimitive(primitiveId);
+
+                    // It doesn't cast shadow... so who cares!
+                    if (!material.isCastingShadow()) { continue; }
+
+                    ShadowMappingPass::ShadowMappingPipelineManager::PropertiesSet properties = ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::LIGHTTYPE_DIRECTIONAL;
+                    {
+                        if (mesh.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
+                            properties |= ShadowMappingPass::ShadowMappingPipelineManager::PipelineProperties::SKIN;
+                        }
+                    }
+
+                    ShadowMappingPass::IndividualData objectData;
+                    objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
+                    if (mesh.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
+                        prepareSkin(mesh.skinId);
+                        objectData.jointsArray = &_jointTransforms[mesh.skinId];
+                    }
+
+                    const auto& pipeline = _shadowMappingPassPipelineManager.GetPipeline(properties);
+                    const auto pipelineBinding = pipeline.Bind();
+                    pipeline.prepareShared(viewData);
+                    pipeline.prepareIndividual(objectData);
+
+                    Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { primitive.getVertexData() };
+
+                    glDrawElements(GL_TRIANGLES, primitive.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
+                }
             } 
 
         }
@@ -470,88 +479,87 @@ void SceneDrawingManager::BasePass()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (const auto& sceneElement : _scene.GetSceneObjects()) {
-
-        if (sceneElement.meshId == Renderer::Scene::Base::Mesh::INVALID_ID) {
-            // Can't draw without geometry.
-            continue;
-        }
-
-        if (sceneElement.materialId == Renderer::Scene::Base::Material::INVALID_ID) {
-            // Can't draw without material for now. Maybe I'll replace it with a dummy material later on.
-            continue;
-        }
-
-        // We'll for now set up properties for each draw call... Unfortunate!
-        BasePass::BasePassPipelineManager::PropertiesSet properties = 0;
-        {
-            if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
-                properties |= BasePass::BasePassPipelineManager::PipelineProperties::SKIN;
-            }
-
-            const auto& material = _scene.GetMaterial(sceneElement.materialId);
-            if (material.getTexture<Renderer::Scene::Base::Material::ETexture::Albedo>() != Renderer::Scene::Base::Texture::INVALID_ID) {
-                properties |= BasePass::BasePassPipelineManager::PipelineProperties::BASE_COLOR_TEXTURE;
-            }
-
-            if (material.getTexture<Renderer::Scene::Base::Material::ETexture::Normal>() != Renderer::Scene::Base::Texture::INVALID_ID) {
-                properties |= BasePass::BasePassPipelineManager::PipelineProperties::NORMAL_MAP_TEXTURE;
-            }
-
-            if (material.getTexture<Renderer::Scene::Base::Material::ETexture::MetallicRoughness>() != Renderer::Scene::Base::Texture::INVALID_ID) {
-                properties |= BasePass::BasePassPipelineManager::PipelineProperties::METALLIC_ROUGHNESS_TEXTURE;
-            }
-
-            if (material.getDithering() != Renderer::Scene::Base::Material::EDithering::NONE) {
-                properties |= BasePass::BasePassPipelineManager::PipelineProperties::DITHERING;
-            }
-        }
-
-        BasePass::IndividualData objectData;
-        objectData.meshId = sceneElement.nodeId; // Temporary
-        objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
-
-        if (sceneElement.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
-            prepareSkin(sceneElement.skinId);
-            objectData.jointsArray = &_jointTransforms[sceneElement.skinId];
-        }
-        const auto& material = _scene.GetMaterial(sceneElement.materialId);
-        if (material.getTexture<Renderer::Scene::Base::Material::ETexture::Albedo>() != Renderer::Scene::Base::Texture::INVALID_ID) {
-            objectData.baseColorTexture = &_scene.GetTexture(material.getTexture<Renderer::Scene::Base::Material::ETexture::Albedo>());
-        }
-        if (material.getTexture<Renderer::Scene::Base::Material::ETexture::Normal>() != Renderer::Scene::Base::Texture::INVALID_ID) {
-            objectData.normalMapTexture = &_scene.GetTexture(material.getTexture<Renderer::Scene::Base::Material::ETexture::Normal>());
-        }
-        if (material.getTexture<Renderer::Scene::Base::Material::ETexture::MetallicRoughness>() != Renderer::Scene::Base::Texture::INVALID_ID) {
-            objectData.metallicRoughnessTexture = &_scene.GetTexture(material.getTexture<Renderer::Scene::Base::Material::ETexture::MetallicRoughness>());
-        }
-        if (material.getDithering() != Renderer::Scene::Base::Material::EDithering::NONE) {
-            GlobalTexturesBuffer::TextureName textureName;
-            switch (material.getDithering()) {
-                case Renderer::Scene::Base::Material::EDithering::Bayer4x4:
-                    textureName = GlobalTexturesBuffer::Bayer4x4;
-                    break;
-                case Renderer::Scene::Base::Material::EDithering::Bayer8x8:
-                    textureName = GlobalTexturesBuffer::Bayer8x8;
-                    break;
-                case Renderer::Scene::Base::Material::EDithering::BlueNoise:
-                    textureName = GlobalTexturesBuffer::BlueNoise;
-                    break;
-                case Renderer::Scene::Base::Material::EDithering::WhiteNoise:
-                    textureName = GlobalTexturesBuffer::WhiteNoise;
-                    break;
-            }
-            objectData.ditherTexture = &_globalTexturesBuffer.getTexture(textureName);
-        }
-
-        const auto& pipeline = _basePassPipelineManager.GetPipeline(properties);
-        const auto pipelineBinding = pipeline.Bind();
-        pipeline.prepareShared(viewData);
-        pipeline.prepareIndividual(objectData);
-
+        // Can't draw without geometry.
+        if (sceneElement.meshId == Renderer::Scene::Base::Primitive::INVALID_ID) { continue; }
         const auto& mesh = _scene.GetMesh(sceneElement.meshId);
-        Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { mesh.getVertexData() };
 
-        glDrawElements(GL_TRIANGLES, mesh.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
+        for (const auto& [materialId, primitiveId] : mesh.materialPrimitiveIdsPairs) {
+
+            // Can't draw without material for now. Maybe I'll replace it with a dummy material later on.
+            if (materialId == Renderer::Scene::Base::Material::INVALID_ID) { continue; }
+            const auto& material = _scene.GetMaterial(materialId);
+            const auto& primitive = _scene.GetPrimitive(primitiveId);
+
+            // We'll for now set up properties for each draw call... Unfortunate!
+            BasePass::BasePassPipelineManager::PropertiesSet properties = 0;
+            {
+                if (mesh.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
+                    properties |= BasePass::BasePassPipelineManager::PipelineProperties::SKIN;
+                }
+
+                if (material.getTexture<Renderer::Scene::Base::Material::ETexture::Albedo>() != Renderer::Scene::Base::Texture::INVALID_ID) {
+                    properties |= BasePass::BasePassPipelineManager::PipelineProperties::BASE_COLOR_TEXTURE;
+                }
+
+                if (material.getTexture<Renderer::Scene::Base::Material::ETexture::Normal>() != Renderer::Scene::Base::Texture::INVALID_ID) {
+                    properties |= BasePass::BasePassPipelineManager::PipelineProperties::NORMAL_MAP_TEXTURE;
+                }
+
+                if (material.getTexture<Renderer::Scene::Base::Material::ETexture::MetallicRoughness>() != Renderer::Scene::Base::Texture::INVALID_ID) {
+                    properties |= BasePass::BasePassPipelineManager::PipelineProperties::METALLIC_ROUGHNESS_TEXTURE;
+                }
+
+                if (material.getDithering() != Renderer::Scene::Base::Material::EDithering::NONE) {
+                    properties |= BasePass::BasePassPipelineManager::PipelineProperties::DITHERING;
+                }
+            }
+
+            BasePass::IndividualData objectData;
+            objectData.meshId = sceneElement.nodeId; // Temporary
+            objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
+
+            if (mesh.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
+                prepareSkin(mesh.skinId);
+                objectData.jointsArray = &_jointTransforms[mesh.skinId];
+            }
+
+            if (material.getTexture<Renderer::Scene::Base::Material::ETexture::Albedo>() != Renderer::Scene::Base::Texture::INVALID_ID) {
+                objectData.baseColorTexture = &_scene.GetTexture(material.getTexture<Renderer::Scene::Base::Material::ETexture::Albedo>());
+            }
+            if (material.getTexture<Renderer::Scene::Base::Material::ETexture::Normal>() != Renderer::Scene::Base::Texture::INVALID_ID) {
+                objectData.normalMapTexture = &_scene.GetTexture(material.getTexture<Renderer::Scene::Base::Material::ETexture::Normal>());
+            }
+            if (material.getTexture<Renderer::Scene::Base::Material::ETexture::MetallicRoughness>() != Renderer::Scene::Base::Texture::INVALID_ID) {
+                objectData.metallicRoughnessTexture = &_scene.GetTexture(material.getTexture<Renderer::Scene::Base::Material::ETexture::MetallicRoughness>());
+            }
+            if (material.getDithering() != Renderer::Scene::Base::Material::EDithering::NONE) {
+                GlobalTexturesBuffer::TextureName textureName;
+                switch (material.getDithering()) {
+                    case Renderer::Scene::Base::Material::EDithering::Bayer4x4:
+                        textureName = GlobalTexturesBuffer::Bayer4x4;
+                        break;
+                    case Renderer::Scene::Base::Material::EDithering::Bayer8x8:
+                        textureName = GlobalTexturesBuffer::Bayer8x8;
+                        break;
+                    case Renderer::Scene::Base::Material::EDithering::BlueNoise:
+                        textureName = GlobalTexturesBuffer::BlueNoise;
+                        break;
+                    case Renderer::Scene::Base::Material::EDithering::WhiteNoise:
+                        textureName = GlobalTexturesBuffer::WhiteNoise;
+                        break;
+                }
+                objectData.ditherTexture = &_globalTexturesBuffer.getTexture(textureName);
+            }
+
+            const auto& pipeline = _basePassPipelineManager.GetPipeline(properties);
+            const auto pipelineBinding = pipeline.Bind();
+            pipeline.prepareShared(viewData);
+            pipeline.prepareIndividual(objectData);
+
+            Renderer::Scene::Base::VertexDataBase::ScopedBinding dataBinding { primitive.getVertexData() };
+
+            glDrawElements(GL_TRIANGLES, primitive.getVertexData().vertexCount(), GL_UNSIGNED_SHORT, 0);
+        }
     }
 }
 

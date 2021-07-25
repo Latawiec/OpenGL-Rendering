@@ -14,7 +14,6 @@
 #include <GLFW/glfw3.h>
 
 #include "Importer.hpp"
-#include <Scene/Base/Mesh.hpp>
 #include <Scene/Base/Texture.hpp>
 #include <Scene/Scene.hpp>
 #include <SceneDrawing/SceneDrawingManager.hpp>

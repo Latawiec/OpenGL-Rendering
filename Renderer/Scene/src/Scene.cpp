@@ -22,18 +22,18 @@ const Base::Node& Scene::GetNode(const Base::Node::IdType& id) const {
     return _nodes.at(id);
 }
 
-Base::Mesh::IdType Scene::AddMesh(Base::Mesh&& mesh) {
-    const auto id = _meshIdGenerator.GenerateId();
-    _meshes.insert({ id, std::move(mesh) });
+Base::Primitive::IdType Scene::AddPrimitive(Base::Primitive&& primitive) {
+    const auto id = _primitiveIdGenerator.GenerateId();
+    _primitives.insert({ id, std::move(primitive) });
     return id;
 }
 
-Base::Mesh& Scene::GetMesh(const Base::Mesh::IdType& id) {
-    return _meshes.at(id);
+Base::Primitive& Scene::GetPrimitive(const Base::Primitive::IdType& id) {
+    return _primitives.at(id);
 }
 
-const Base::Mesh& Scene::GetMesh(const Base::Mesh::IdType& id) const {
-    return _meshes.at(id);
+const Base::Primitive& Scene::GetPrimitive(const Base::Primitive::IdType& id) const {
+    return _primitives.at(id);
 }
 
 Base::Texture::IdType Scene::AddTexture(Base::Texture&& texture) {
@@ -94,6 +94,20 @@ const Base::Skin& Scene::GetSkin(const Base::Skin::IdType& id) const {
 
 const std::unordered_map<Base::Skin::IdType, Base::Skin>& Scene::GetSkins() const {
     return _skins;
+}
+
+Base::Mesh::IdType Scene::AddMesh(Base::Mesh mesh) {
+    const auto id = _meshIdGenerator.GenerateId();
+    _meshes.insert({ id, std::move(mesh) });
+    return id;
+}
+
+Base::Mesh& Scene::GetMesh(const Base::Mesh::IdType& id) {
+    return _meshes.at(id);
+}
+
+const Base::Mesh& Scene::GetMesh(const Base::Mesh::IdType& id) const {
+    return _meshes.at(id);
 }
 
 Base::DirectionalLight::IdType Scene::AddDirectionalLight(Base::DirectionalLight&& light) {

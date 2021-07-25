@@ -9,6 +9,7 @@
 
 #include "Scene/Base/VertexData.hpp"
 #include "Scene/Base/VertexAttribute.hpp"
+#include "Scene/Base/Primitive.hpp"
 #include "Scene/Base/Mesh.hpp"
 #include "Scene/Base/Camera.hpp"
 #include "Scene/Base/Texture.hpp"
@@ -45,14 +46,11 @@ namespace /*anonymous*/ {
 
 }
 
-Scene::Base::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh) {
+Scene::Base::Primitive processPrimitive(const tinygltf::Model& model, const tinygltf::Primitive& primitive) {
 
     GLuint VAO;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
-
-    // I assume single primitve.
-    const auto primitive = mesh.primitives[0];
 
     const auto& positionAccessorId = primitive.attributes.at(PositionAttribute);
     const auto& normalAccessorId = primitive.attributes.at(NormalsAttribute);
@@ -115,7 +113,7 @@ Scene::Base::Mesh processMesh(const tinygltf::Model& model, const tinygltf::Mesh
 
     glBindVertexArray(0);
 
-    return Scene::Base::Mesh{ Scene::Base::VertexDataBase(VAO, indicesAccessor.count, std::move(buffers)) };
+    return Scene::Base::Primitive{ Scene::Base::VertexDataBase(VAO, indicesAccessor.count, std::move(buffers)) };
 }
 
 Scene::Base::Camera processCamera(const tinygltf::Model& model, const tinygltf::Camera& camera) {
@@ -209,7 +207,17 @@ void Importer::convertMeshes(
 
     for (size_t i = 0; i < meshesCount; ++i) {
         const tinygltf::Mesh& gltfMesh = gltfModel.meshes[i];
-        Scene::Base::Mesh convertedMesh = processMesh(gltfModel, gltfMesh); 
+        Scene::Base::Mesh convertedMesh;
+        convertedMesh.materialPrimitiveIdsPairs.reserve(gltfMesh.primitives.size());
+
+        for (const auto& gltfPrimitive : gltfMesh.primitives) {
+            Scene::Base::Primitive convertedPrimitive = processPrimitive(gltfModel, gltfPrimitive);
+            const SceneId scenePrimitiveId = scene.AddPrimitive(std::move(convertedPrimitive));
+
+            Scene::Base::Mesh::MaterialPrimitivePair materialPrimitivePair = { Scene::Base::Material::INVALID_ID, scenePrimitiveId };
+            convertedMesh.materialPrimitiveIdsPairs.push_back(materialPrimitivePair);
+        }
+
         const SceneId sceneMeshId = scene.AddMesh(std::move(convertedMesh));
         meshConversionData.convertedMeshes.push_back(sceneMeshId);
     }
@@ -442,18 +450,25 @@ Scene::NodeLink Importer::traverseNodes(Scene::Scene& scene, const tinygltf::Mod
     // Scene elements
     if (gltfNode.mesh != -1) {
         const auto& gltfMesh = gltfModel.meshes[gltfNode.mesh];
+        auto& sceneMeshId = meshConversionData.convertedMeshes[gltfNode.mesh];
+        auto& sceneMesh = scene.GetMesh(sceneMeshId);
+        
+        // Bind skin
+        if (gltfNode.skin != -1) {
+            sceneMesh.skinId = skinConversionData.convertedSkins[gltfNode.skin];
+        }
+
+        // Bind materials to primitives
+        for (int i=0; i<gltfMesh.primitives.size(); i++) {
+            const auto& primitive = gltfMesh.primitives[i];
+            if (primitive.material != -1) {
+                sceneMesh.materialPrimitiveIdsPairs[i].first = materialsConversionData.convertedMaterials[primitive.material];
+            }
+        }
+
         Scene::SceneObject obj;
         obj.nodeId = nodeId;
-        obj.meshId = meshConversionData.convertedMeshes[gltfNode.mesh];;
-
-        if (gltfNode.skin != -1) {
-            obj.skinId = skinConversionData.convertedSkins[gltfNode.skin];
-        }
-
-        if (gltfMesh.primitives[0].material != -1) {
-            obj.materialId = materialsConversionData.convertedMaterials[gltfMesh.primitives[0].material];
-        }
-
+        obj.meshId = sceneMeshId;
         scene.AddSceneObject(obj);
     }
 

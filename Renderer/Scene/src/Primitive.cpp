@@ -1,13 +1,13 @@
-#include "../Scene/Base/Mesh.hpp"
+#include "../Scene/Base/Primitive.hpp"
 
 namespace Renderer {
 namespace Scene {
 namespace Base {
     
-Mesh::Mesh(VertexDataBase&& vertexData)
+Primitive::Primitive(VertexDataBase&& vertexData)
 : _vertexData(std::move(vertexData)) {}
 
-const VertexDataBase& Mesh::getVertexData() const {
+const VertexDataBase& Primitive::getVertexData() const {
     return _vertexData;
 }
 
