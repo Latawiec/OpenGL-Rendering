@@ -517,6 +517,9 @@ void SceneDrawingManager::BasePass()
             BasePass::IndividualData objectData;
             objectData.meshId = sceneElement.nodeId; // Temporary
             objectData.objectModelTransform = _transformProcessor.GetNodeTransforms().at(sceneElement.nodeId);
+            objectData.baseColorFactor = material.getSolidColor<Scene::Base::Material::ESolidColor::Albedo>();
+            objectData.emissiveFactor = material.getSolidColor<Scene::Base::Material::ESolidColor::Emissive>();
+            objectData.roughnessMetallicFactor = material.getSolidColor<Scene::Base::Material::ESolidColor::MetallicRoughness>();
 
             if (mesh.skinId != Renderer::Scene::Base::Skin::INVALID_ID) {
                 prepareSkin(mesh.skinId);

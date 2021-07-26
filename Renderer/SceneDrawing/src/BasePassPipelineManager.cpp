@@ -155,6 +155,13 @@ void BasePassFragmentProgram::prepareIndividual(const IndividualData& sceneObjec
         glActiveTexture(GL_TEXTURE0 + DitherTextureLocation);
         glBindTexture(GL_TEXTURE_2D, static_cast<unsigned int>(*sceneObject.ditherTexture));
     }
+
+    // Setup solid colors (factors)
+    using Programs::Base::UniformValue;
+    using Programs::Base::UniformType;
+    UniformValue<UniformType::Vec4>(_program, BaseColorFactorUniform).Set(sceneObject.baseColorFactor);
+    UniformValue<UniformType::Vec4>(_program, EmissiveFactorUniform).Set(sceneObject.emissiveFactor);
+    UniformValue<UniformType::Vec4>(_program, MetallicRoughnessFactorUniform).Set(sceneObject.roughnessMetallicFactor);
 }
 
 

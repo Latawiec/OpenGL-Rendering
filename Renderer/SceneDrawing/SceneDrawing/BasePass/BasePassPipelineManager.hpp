@@ -30,6 +30,9 @@ struct IndividualData {
     const Renderer::Scene::Base::Texture* metallicRoughnessTexture = nullptr;
     const Renderer::Scene::Base::Texture* ditherTexture = nullptr;
     const JointsArray* jointsArray = nullptr;
+    glm::vec4 baseColorFactor {0.f};
+    glm::vec4 emissiveFactor {0.f};
+    glm::vec4 roughnessMetallicFactor {0.f};
 };
 
 
@@ -72,9 +75,15 @@ class BasePassFragmentProgram {
     static constexpr std::string_view DitheringFlag = "#define DITHERING 1\n";
     // Uniform names
     static constexpr std::string_view BaseColorSamplerUniform = "baseColor";
+    static constexpr std::string_view EmissiveColorSamplerUniform = "emissiveColor";
     static constexpr std::string_view NormalMapSamplerUniform = "normalMap";
     static constexpr std::string_view MetallicRougnessSamplerUniform = "metallicRoughness";
     static constexpr std::string_view DitheringSamplerUniform = "ditherTexture";
+
+    static constexpr std::string_view BaseColorFactorUniform = "baseColorFactor";
+    static constexpr std::string_view EmissiveFactorUniform = "emissiveFactor";
+    static constexpr std::string_view MetallicRoughnessFactorUniform = "metallicRoughnessFactor";
+
     static constexpr unsigned int BaseColorTextureLocation = 0;
     static constexpr unsigned int NormalMapTextureLocation = 1;
     static constexpr unsigned int MetallicRoughnessTextureLocation = 2;

@@ -332,6 +332,15 @@ void Importer::convertMaterials (
         const gltfId normalTexture = gltfMaterial.normalTexture.index;
         
         Scene::Base::Material material;
+        const auto& gltfBaseColor = gltfMaterial.pbrMetallicRoughness.baseColorFactor;
+        const auto& gltfEmissiveColor = gltfMaterial.emissiveFactor;
+        const auto& gltfRoughnessFactor = gltfMaterial.pbrMetallicRoughness.roughnessFactor;
+        const auto& gltfMetallicFactor = gltfMaterial.pbrMetallicRoughness.metallicFactor;
+
+        material.setSolidColor<Scene::Base::Material::ESolidColor::Albedo>(glm::vec4{ gltfBaseColor[0], gltfBaseColor[1], gltfBaseColor[2], gltfBaseColor[3] });
+        material.setSolidColor<Scene::Base::Material::ESolidColor::Emissive>(glm::vec4{ gltfEmissiveColor[0], gltfEmissiveColor[1], gltfEmissiveColor[2], 1.0f });
+        material.setSolidColor<Scene::Base::Material::ESolidColor::MetallicRoughness>({ 0.f, gltfRoughnessFactor, gltfMetallicFactor, 0.f });
+
         if (albedoTexture != -1) {
             const gltfId albedoTextureImage = gltfModel.textures[albedoTexture].source;
             const Scene::Base::Texture::IdType albedoId = texturesConversionData.convertedImages[albedoTextureImage];

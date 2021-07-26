@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <array>
+#include <optional>
 
 namespace Renderer {
 namespace Scene {
@@ -32,9 +33,22 @@ struct Material {
         SIZE
     };
 
+    enum class ESolidColor : uint8_t {
+        Albedo,
+        Emissive,
+        MetallicRoughness, // Metallic -> Blue; Rougness -> Green
+        SIZE
+    };
+
+    Material() 
+    {
+        _textures.fill(Texture::INVALID_ID);
+        _solidColors.fill(glm::vec4(0.f));
+    }
+
     template<ETexture TextureType>
     bool hasTexture() const {
-        return _textures[size_t(TextureType)].has_value();
+        return _textures[size_t(TextureType)] != Texture::INVALID_ID;
     }
 
     template<ETexture TextureType>
@@ -42,9 +56,19 @@ struct Material {
         return _textures[size_t(TextureType)];
     }
 
+    template<ESolidColor ColorType>
+    glm::vec4 getSolidColor() const {
+        return _solidColors[size_t(ColorType)];
+    }
+
     template<ETexture TextureType>
     void setTexture(Texture::IdType texture) {
         _textures[size_t(TextureType)] = texture;
+    }
+
+    template<ESolidColor ColorType>
+    void setSolidColor(glm::vec4 color) {
+        _solidColors[size_t(ColorType)] = color;
     }
 
     EDithering getDithering() const { return _dithering; }
@@ -55,6 +79,7 @@ struct Material {
 
 private:
     std::array<Texture::IdType, size_t(ETexture::SIZE)> _textures = {};
+    std::array<glm::vec4, size_t(ESolidColor::SIZE)> _solidColors = {};
     EDithering _dithering = EDithering::NONE;
     bool _isCastingShadow = true;
 };

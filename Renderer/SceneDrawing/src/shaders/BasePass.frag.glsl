@@ -8,6 +8,10 @@
 #define BASE_COLOUR_TEXTURE 0
 #endif
 
+#ifndef EMISSIVE_TEXTURE
+#define EMISSIVE_TEXTURE 0
+#endif
+
 #ifndef NORMAL_MAP_TEXTURE
 #define NORMAL_MAP_TEXTURE 0
 #endif
@@ -42,6 +46,10 @@ layout (location = 5) out float Dither;
 uniform sampler2D baseColor;
 #endif
 
+#if EMISSIVE_TEXTURE
+uniform sampler2D emissiveColor;
+#endif
+
 #if NORMAL_MAP_TEXTURE
 uniform sampler2D normalMap;
 #endif
@@ -54,7 +62,12 @@ uniform sampler2D metallicRoughness;
 uniform sampler2D ditherTexture;
 #endif
 
+uniform vec4 baseColorFactor;
+uniform vec4 emissiveFactor;
+uniform vec4 metallicRoughnessFactor;
+
 vec4 SampleBaseColor(in vec2 coords);
+vec3 SampleEmissiveColor(in vec2 coords);
 vec3 SampleNormalMap(in vec2 coords);
 vec4 SampleSilhouette(in vec2 coords);
 vec2 SampleRoughnessMetallic(in vec2 coords);
@@ -73,13 +86,21 @@ void main()
 
 vec4 SampleBaseColor(vec2 coords) 
 {
-#ifdef BASE_COLOUR_TEXTURE
+#if BASE_COLOUR_TEXTURE
     return texture(baseColor, coords.xy);
 #else
-    return vec4(1);
+    return baseColorFactor;
 #endif
 }
 
+vec3 SampleEmissiveColor(in vec2 coords)
+{
+#if EMISSIVE_TEXTURE
+    return texture(emissiveColor, coords.xy).rgb;
+#else
+    return emissiveFactor.rgb;
+#endif
+}
 
 vec3 SampleNormalMap(vec2 coords)
 {
@@ -101,7 +122,7 @@ vec2 SampleRoughnessMetallic(in vec2 coords)
     vec2 metallicRoughness = texture(metallicRoughness, coords).bg;
     return metallicRoughness;
 #else
-    return vec2(0, 1);
+    return metallicRoughnessFactor.bg;
 #endif
 }
 
